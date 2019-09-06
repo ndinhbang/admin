@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthRequest;
+use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passport\Http\Controllers\HandlesOAuthErrors;
@@ -35,37 +37,34 @@ class LoginController extends Controller
     /**
      * The authorization server.
      *
-     * @var \League\OAuth2\Server\AuthorizationServer
+     * @var AuthorizationServer
      */
     protected $server;
 
     /**
      * The token repository instance.
      *
-     * @var \Laravel\Passport\TokenRepository
+     * @var TokenRepository
      */
     protected $tokens;
 
     /**
      * The JWT parser instance.
      *
-     * @var \Lcobucci\JWT\Parser
+     * @var JwtParser
      */
     protected $jwt;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \League\OAuth2\Server\AuthorizationServer $server
-     * @param  \Laravel\Passport\TokenRepository         $tokens
-     * @param  \Lcobucci\JWT\Parser                      $jwt
+     * @param AuthorizationServer $server
+     * @param TokenRepository     $tokens
+     * @param JwtParser           $jwt
      * @return void
      */
-    public function __construct(
-        AuthorizationServer $server,
-        TokenRepository $tokens,
-        JwtParser $jwt
-    ) {
+    public function __construct(AuthorizationServer $server, TokenRepository $tokens, JwtParser $jwt)
+    {
         $this->jwt = $jwt;
         $this->server = $server;
         $this->tokens = $tokens;
@@ -77,7 +76,7 @@ class LoginController extends Controller
      * @param AuthRequest $request
      * @return mixed
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function login(AuthRequest $request)
     {
@@ -92,13 +91,11 @@ class LoginController extends Controller
             // @throws \Illuminate\Validation\ValidationException
             $this->sendLockoutResponse($request);
         }
-
         if ($this->attemptLogin($request)) {
 //            $request->session()->regenerate();
             $this->clearLoginAttempts($request);
             // authenticated user
 //            $user = $this->guard()->user();
-
             // TODO: get all user 's abilities for using as scope for access token
 
             // create PSR-7 request from current request object
@@ -107,10 +104,10 @@ class LoginController extends Controller
 
             // issue the access token
             return $this->issueToken($psr7Request->withParsedBody([
-                'grant_type' => 'password',
-                'username' => $request->input($this->username()),
-                'password' => $request->input('password'),
-                'client_id' => config('passport.password_client_id'),
+                'grant_type'    => 'password',
+                'username'      => $request->input($this->username()),
+                'password'      => $request->input('password'),
+                'client_id'     => config('passport.password_client_id'),
                 'client_secret' => config('passport.password_client_secret'),
             ]));
         }
@@ -129,7 +126,7 @@ class LoginController extends Controller
     /**
      * Attempt to log the user into the application.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param Request $request
      * @return bool
      */
     protected function attemptLogin(Request $request)
@@ -140,24 +137,11 @@ class LoginController extends Controller
     /**
      * Get the guard to be used during authentication.
      *
-     * @return \Illuminate\Contracts\Auth\StatefulGuard
+     * @return StatefulGuard
      */
     protected function guard()
     {
         return Auth::guard();
-    }
-
-    /**
-     * Authorize a client to access the user's account.
-     *
-     * @param  \Psr\Http\Message\ServerRequestInterface $request
-     * @return \Illuminate\Http\Response
-     */
-    public function issueToken(ServerRequestInterface $request)
-    {
-        return $this->withErrorHandling(function () use ($request) {
-            return $this->convertResponse($this->server->respondToAccessTokenRequest($request, new Psr7Response));
-        });
     }
 
     /**
@@ -171,10 +155,23 @@ class LoginController extends Controller
     }
 
     /**
+     * Authorize a client to access the user's account.
+     *
+     * @param ServerRequestInterface $request
+     * @return Response
+     */
+    public function issueToken(ServerRequestInterface $request)
+    {
+        return $this->withErrorHandling(function () use ($request) {
+            return $this->convertResponse($this->server->respondToAccessTokenRequest($request, new Psr7Response));
+        });
+    }
+
+    /**
      * Log the user out of the application.
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Response
      */
     public function logout(Request $request)
     {
