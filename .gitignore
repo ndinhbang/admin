@@ -10,9 +10,12 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-
 public/css/
-
-.idea/
-
+public/js/
+public/vendor/telescope/
 public/mix-manifest.json
+.idea/
+_ide_helper.php
+.phpstorm.meta.php
+
+
