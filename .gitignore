@@ -19,3 +19,13 @@ _ide_helper.php
 .phpstorm.meta.php
 
 
+
+public/dist/
+
+public/img/
+
+public/service-worker.js
+
+public/manifest.json
+
+public/precache-manifest.*.js
