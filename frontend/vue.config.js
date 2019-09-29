@@ -1,4 +1,8 @@
 module.exports = {
+    // see more: https://webpack.js.org/configuration/devtool
+    configureWebpack: {
+        devtool: process.env.NODE_ENV === 'production' ? '' : 'eval-source-map'
+    },
     // proxy API requests to Valet during development
     devServer: {
         proxy: 'http://localhost:8000'
