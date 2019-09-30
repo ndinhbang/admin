@@ -1,43 +1,55 @@
 <template>
-    <el-form :model="loginForm" status-icon :rules="rules" ref="loginForm" class="login-form">
-        <el-form-item prop="email">
-            <el-input
-                    ref="email"
-                    v-model="loginForm.email"
-                    placeholder="Email"
-                    name="email"
-                    type="text"
-                    tabindex="1"
-                    autocomplete="on"
-            />
-        </el-form-item>
+    <ValidationObserver ref="observer">
+        <el-form :model="loginForm" :rules="rules" ref="loginForm" class="login-form" slot-scope="{ validate }">
+            <ValidationProvider rules="required|email" name="email" vid="email">
+                <el-form-item prop="email" slot-scope="{ errors }" :error="errors[0]">
+                    <el-input
+                            ref="email"
+                            v-model="loginForm.email"
+                            placeholder="Email"
+                            name="email"
+                            type="text"
+                            tabindex="1"
+                            autocomplete="on"
+                    />
+                </el-form-item>
+            </ValidationProvider>
 
-        <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-            <el-form-item prop="password">
-                <el-input
-                        ref="password"
-                        v-model="loginForm.password"
-                        placeholder="Password"
-                        name="password"
-                        type="password"
-                        tabindex="2"
-                        autocomplete="on"
-                        @keyup.native="checkCapslock"
-                        @blur="capsTooltip = false"
-                        @keyup.enter.native="handleLogin"
-                />
-            </el-form-item>
-        </el-tooltip>
+            <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
+                <ValidationProvider rules="required|min:8" name="password" vid="password">
+                    <el-form-item prop="password" slot-scope="{ errors }" :error="errors[0]">
+                        <el-input
+                                ref="password"
+                                v-model="loginForm.password"
+                                placeholder="Password"
+                                name="password"
+                                type="password"
+                                tabindex="2"
+                                autocomplete="on"
+                                @keyup.native="checkCapslock"
+                                @blur="capsTooltip = false"
+                                @keyup.enter.native="handleLogin"
+                        />
+                    </el-form-item>
+                </ValidationProvider>
+            </el-tooltip>
 
-        <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;"
-                   @click.native.prevent="handleLogin">Login
-        </el-button>
-    </el-form>
+            <el-button type="primary" :loading="loading" @click.native.prevent="validate().then(handleLogin)">Login
+            </el-button>
+        </el-form>
+    </ValidationObserver>
 </template>
 
 <script>
+    import {extend, ValidationObserver, ValidationProvider} from 'vee-validate'
+    import {email, min, required} from 'vee-validate/dist/rules'
+
     export default {
         name: 'Login',
+        components: {
+            ValidationObserver,
+            ValidationProvider
+        },
         data() {
             return {
                 loginForm: {
@@ -45,9 +57,29 @@
                     password: ''
                 },
                 capsTooltip: false,
-                loading: false,
-                rules: {}
+                loading: false
             };
+        },
+        created() {
+            // Add the vee-validate rules
+            extend('required', {
+                ...required,
+                message (field) {
+                    return `The ${field} is required`;
+                }
+            })
+            extend('email', {
+                ...email,
+                message (field) {
+                    return `The ${field} is not an email`;
+                }
+            })
+            extend('min', {
+                ...min,
+                message (field, props) {
+                    return `The ${field} can not be less than ${props.length} characters`;
+                }
+            })
         },
         mounted() {
             if (this.loginForm.email === '') {
@@ -55,6 +87,8 @@
             } else if (this.loginForm.password === '') {
                 this.$refs.password.focus()
             }
+
+
         },
         methods: {
             checkCapslock({shiftKey, key} = {}) {
