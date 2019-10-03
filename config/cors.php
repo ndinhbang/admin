@@ -16,7 +16,7 @@ return [
     'allowedOrigins' => ['http://localhost:8000'],
     'allowedOriginsPatterns' => ['/localhost:\d/'],
     'allowedHeaders' => ['Content-Type', 'X-Requested-With', 'Authorization'],
-    'allowedMethods' => ['GET', 'POST', 'PUT','DELETE', 'OPTIONS'],
+    'allowedMethods' => ['GET', 'POST', 'PUT','DELETE'],
     'exposedHeaders' => [],
     'maxAge' => 0,
 
