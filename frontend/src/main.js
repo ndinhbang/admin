@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import App from './App.vue'
-import router from '@/router/index'
-import store from '@/store/index'
+import router from './router/index'
+import store from './store/index'
 
+// Global Exception Handler
+import '@/utils/exceptionHandler'
 // PWA
-import './registerServiceWorker'
+import '@/registerServiceWorker'
 // Register Element UI components
-import './plugins/element.js'
+import '@/plugins/element.js'
 // CSS reset
 import 'normalize.css/normalize.css'
 // Custom styles

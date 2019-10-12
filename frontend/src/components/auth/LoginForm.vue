@@ -43,7 +43,6 @@
 <script>
   import {extend, ValidationObserver, ValidationProvider} from 'vee-validate'
   import {email, min, required} from 'vee-validate/dist/rules'
-  import auth from '@/api/auth'
 
   export default {
     name: 'LoginForm',
@@ -102,6 +101,7 @@
         this.loading = true
         await this.$store.dispatch('auth/login', this.loginForm)
         this.loading = false
+        // redirect to dashboard
       }
     }
   }
