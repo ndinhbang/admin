@@ -1,13 +1,16 @@
 import Vue from 'vue'
-import 'normalize.css/normalize.css' // a modern alternative to CSS resets
-
 import App from './App.vue'
-import router from './router'
-import store from './store'
-import './registerServiceWorker'
-import './plugins/element.js'
+import router from '@/router/index'
+import store from '@/store/index'
 
-import './scss/style.scss'
+// PWA
+import './registerServiceWorker'
+// Register Element UI components
+import './plugins/element.js'
+// CSS reset
+import 'normalize.css/normalize.css'
+// Custom styles
+import './styles/index.scss'
 
 Vue.config.productionTip = false
 
