@@ -1,4 +1,6 @@
 /*eslint no-console: ["off"] */
+import {VUE_APP_ENV} from '@/environment/index'
+
 /**
  * @description Logger class
  * This is responsible for logging of all kind of stuff in the application
@@ -13,27 +15,28 @@ class Logger {
 
     initLogger() {
         /** Checking the environment */
-        if (process.env.VUE_APP_ENV !== 'production') {
-            this.log = console.log.bind(console)
-            this.debug = console.debug.bind(console)
-            this.info = console.info.bind(console)
-            this.warn = console.warn.bind(console)
-            this.error = console.error.bind(console)
-            this.logToServer = this.error
-        } else {
+        // if (VUE_APP_ENV !== 'production') {
+        //     this.log = console.log.bind(console)
+        //     this.debug = console.debug.bind(console)
+        //     this.info = console.info.bind(console)
+        //     this.warn = console.warn.bind(console)
+        //     this.error = console.error.bind(console)
+        //     this.report = this.error
+        // } else {
             /** In case of production replace the functions definition */
-            this.log = this.debug = this.info = this.warn = this.error = () => {}
+            // this.log = this.debug = this.info = this.warn = this.error = () => {
+            // }
 
-            this.logToServer = err => {
+            this.report = err => {
                 /** temp added to print in the console during production */
-                console.error(err) //
+                console.log(JSON.stringify(err)) //
                 /** TODO: API integration for logging to server or any custom logic in case of Production environment */
-            };
-        }
+            }
+        // }
     }
 }
 
 /** Creating the instance of logger */
 const logger = new Logger()
 
-export { logger };
+export {logger};

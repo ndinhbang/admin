@@ -1,34 +1,34 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import {APP_NAME} from '@/.env'
-import { setPageTitle } from '@/router/middlewares'
-import Home from '@/views/Home.vue'
-
+import {setPageTitle} from '@/router/middlewares'
+import {VUE_APP_NAME, VUE_CLI_BASE_URL, VUE_APP_URL, VUE_APP_ENV} from '@/environment/index'
 
 Vue.use(Router)
 
-// Route-level code splitting
-const LoginView = () => import(/* webpackChunkName: "login.view" */'@/views/auth/Login.vue')
+const baseUrl = VUE_APP_ENV !== 'development' ? VUE_APP_URL : VUE_CLI_BASE_URL
 
+// Route-level code splitting
+const Login = () => import('@/views/auth/Login.vue')
+const Home = () => import('@/views/Home.vue')
 
 const router = new Router({
-    mode: 'history',
-    linkActiveClass: 'is-active',
-    base: process.env.BASE_URL,
-    routes: [
-        {
-            path: '/',
-            name: 'home',
-            meta: { title: `${APP_NAME} - Home` },
-            component: Home
-        },
-        {
-            path: '/login',
-            name: 'login',
-            meta: { title: `${APP_NAME} - Login` },
-            component: LoginView
-        },
-    ]
+  mode: 'history',
+  linkActiveClass: 'is-active',
+  base: baseUrl,
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      meta: {title: `${VUE_APP_NAME} - Home`},
+      component: Home
+    },
+    {
+      path: '/login',
+      name: 'login',
+      meta: {title: `${VUE_APP_NAME} - Login`},
+      component: Login
+    },
+  ]
 })
 
 

@@ -103,7 +103,7 @@ export function arrayBufferToString(arrayBuffer) {
 /**
  * Encode utf-8 string into ArrayBuffer
  * @param {string} str
- * @return {ArrayBuffer}
+ * @return {Uint8Array}
  */
 export function stringToArrayBuffer(str) {
     if (typeof str !== 'string') {
@@ -111,13 +111,12 @@ export function stringToArrayBuffer(str) {
     }
 
     let encoder = new TextEncoder('utf-8') // eslint-disable-line
-    let byteArray = encoder.encode(str)
-    return byteArray.buffer
+    return encoder.encode(str)
 }
 
 /**
  * Decode ArrayBuffer to hex string
- * @param {TypedArray} arrayBuffer
+ * @param {ArrayBuffer} arrayBuffer
  * @return {string}
  */
 export function arrayBufferToHexString(arrayBuffer) {
