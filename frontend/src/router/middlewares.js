@@ -1,4 +1,4 @@
-// import $store from '../store'
+import store from '@/store/index'
 // import * as authService from '../services/auth.service'
 
 /**
@@ -21,16 +21,20 @@ export function initCurrentUserStateMiddleware(to, from, next) {
  * Check access permission to auth routes
  */
 export function checkAccessMiddleware(to, from, next) {
-    // const currentUserId = $store.state.user.currentUser.id
-    // const isAuthRoute = to.matched.some(item => item.meta.isAuth)
-    //
-    // if (isAuthRoute && currentUserId) return next()
-    // if (isAuthRoute) return next({name: 'login'})
+    const isAuthenticated = store.getters['auth/isAuthenticated']
+    const isAuthRoute = to.matched.some(item => item.meta.requireAuth)
+
+    console.log(isAuthenticated, isAuthRoute)
+
+    if (isAuthRoute && isAuthenticated) return next()
+    if (isAuthRoute) return next({name: 'login'})
     next()
 }
 
-
-export function setPageTitle(to, from, next) {
+/**
+ * Set document meta title
+ */
+export function setMetadataMiddleware(to, from, next) {
     const title = to.matched.find(item => item.meta.title)
     if (title) window.document.title = title.meta.title
     next()
