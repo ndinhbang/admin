@@ -1,22 +1,18 @@
 import Dexie from 'dexie'
-import {encrypt, decrypt} from "@/utils/webCrypto"
+import {decrypt, encrypt} from "@/utils/webCrypto"
 
+/**
+ * @link https://medium.com/@ole.ersoy/having-fun-with-dexiejs-and-typescript-1c52514a090
+ */
 export class AppIdxDb extends Dexie {
     constructor() {
         super("idxDb")
         // const db = this
-        //
         // Define tables and indexes
-        //
         this.version(1).stores({
             meta: '++id, crtk',
             vaults: '++id, kname, _encv'
         })
-
-        // Let's physically map Contact class to contacts table.
-        // This will make it possible to call loadEmailsAndPhones()
-        // directly on retrieved database objects.
-        // db.contacts.mapToClass(Contact);
     }
 
     /**
