@@ -1,7 +1,7 @@
 <template>
-  <ValidationObserver ref="observer">
+  <ValidationObserver ref="observer" slim>
     <el-form :model="loginForm" ref="loginForm" class="login-form" slot-scope="{ validate }">
-      <ValidationProvider rules="required|email" name="email" vid="email">
+      <ValidationProvider rules="required|email" name="email" vid="email" slim>
         <el-form-item prop="email" slot-scope="{ errors }" :error="errors[0]">
           <el-input
             ref="email"
@@ -16,7 +16,7 @@
       </ValidationProvider>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-        <ValidationProvider rules="required|min:8" name="password" vid="password">
+        <ValidationProvider rules="required|min:8" name="password" vid="password" slim>
           <el-form-item prop="password" slot-scope="{ errors }" :error="errors[0]">
             <el-input
               ref="password"
@@ -43,6 +43,7 @@
 <script>
   import {extend, ValidationObserver, ValidationProvider} from 'vee-validate'
   import {email, min, required} from 'vee-validate/dist/rules'
+  import {showMsg} from '@/utils/helpers'
 
   export default {
     name: 'LoginForm',
@@ -99,11 +100,20 @@
       },
       async handleLogin() {
         this.loading = true
-        await this.$store.dispatch('auth/login', this.loginForm)
+        try {
+          await this.$store.dispatch('auth/login', this.loginForm)
+          // check if user is authenticated ?
+          if (this.$store.getters['auth/isAuthenticated']) {
+            // redirect to dashboard
+            this.$router.push({name: 'home'})
+          }
+        } catch (err) {
+          showMsg(err)
+          console.log(err)
+        }
         this.loading = false
-        // redirect to dashboard
       }
-    }
+    },
   }
 </script>
 
