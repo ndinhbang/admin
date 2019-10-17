@@ -23,9 +23,14 @@ class AuthRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'email' => 'required|email|max:191',
-            'password' => 'required|string|min:8|max:191',
-        ];
+        if ($this->routeIs('login')) {
+            return [
+                'email' => 'bail|required|email|max:191',
+                'password' => 'bail|required|string|min:8|max:191',
+            ];
+        }
+
+        return [];
+
     }
 }

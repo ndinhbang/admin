@@ -81,7 +81,6 @@ class LoginController extends Controller
     public function login(AuthRequest $request)
     {
         $request->validated();
-
         // If the class is using the ThrottlesLogins trait, we can automatically throttle
         // the login attempts for this application. We'll key this by the username and
         // the IP address of the client making these requests into this application.
@@ -109,6 +108,7 @@ class LoginController extends Controller
                 'password'      => $request->input('password'),
                 'client_id'     => config('passport.password_client_id'),
                 'client_secret' => config('passport.password_client_secret'),
+                'scope'         => ''
             ]));
         }
 
@@ -121,6 +121,21 @@ class LoginController extends Controller
         throw ValidationException::withMessages([
             $this->username() => [trans('auth.failed')],
         ]);
+    }
+
+    public function refreshToken(AuthRequest $request)
+    {
+        $request->validated();
+        $psr7Request = (new DiactorosFactory())->createRequest($request);
+
+        // issue the access token
+        return $this->issueToken($psr7Request->withParsedBody([
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $request->input('refresh_token'),
+            'client_id'     => config('passport.password_client_id'),
+            'client_secret' => config('passport.password_client_secret'),
+            'scope'         => ''
+        ]));
     }
 
     /**
@@ -173,8 +188,9 @@ class LoginController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function logout(Request $request)
+    public function logout(AuthRequest $request)
     {
+        $request->validated();
         $this->guard()->logout();
 
 //        $request->session()->invalidate();

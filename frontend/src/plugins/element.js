@@ -1,17 +1,5 @@
 import Vue from 'vue'
-import {
-    Container,
-    Header,
-    Main,
-    Aside,
-    Row,
-    Col,
-    Button,
-    Form,
-    FormItem,
-    Input,
-    Tooltip
-} from 'element-ui'
+import {Aside, Button, Col, Container, Form, FormItem, Header, Input, Main, Row, Tooltip} from 'element-ui'
 import lang from 'element-ui/lib/locale/lang/en'
 import locale from 'element-ui/lib/locale'
 
@@ -28,4 +16,3 @@ Vue.use(Form)
 Vue.use(FormItem)
 Vue.use(Input)
 Vue.use(Tooltip)
-

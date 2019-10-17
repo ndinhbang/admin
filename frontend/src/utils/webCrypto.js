@@ -1,8 +1,8 @@
 import nacl from 'tweetnacl'
-import {arrayBufferToString, stringToArrayBuffer} from '@/utils/converters'
+import {arrayBufferToString, stringToArrayBuffer} from '../utils/converters'
 
 const cryptoLib = window.crypto || window.msCrypto
-const cryptoApi = cryptoLib.subtle || cryptoLib.webkitSubtle
+// const cryptoApi = cryptoLib.subtle || cryptoLib.webkitSubtle
 
 /**
  *
@@ -19,58 +19,22 @@ export function getRandomValues(size) {
 }
 
 /**
- *
- * Method to derive bit from passphrase and salt
- * @param    passphrase        {String}        default: "undefined" any passphrase string
- * @param    iterations        {Number}        default: "300000" number of iterations is 300 000 (Recommended)
- * @param    hash              {String}        default: "SHA-512" hash algorithm
- * @return   {Uint8Array}
+ * Generate secret-key used to encrypt/decrypt string
+ * @returns {Uint8Array}
  */
-export async function keyFromPassphrase(passphrase, iterations, hash) {
-    try {
-        iterations = (typeof iterations !== 'undefined') ? iterations : 300000
-        hash = (typeof hash !== 'undefined') ? hash : 'SHA-512'
-
-        // Uint8Array
-        const salt = getRandomValues(32)
-        // convert passphrase string to ArrayBuffer
-        const passphraseBuffer = stringToArrayBuffer(passphrase)
-        // construct base CryptoKey
-        const baseKey = await cryptoApi.importKey(
-            'raw',
-            passphraseBuffer,
-            {
-                name: 'PBKDF2'
-            },
-            false,
-            ['deriveBits']
-        )
-        const derivedBits = await cryptoApi.deriveBits(
-            {
-                name: 'PBKDF2',
-                salt: salt,
-                iterations: iterations,
-                hash: hash
-            },
-            baseKey,
-            256
-        )
-        // concat 2 buffer
-        const derived = new Uint8Array(derivedBits)
-        const combined = new Uint8Array(salt.length + derived.length)
-        combined.set(salt)
-        combined.set(derived, salt.length)
-
-        return combined
-    } catch (err) {
-        throw err
-    }
+export function generateCryptoKey() {
+    const salt = getRandomValues(12) // Uint8Array
+    const secretKey = getRandomValues(32) // Uint8Array
+    const combined = new Uint8Array(salt.length + secretKey.length)
+    combined.set(salt)
+    combined.set(secretKey, salt.length)
+    return combined
 }
 
 /**
  * Secret-key authenticated encryption
  * Implements xsalsa20-poly1305
- * @param   {Uint8Array} sharedKey   default: "undefined", salt(32 bytes) + cryptoKey
+ * @param   {Uint8Array} sharedKey
  * @param   {string}    stringified  default: "undefined", utf-8 string
  * @returns {Uint8Array}
  */
@@ -86,9 +50,9 @@ export function encrypt(sharedKey, stringified) {
 }
 
 /**
- *
- * @param {Uint8Array} sharedKey default: "undefined", salt(32 bytes) + cryptoKey
+ * @param {Uint8Array} sharedKey
  * @param {Uint8Array} encv
+ * @return {String}
  */
 export function decrypt(sharedKey, encv) {
     // get real encrypted messages

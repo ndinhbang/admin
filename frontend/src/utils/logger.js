@@ -1,5 +1,4 @@
 /*eslint no-console: ["off"] */
-import {VUE_APP_ENV} from '@/environment/index'
 
 /**
  * @description Logger class
@@ -9,34 +8,34 @@ import {VUE_APP_ENV} from '@/environment/index'
  * This can be extended with the help of adding Log level functionality
  */
 class Logger {
-    constructor() {
-        this.initLogger();
-    }
+  constructor() {
+    this.initLogger();
+  }
 
-    initLogger() {
-        /** Checking the environment */
-        // if (VUE_APP_ENV !== 'production') {
-        //     this.log = console.log.bind(console)
-        //     this.debug = console.debug.bind(console)
-        //     this.info = console.info.bind(console)
-        //     this.warn = console.warn.bind(console)
-        //     this.error = console.error.bind(console)
-        //     this.report = this.error
-        // } else {
-            /** In case of production replace the functions definition */
-            // this.log = this.debug = this.info = this.warn = this.error = () => {
-            // }
+  initLogger() {
+    /** Checking the environment */
+    // if (VUE_APP_ENV !== 'production') {
+    //     this.log = console.log.bind(console)
+    //     this.debug = console.debug.bind(console)
+    //     this.info = console.info.bind(console)
+    //     this.warn = console.warn.bind(console)
+    //     this.error = console.error.bind(console)
+    //     this.report = this.error
+    // } else {
+    /** In case of production replace the functions definition */
+    // this.log = this.debug = this.info = this.warn = this.error = () => {
+    // }
 
-            this.report = err => {
-                /** temp added to print in the console during production */
-                console.log(JSON.stringify(err)) //
-                /** TODO: API integration for logging to server or any custom logic in case of Production environment */
-            }
-        // }
+    this.report = async (err) => {
+      /** temp added to print in the console during production */
+      console.log(JSON.stringify(err)) //
+      /** TODO: API integration for logging to server or any custom logic in case of Production environment */
     }
+    // }
+  }
 }
 
 /** Creating the instance of logger */
 const logger = new Logger()
 
-export {logger};
+export default logger

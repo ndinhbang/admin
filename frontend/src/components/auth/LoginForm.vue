@@ -41,80 +41,82 @@
 </template>
 
 <script>
-  import {extend, ValidationObserver, ValidationProvider} from 'vee-validate'
-  import {email, min, required} from 'vee-validate/dist/rules'
-  import {showMsg} from '@/utils/helpers'
+    import {extend, ValidationObserver, ValidationProvider} from 'vee-validate'
+    import {email, min, required} from 'vee-validate/dist/rules'
+    import Auth from '../../api/auth'
+    import {showMsg} from '../../utils/helpers'
 
-  export default {
-    name: 'LoginForm',
-    components: {
-      ValidationObserver,
-      ValidationProvider
-    },
-    data() {
-      return {
-        loginForm: {
-          email: '',
-          password: ''
+    export default {
+        name: 'LoginForm',
+        components: {
+            ValidationObserver,
+            ValidationProvider
         },
-        capsTooltip: false,
-        loading: false
-      };
-    },
-    created() {
-      // Add the vee-validate rules
-      extend('required', {
-        ...required,
-        message(field) {
-          return `The ${field} is required`;
-        }
-      })
-      extend('email', {
-        ...email,
-        message(field) {
-          return `The ${field} is not an email`;
-        }
-      })
-      extend('min', {
-        ...min,
-        message(field, props) {
-          return `The ${field} can not be less than ${props.length} characters`;
-        }
-      })
-    },
-    mounted() {
-      if (this.loginForm.email === '') {
-        this.$refs.email.focus()
-      } else if (this.loginForm.password === '') {
-        this.$refs.password.focus()
-      }
-    },
-    methods: {
-      checkCapslock({shiftKey, key} = {}) {
-        if (key && key.length === 1) {
-          this.capsTooltip = shiftKey && (key >= 'a' && key <= 'z') || !shiftKey && (key >= 'A' && key <= 'Z');
-        }
-        if (key === 'CapsLock' && this.capsTooltip === true) {
-          this.capsTooltip = false
-        }
-      },
-      async handleLogin() {
-        this.loading = true
-        try {
-          await this.$store.dispatch('auth/login', this.loginForm)
-          // check if user is authenticated ?
-          if (this.$store.getters['auth/isAuthenticated']) {
-            // redirect to dashboard
-            this.$router.push({name: 'home'})
-          }
-        } catch (err) {
-          showMsg(err)
-          console.log(err)
-        }
-        this.loading = false
-      }
-    },
-  }
+        data() {
+            return {
+                loginForm: {
+                    email: '',
+                    password: ''
+                },
+                capsTooltip: false,
+                loading: false
+            };
+        },
+        created() {
+            // Add the vee-validate rules
+            extend('required', {
+                ...required,
+                message(field) {
+                    return `The ${field} is required`;
+                }
+            })
+            extend('email', {
+                ...email,
+                message(field) {
+                    return `The ${field} is not an email`;
+                }
+            })
+            extend('min', {
+                ...min,
+                message(field, props) {
+                    return `The ${field} can not be less than ${props.length} characters`;
+                }
+            })
+        },
+        mounted() {
+            if (this.loginForm.email === '') {
+                this.$refs.email.focus()
+            } else if (this.loginForm.password === '') {
+                this.$refs.password.focus()
+            }
+        },
+        methods: {
+            checkCapslock({shiftKey, key} = {}) {
+                if (key && key.length === 1) {
+                    this.capsTooltip = shiftKey && (key >= 'a' && key <= 'z') || !shiftKey && (key >= 'A' && key <= 'Z');
+                }
+                if (key === 'CapsLock' && this.capsTooltip === true) {
+                    this.capsTooltip = false
+                }
+            },
+            async handleLogin() {
+                this.loading = true
+                try {
+                    const {data} = await Auth.login(this.loginForm)
+                    await this.$store.dispatch('auth/login', data)
+                    const response = await Auth.getCurrentUser()
+                    // continue after done
+                    this.$store.dispatch('auth/setCurrentUser', response.data)
+                    // redirect to dashboard
+                    this.$router.push({name: 'home'})
+                } catch (err) {
+                    showMsg(err)
+                    console.log(err)
+                }
+                this.loading = false
+            }
+        },
+    }
 </script>
 
 <style lang="scss">

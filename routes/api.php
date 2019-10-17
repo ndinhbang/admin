@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Route;
  */
 
 
-Route::post('login', 'Auth\LoginController@login');
-Route::post('register', 'Auth\RegisterController@register');
+Route::post('login', 'Auth\LoginController@login')->name('login');
+Route::post('register', 'Auth\RegisterController@register')->name('register');
+Route::post('refresh-token', 'Auth\LoginController@refreshToken')->name('token.refresh');
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('logout', 'Auth\LoginController@logout')->name('logout');
