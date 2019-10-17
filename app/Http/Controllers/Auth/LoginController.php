@@ -9,8 +9,10 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passport\Http\Controllers\HandlesOAuthErrors;
+use Laravel\Passport\Passport;
 use Laravel\Passport\TokenRepository;
 use Lcobucci\JWT\Parser as JwtParser;
 use League\OAuth2\Server\AuthorizationServer;
@@ -96,6 +98,7 @@ class LoginController extends Controller
             // authenticated user
 //            $user = $this->guard()->user();
             // TODO: get all user 's abilities for using as scope for access token
+            // TODO: restrict access token by ip to limit the consequences of access token being stolen
 
             // create PSR-7 request from current request object
             // See: symfony/psr-http-message-bridge v1.2
@@ -185,16 +188,25 @@ class LoginController extends Controller
     /**
      * Log the user out of the application.
      *
-     * @param Request $request
+     * @param AuthRequest $request
      * @return Response
      */
     public function logout(AuthRequest $request)
     {
         $request->validated();
-        $this->guard()->logout();
+        // revoke the current access token being used by the user
+        $request->user()->token()->revoke();
+        // delete passport cookies on logout
+        if ($request->hasCookie(Passport::cookie())) {
+            Cookie::queue(Cookie::forget(Passport::cookie()));
+        }
+        // invalidate session if present
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+        }
 
-//        $request->session()->invalidate();
-
-//        return $this->loggedOut($request) ?: redirect('/');
+        return response()->json([
+            'message' => 'User is logged out'
+        ]);
     }
 }
