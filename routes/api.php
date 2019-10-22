@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
  */
 
 Route::post('login', 'AuthController@login')->name('login');
+Route::post('password', 'AuthController@password')->name('password');
 Route::post('refresh-token', 'AuthController@refreshToken')->name('token.refresh');
 
 Route::group(['middleware' => 'auth:api'], function () {
