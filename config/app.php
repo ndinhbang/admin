@@ -167,6 +167,7 @@ return [
          */
         Silber\Bouncer\BouncerServiceProvider::class,
         Barryvdh\Cors\ServiceProvider::class,
+        
         /*
          * Application Service Providers...
          */

@@ -168,7 +168,7 @@ class AuthController extends Controller
      */
     public function username()
     {
-        return 'email';
+        return 'phone';
     }
 
     /**

@@ -25,11 +25,19 @@ class AuthRequest extends FormRequest
     {
         if ($this->routeIs('login')) {
             return [
-                'email' => 'bail|required|email|max:191',
-                'password' => 'bail|required|string|min:8|max:191',
+                'phone' => 'bail|required|digits_between:10,11',
+                'password' => 'bail|required|string|min:6|max:191',
             ];
         }
 
         return [];
+    }
+
+    public function messages()
+    {
+        return [
+            'phone.required' => 'Số điện thoại bắt buộc phải nhập.',
+            'phone.digits_between' => 'Số điện thoại không hợp lệ.',
+        ];
     }
 }

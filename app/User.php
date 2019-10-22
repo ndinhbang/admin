@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'phone', 'email', 'password'
     ];
 
     /**
@@ -38,4 +38,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // change login way form `username` -> `phone`
+    public function findForPassport($identifier) {
+        return $this->where('phone', $identifier)->first();
+    }
 }
