@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+//use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,15 +14,14 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-
-Route::post('login', 'Auth\LoginController@login')->name('login');
-Route::post('register', 'Auth\RegisterController@register')->name('register');
-Route::post('refresh-token', 'Auth\LoginController@refreshToken')->name('token.refresh');
+Route::post('login', 'AuthController@login')->name('login');
+Route::post('refresh-token', 'AuthController@refreshToken')->name('token.refresh');
 
 Route::group(['middleware' => 'auth:api'], function () {
-    Route::post('logout', 'Auth\LoginController@logout')->name('logout');
+    Route::post('logout', 'AuthController@logout')->name('logout');
 
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        $user = $request->user();
+        return ['user' => $user, 'abilities' => $user->getAbilities()];
     });
 });

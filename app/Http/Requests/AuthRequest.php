@@ -31,6 +31,5 @@ class AuthRequest extends FormRequest
         }
 
         return [];
-
     }
 }

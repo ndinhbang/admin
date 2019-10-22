@@ -11,6 +11,9 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\User::class)->create();
+        // create a user
+        $user = factory(App\User::class)->create();
+        // assign superadmin role to user
+        Bouncer::assign('superadmin')->to($user);
     }
 }

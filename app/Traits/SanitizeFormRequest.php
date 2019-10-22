@@ -5,12 +5,13 @@ namespace App\Traits;
 trait SanitizeFormRequest
 {
     /**
-     * Sanitize data from the request before validation
+     * {@inheritdoc}
      *
      * @return void
      */
     protected function prepareForValidation()
     {
+        // Sanitize data from the request before validation
         $this->merge(app('binput')->all());
     }
 }
