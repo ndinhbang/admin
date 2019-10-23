@@ -14,15 +14,23 @@ use Illuminate\Http\Request;
 |
  */
 
-Route::post('login', 'AuthController@login')->name('login');
-Route::post('password', 'AuthController@password')->name('password');
-Route::post('refresh-token', 'AuthController@refreshToken')->name('token.refresh');
+Route::group(['prefix' => 'auth'], function () {
+    Route::post('/login', 'AuthController@login')->name('auth.login');
+    Route::post('/register', 'AuthController@register')->name('auth.register');
+    Route::get('/activate/{token}', 'AuthController@activate')->name('auth.activate');
+    Route::post('/password', 'AuthController@password')->name('auth.password');
+    Route::post('/validate-password-reset', 'AuthController@validatePasswordReset')->name('auth.validate-password');
+    Route::post('/reset', 'AuthController@reset')->name('auth.reset');
+    Route::post('/social/token', 'SocialAuthController@getToken')->name('auth.social.token');
 
-Route::group(['middleware' => 'auth:api'], function () {
-    Route::post('logout', 'AuthController@logout')->name('logout');
+    Route::post('/refresh-token', 'AuthController@refreshToken')->name('auth.refresh.token');
 
-    Route::get('/user', function (Request $request) {
-        $user = $request->user();
-        return ['user' => $user, 'abilities' => $user->getAbilities()];
+    Route::group(['middleware' => 'auth:api'], function () {
+        Route::post('logout', 'AuthController@logout')->name('logout');
+
+        Route::get('/user', function (Request $request) {
+            $user = $request->user();
+            return ['user' => $user, 'abilities' => $user->getAbilities()];
+        });
     });
 });

@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\Activated;
+use App\Notifications\Activation;
+use App\Notifications\PasswordReset;
+use App\Notifications\PasswordResetted;
+use Illuminate\Support\Facades\Hash;
+
 use App\Http\Requests\AuthRequest;
+use App\Http\Requests\PasswordRequest;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\Request;
@@ -205,7 +212,153 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'User is logged out'
+            'message' => 'Đăng xuất thành công!'
         ]);
+    }
+
+
+    public function register(Request $request)
+    {
+        $validation = Validator::make($request->all(), [
+            'first_name'            => 'required',
+            'last_name'             => 'required',
+            'email'                 => 'required|email|unique:users',
+            'password'              => 'required|min:6',
+            'password_confirmation' => 'required|same:password',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json(['message' => $validation->messages()->first()], 422);
+        }
+
+        $user = \App\User::create([
+            'email'    => request('email'),
+            'status'   => 'pending_activation',
+            'password' => bcrypt(request('password')),
+        ]);
+
+        $user->activation_token = generateUuid();
+        $user->save();
+        $profile             = new \App\Profile;
+        $profile->first_name = request('first_name');
+        $profile->last_name  = request('last_name');
+        $user->profile()->save($profile);
+
+        $user->notify(new Activation($user));
+
+        return response()->json(['message' => 'Bạn đã đăng ký thành công. Vui lòng kiểm tra email của bạn để kích hoạt!']);
+    }
+
+    public function activate($activation_token)
+    {
+        $user = \App\User::whereActivationToken($activation_token)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Mã thông báo kích hoạt không hợp lệ!'], 422);
+        }
+
+        if ($user->status == 'activated') {
+            return response()->json(['message' => 'Tài khoản của bạn đã được kích hoạt!'], 422);
+        }
+
+        if ($user->status != 'pending_activation') {
+            return response()->json(['message' => 'Mã thông báo kích hoạt không hợp lệ!'], 422);
+        }
+
+        $user->status = 'activated';
+        $user->save();
+        $user->notify(new Activated($user));
+
+        return response()->json(['message' => 'Tài khoản của bạn đã được kích hoạt!']);
+    }
+
+    public function password(AuthRequest $request)
+    {
+
+        $user = \App\User::wherePhone(request('phone'))->first();
+
+        if (!$user) {
+            return response()->json(['errors' => ['phone' => ['Số điện thoại không hợp lệ!']]], 422);
+        }
+
+        $token = generateUuid();
+        \DB::table('password_resets')->insert([
+            'email' => $user->email,
+            'token' => $token,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+        $user->notify(new PasswordReset($user, $token));
+
+        return response()->json(['message' => 'Chúng tôi đã gửi thông tin lấy lại mật khẩu vào địa chỉ email `'.$user->email.'` của bạn!']);
+    }
+
+    public function validatePasswordReset(AuthRequest $request)
+    {
+        $validate_password_request = \DB::table('password_resets')->where('token', '=', request('token'))->first();
+
+        if (!$validate_password_request) {
+            return response()->json(['message' => 'Mã thông báo đặt lại mật khẩu không hợp lệ!'], 422);
+        }
+
+        if (date("Y-m-d H:i:s", strtotime($validate_password_request->created_at . "+30 minutes")) < date('Y-m-d H:i:s')) {
+            return response()->json(['message' => 'Mã thông báo đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu!'], 422);
+        }
+
+        return response()->json(['status' => true, 'message' => 'ok', 'email' => $validate_password_request->email]);
+    }
+
+    public function reset(Request $request)
+    {
+
+        $user = \App\User::whereEmail(request('email'))->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Chúng tôi không thể tìm thấy bất kỳ người dùng nào với email này. Vui lòng thử lại!'], 422);
+        }
+
+        $validate_password_request = \DB::table('password_resets')->where('email', '=', request('email'))->where('token', '=', request('token'))->first();
+
+        if (!$validate_password_request) {
+            return response()->json(['message' => 'Mã thông báo đặt lại mật khẩu không hợp lệ!'], 422);
+        }
+
+        if (date("Y-m-d H:i:s", strtotime($validate_password_request->created_at . "+30 minutes")) < date('Y-m-d H:i:s')) {
+            return response()->json(['message' => 'Mã thông báo đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu!'], 422);
+        }
+
+        $user->password = Hash::make(request('new_password'));
+        $user->save();
+
+        $user->notify(new PasswordResetted($user));
+
+        return response()->json(['message' => 'Mật khẩu của bạn đã được thiết lập lại. Xin vui lòng đăng nhập lại!']);
+    }
+
+    public function changePassword(Request $request)
+    {
+        if (env('IS_DEMO')) {
+            return response()->json(['message' => 'Bạn không được phép thực hiện hành động này trong chế độ này.'], 422);
+        }
+
+        $validation = Validator::make($request->all(), [
+            'current_password'          => 'required',
+            'new_password'              => 'required|confirmed|different:current_password|min:6',
+            'new_password_confirmation' => 'required|same:new_password',
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json(['message' => $validation->messages()->first()], 422);
+        }
+
+        $user = JWTAuth::parseToken()->authenticate();
+
+        if (!\Hash::check(request('current_password'), $user->password)) {
+            return response()->json(['message' => 'Mặt khẩu cũ không khớp! Vui lòng thử lại!'], 422);
+        }
+
+        $user->password = bcrypt(request('new_password'));
+        $user->save();
+
+        return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
     }
 }

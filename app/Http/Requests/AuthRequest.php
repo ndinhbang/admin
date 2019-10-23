@@ -23,10 +23,29 @@ class AuthRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->routeIs('login')) {
+        if ($this->routeIs('auth.login')) {
             return [
                 'phone' => 'bail|required|digits_between:10,11',
-                'password' => 'bail|required|string|min:6|max:191',
+                'password' => 'bail|required|min:6|max:191',
+            ];
+        }
+
+        if ($this->routeIs('auth.password')) {
+            return [
+                'phone' => 'bail|required|digits_between:10,11',
+            ];
+        }
+        
+        if ($this->routeIs('auth.validate-password')) {
+            return [
+                'token' => 'bail|required',
+            ];
+        }
+        
+        if ($this->routeIs('auth.reset')) {
+            return [
+                'email' => 'bail|required|email|exists:users,email',
+                'password' => 'bail|required|min:6|max:191',
             ];
         }
 
@@ -38,6 +57,7 @@ class AuthRequest extends FormRequest
         return [
             'phone.required' => 'Số điện thoại bắt buộc phải nhập.',
             'phone.digits_between' => 'Số điện thoại không hợp lệ.',
+            'email.exists' => 'Tài khoản không tồn tại.',
         ];
     }
 }
