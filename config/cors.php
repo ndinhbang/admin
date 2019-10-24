@@ -14,7 +14,7 @@ return [
    
     'supportsCredentials' => false,
     'allowedOrigins' => ['http://localhost:8000'],
-    'allowedOriginsPatterns' => ['/localhost:\d/'],
+    'allowedOriginsPatterns' => ['/localhost:\d/','/[a-z\.]*goido\.local/'],
     'allowedHeaders' => ['Content-Type', 'X-Requested-With', 'Authorization'],
     'allowedMethods' => ['GET', 'POST', 'PUT','DELETE'],
     'exposedHeaders' => [],
