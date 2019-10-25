@@ -39,6 +39,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * The roles that belong to the user.
+     */
+    public function places()
+    {
+        return $this->belongsToMany('App\Models\Place')->withTimestamps();
+    }
+
     // change login way form `username` -> `phone`
     public function findForPassport($identifier) {
         return $this->where('phone', $identifier)->first();
