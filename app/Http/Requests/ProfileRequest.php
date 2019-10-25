@@ -30,6 +30,12 @@ class ProfileRequest extends FormRequest
                 'new_password_confirmation' => 'bail|required|same:new_password',
             ];
         }
+
+        if ($this->routeIs('profile.update-avatar')) {
+            return [
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
+            ];
+        }
     }
 
     public function messages()
