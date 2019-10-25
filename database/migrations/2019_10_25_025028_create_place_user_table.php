@@ -15,9 +15,11 @@ class CreatePlaceUserTable extends Migration
     {
         Schema::create('place_user', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('place_id');
-            $table->integer('user_id');
-            $table->timestamps();
+            $table->integer('place_id')->unsigned();
+            $table->integer('user_id')->unsigned()->index();
+//            $table->timestamps();
+
+            $table->unique(['place_id', 'user_id']);
         });
     }
 
