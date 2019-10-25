@@ -14,6 +14,13 @@ use Illuminate\Http\Request;
 |
  */
 
+
+Route::group(['prefix' => 'profile', 'middleware' => 'auth:api'], function () {
+    Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
+    Route::post('/update-profile', 'ProfileController@updateProfile')->name('profile.update-profile');
+    Route::post('/update-avatar', 'ProfileController@updateAvatar')->name('profile.update-avatar');
+});
+
 Route::group(['prefix' => 'auth'], function () {
     Route::post('/login', 'AuthController@login')->name('auth.login');
     Route::post('/register', 'AuthController@register')->name('auth.register');
@@ -33,8 +40,4 @@ Route::group(['prefix' => 'auth'], function () {
             return ['user' => $user, 'abilities' => $user->getAbilities()];
         });
     });
-});
-
-Route::group(['prefix' => 'profile', 'middleware' => 'auth:api'], function () {
-    Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
 });
