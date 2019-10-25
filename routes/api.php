@@ -34,3 +34,7 @@ Route::group(['prefix' => 'auth'], function () {
         });
     });
 });
+
+Route::group(['prefix' => 'profile', 'middleware' => 'auth:api'], function () {
+    Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
+});

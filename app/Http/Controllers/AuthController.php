@@ -333,32 +333,4 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Mật khẩu của bạn đã được thiết lập lại. Xin vui lòng đăng nhập lại!']);
     }
-
-    public function changePassword(Request $request)
-    {
-        if (env('IS_DEMO')) {
-            return response()->json(['message' => 'Bạn không được phép thực hiện hành động này trong chế độ này.'], 422);
-        }
-
-        $validation = Validator::make($request->all(), [
-            'current_password'          => 'required',
-            'new_password'              => 'required|confirmed|different:current_password|min:6',
-            'new_password_confirmation' => 'required|same:new_password',
-        ]);
-
-        if ($validation->fails()) {
-            return response()->json(['message' => $validation->messages()->first()], 422);
-        }
-
-        $user = JWTAuth::parseToken()->authenticate();
-
-        if (!\Hash::check(request('current_password'), $user->password)) {
-            return response()->json(['message' => 'Mặt khẩu cũ không khớp! Vui lòng thử lại!'], 422);
-        }
-
-        $user->password = bcrypt(request('new_password'));
-        $user->save();
-
-        return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
-    }
 }
