@@ -32,11 +32,11 @@ Route::group(['prefix' => 'auth'], function () {
 
         Route::get('/user', function (Request $request) {
             $user = $request->user();
-            return ['user' => $user, 'abilities' => $user->getAbilities()];
+            return ['user' => $user, 'abilities' => $user->getAbilities(), 'roles' => $user->getRoles()];
         });
     });
 });
-
+    
 Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['prefix' => 'profile'], function () {
@@ -47,7 +47,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['prefix' => 'place'], function () {
         Route::get('/my', 'PlaceController@getMy')->name('place.my');
+        Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
     });
-    
+
     Route::resource('place', 'PlaceController');
+    Route::resource('employee', 'EmployeeController');
+    Route::resource('users', 'EmployeeController');
 });

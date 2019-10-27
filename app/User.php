@@ -44,7 +44,7 @@ class User extends Authenticatable
      */
     public function places()
     {
-        return $this->belongsToMany('App\Models\Place')->withTimestamps();
+        return $this->belongsToMany('App\Models\Place');
     }
 
     // change login way form `username` -> `phone`

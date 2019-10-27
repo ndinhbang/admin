@@ -10,11 +10,13 @@ use Validator;
 
 class PlaceController extends Controller
 {
+
+    protected $place_path = 'medias/places/';
+
     public function getMy(Request $request)
     {
         $user = $request->user();
         $places = $user->places;
-        dump($places);
         return $places->toJson();
     }
 
@@ -34,7 +36,6 @@ class PlaceController extends Controller
     public function store(PlaceRequest $request)
     {
         $user = $request->user();
-
         $place = null;
 
         \DB::transaction(function () use ($user, &$place) {
@@ -142,9 +143,6 @@ class PlaceController extends Controller
             // $this->data['u']->save();
         }, 5);
 
-
-        $netrooms = $user->netrooms;
-
         return response()->json(['message' => 'Thêm thông tin cửa hàng thành công!', 'place' => $place, 'places' => $user->places]);
     }
 
@@ -186,76 +184,58 @@ class PlaceController extends Controller
         // return response()->json(compact('netroom'));
     }
 
-    public function update(Request $request, $id)
+    public function update(PlaceRequest $request, $id)
     {
 
-        // $netroom = \App\Netroom::find($id);
+        $user = $request->user();
+        $place = \App\Models\Place::find($id);
 
-        // if (!$netroom) {
-        //     return response()->json(['message' => 'Couldnot find netroom!']);
-        // }
+        if (!$place) {
+            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+        }
 
-        // $validation = Validator::make($request->all(), [
-        //     'title'   => 'required|min:3',
-        //     'address' => 'required|min:10',
-        //     'mobile'  => 'required|digits_between:9,11',
-        // ]);
+        \DB::transaction(function () use ($user, &$place) {
+            $place->title    = request()->title;
 
-        // if ($validation->fails()) {
-        //     return response()->json(['message' => $validation->messages()->first()], 422);
-        // }
+            $place->code     = Str::slug(request()->title);
+            $place->address  = request()->address;
 
-        // // return response()->json(request()->all());
+            $place->contact_name  = request()->contact_name;
+            $place->contact_phone  = request()->contact_phone;
+            $place->contact_email  = request()->contact_email;
 
-        // $netroom->title       = request()->title;
-        // $netroom->address     = request()->address;
-        // $netroom->mobile      = request()->mobile;
-        // $netroom->description = request()->description;
+            $place->save();
+        }, 5);
 
-        // if ($this->data['u']->admin) {
-        //     $netroom->status       = request()->status;
-        //     $netroom->expired_date = request()->expired_date;
-        // }
-        // $netroom->save();
+        return response()->json(['message' => 'Cập nhật thông tin cửa hàng thành công!', 'place' => $place, 'places' => $user->places]);
 
-        // $user = \JWTAuth::parseToken()->authenticate();
-
-        // $netrooms = \App\Netroom::whereUserId($user->id)->get();
-
-        // return response()->json(['message' => 'Cập nhật thành công!', 'netroom' => $netroom, 'netrooms' => $netrooms]);
     }
 
-    public function updateUserLevel(Request $request)
+    public function updateLogo(PlaceRequest $request)
     {
+        $user = $request->user();
+        $place = \App\Models\Place::find(request()->place_id);
 
-        // $id     = request()->id;
-        // $userId = request()->user_id;
-        // $level  = request()->level;
-        // $remove = request()->remove;
-        // $user   = \App\User::find($userId);
+        if (!$place) {
+            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+        }
 
-        // // check exist netroom user
-        // $existsLevel = $user->netrooms()->where('netroom_user.netroom_id', $id)->where('netroom_user.level', $level)->first();
+        if ($place->logo && \File::exists($this->place_path . $place->logo)) {
+            \File::delete($this->place_path . $place->logo);
+        }
 
-        // // return response()->json(compact('existsLevel'));
+        $extension = $request->file('logo')->getClientOriginalExtension();
+        $filename  = $place->id.'-'.$place->code. "-goido.net.";
 
-        // if ($remove) {
-        //     // remove all level
-        //     $user->netrooms()->detach($id);
-        // } else {
-        //     if ($level && $existsLevel) {
-        //         // update level
-        //         $user->netrooms()->updateExistingPivot($id, ['level' => $level, 'active' => 1]);
-        //     } elseif ($level) {
-        //         // remove all level
-        //         $user->netrooms()->detach($id);
-        //         // add level
-        //         $user->netrooms()->attach($id, ['level' => $level, 'active' => 1]);
-        //     }
-        // }
+        $img       = \Image::make($request->file('logo'));
 
-        // $userNetrooms = $user->netrooms;
+        $filePath = $this->place_path . $filename . $extension;
+        $img->fit(200, 200);
+        $img->save($filePath);
 
-        // return response()->json(compact('userNetrooms'));
+        $place->logo = $filename . $extension;
+        $place->save();
+
+        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'place' => $place]);
     }
 }

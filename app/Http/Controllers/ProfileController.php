@@ -10,7 +10,7 @@ use App\Http\Requests\ProfileRequest;
 class ProfileController extends Controller
 {
 
-    protected $avatar_path = 'images/avatas/';
+    protected $avatar_path = 'medias/avatars/';
 
     public function changePassword(ProfileRequest $request)
     {
@@ -40,19 +40,20 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->avatar && \File::exists($this->avatar_path . $profile->avatar)) {
+        if ($user->avatar && \File::exists($this->avatar_path . $user->avatar)) {
             \File::delete($this->avatar_path . $user->avatar);
         }
 
         $extension = $request->file('avatar')->getClientOriginalExtension();
-        $filename  = uniqid();
-        $file      = $request->file('avatar')->move($this->avatar_path, $filename . "." . $extension);
-        $img       = \Image::make($this->avatar_path . $filename . "." . $extension);
-        $img->resize(200, null, function ($constraint) {
-            $constraint->aspectRatio();
-        });
-        $img->save($this->avatar_path . $filename . "." . $extension);
-        $user->avatar = $filename . "." . $extension;
+        $filename  = $user->id.'-'.$user->name. "-goido.net.";
+
+        $img       = \Image::make($request->file('avatar'));
+
+        $filePath = $this->avatar_path . $filename . $extension;
+        $img->fit(200, 200);
+        $img->save($filePath);
+
+        $user->avatar = $filename . $extension;
         $user->save();
 
         return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'user' => $user]);

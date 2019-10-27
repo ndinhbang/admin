@@ -17,6 +17,7 @@ class CreatePlacesTable extends Migration
             $table->bigIncrements('id');
             $table->string('title', 191)->nullable();
             $table->string('code',64)->unique();
+            $table->string('logo', 255)->nullable();
             $table->string('contact_name', 191)->nullable();
             $table->string('contact_phone', 191)->nullable();
             $table->string('contact_email', 191)->nullable();
