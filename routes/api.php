@@ -49,8 +49,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('/my', 'PlaceController@getMy')->name('place.my');
         Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
     });
-
     Route::resource('place', 'PlaceController');
+
+
+    Route::group(['prefix' => 'employee'], function () {
+        Route::post('/update-avatar', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
+    });
     Route::resource('employee', 'EmployeeController');
+
+
     Route::resource('users', 'EmployeeController');
 });
