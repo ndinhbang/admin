@@ -42,4 +42,13 @@ class Place extends Model
     //     return $this->hasMany('Spatie\Permission\Models\Role');
     // }
 
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 }

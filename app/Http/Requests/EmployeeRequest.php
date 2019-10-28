@@ -36,9 +36,9 @@ class EmployeeRequest extends FormRequest
         if ($this->routeIs('employee.update')) {
             return [
                 'display_name' => 'bail|required',
-                'name' => 'bail|required|unique:users,name,'.$this->id,
-                'phone' => 'bail|min:10|max:11|unique:users,phone,'.$this->id,
-                'email' => 'bail|unique:users,email,'.$this->id,
+                'name' => 'bail|required|unique:users,name,'.$this->uuid.',uuid',
+                'phone' => 'bail|min:10|max:11|unique:users,phone,'.$this->uuid.',uuid',
+                'email' => 'bail|unique:users,email,'.$this->uuid.',uuid',
             ];
         }
 
