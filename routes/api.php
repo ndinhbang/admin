@@ -23,7 +23,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/password', 'AuthController@password')->name('auth.password');
     Route::post('/validate-password-reset', 'AuthController@validatePasswordReset')->name('auth.validate-password');
     Route::post('/reset', 'AuthController@reset')->name('auth.reset');
-    Route::post('/social/token', 'SocialAuthController@getToken')->name('auth.social.token');
+    // Route::post('/social/token', 'SocialAuthController@getToken')->name('auth.social.token');
 
     Route::post('/refresh-token', 'AuthController@refreshToken')->name('auth.refresh.token');
 

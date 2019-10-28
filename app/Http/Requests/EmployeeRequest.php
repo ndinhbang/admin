@@ -23,11 +23,13 @@ class EmployeeRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->routeIs('employee.update-info')) {
+        if ($this->routeIs('employee.store')) {
             return [
-                'current_password' => 'bail|required',
-                'new_password' => 'bail|required|different:current_password|min:6',
-                'new_password_confirmation' => 'bail|required|same:new_password',
+                'display_name' => 'bail|required',
+                'name' => 'bail|required|unique:users',
+                'phone' => 'bail|unique:users',
+                'email' => 'bail|unique:users',
+                'password' => 'bail|required',
             ];
         }
 
@@ -36,14 +38,5 @@ class EmployeeRequest extends FormRequest
                 'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
             ];
         }
-    }
-
-    public function messages()
-    {
-        return [
-            'current_password.required' => 'Số điện thoại bắt buộc phải nhập.',
-            'new_password.different' => 'Mật khẩu mới cần phải khác với mật khẩu cũ',
-            'new_password_confirmation.same' => 'Xác nhận cần phải giống với Mật khẩu mới',
-        ];
     }
 }

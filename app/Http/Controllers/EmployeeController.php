@@ -25,7 +25,7 @@ class EmployeeController extends Controller
         return $users->toJson();
     }
 
-    public function changePassword(ProfileRequest $request)
+    public function changePassword(EmployeeRequest $request)
     {
         $user = $request->user();
 
@@ -39,7 +39,32 @@ class EmployeeController extends Controller
         return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
     }
 
-    public function update(Request $request, $id)
+    public function store(EmployeeRequest $request)
+    {
+        $user = $request->user();
+
+        $place = \App\Models\Place::find(request()->place_id);
+
+        if (!$place) {
+            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+        }
+
+        $employee = new \App\User;
+        $employee->display_name = request()->display_name;
+        $employee->name = request()->name;
+        $employee->email = request()->email;
+        $employee->phone = request()->phone;
+        $employee->password = \Hash::make(request()->password);
+
+        $employee->save();
+
+        // thêm nhân viên vào cửa hàng
+        $employee->places()->attach($place->id);
+
+        return response()->json(['message' => 'Thêm nhân viên thành công!', 'employee' => $employee]);
+    }
+
+    public function update(EmployeeRequest $request, $id)
     {
         $user = $request->user();
 
@@ -50,6 +75,12 @@ class EmployeeController extends Controller
         }
 
         $employee->display_name = request('display_name');
+
+        if(request()->password)
+        {
+            $employee->password = \Hash::make(request()->password);
+        }
+        
         $employee->save();
 
         return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
