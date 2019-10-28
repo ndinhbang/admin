@@ -75,6 +75,9 @@ class EmployeeController extends Controller
         }
 
         $employee->display_name = request('display_name');
+        $employee->name = request('name');
+        $employee->email = request('email');
+        $employee->phone = request('phone');
 
         if(request()->password)
         {
@@ -86,16 +89,18 @@ class EmployeeController extends Controller
         return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
     }
 
-    public function updateAvatar(EmployeeRequest $request)
+    public function updateAvatar(EmployeeRequest $request, $id)
     {
         $user = $request->user();
 
-        if ($user->avatar && \File::exists($this->avatar_path . $user->avatar)) {
-            \File::delete($this->avatar_path . $user->avatar);
+        $employee = \App\User::find($id);
+
+        if (!$employee) {
+            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin nhân viên!']]], 422);
         }
 
         $extension = $request->file('avatar')->getClientOriginalExtension();
-        $filename  = $user->id.'-'.$user->name. "-goido.net.";
+        $filename  = $employee->id.'-'.$employee->name. "-goido.net.";
 
         $img       = \Image::make($request->file('avatar'));
 
@@ -103,9 +108,9 @@ class EmployeeController extends Controller
         $img->fit(200, 200);
         $img->save($filePath);
 
-        $user->avatar = $filename . $extension;
-        $user->save();
+        $employee->avatar = $filename . $extension;
+        $employee->save();
 
-        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'user' => $user]);
+        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'employee' => $employee]);
     }
 }

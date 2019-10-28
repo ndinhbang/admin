@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 class ProfileRequest extends FormRequest
 {
@@ -21,7 +22,7 @@ class ProfileRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(Request $request)
     {
         if ($this->routeIs('profile.change-password')) {
             return [
@@ -33,9 +34,20 @@ class ProfileRequest extends FormRequest
 
         if ($this->routeIs('profile.update-avatar')) {
             return [
-                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             ];
         }
+
+        if ($this->routeIs('profile.update-profile')) {
+            return [
+                'display_name' => 'bail|required',
+                'name' => 'bail|required|unique:users,name,'.$request->user()->id,
+                'phone' => 'bail|min:10|max:11|unique:users,phone,'.$request->user()->id,
+                'email' => 'bail|unique:users,email,'.$request->user()->id,
+            ];
+        }
+
+        return [];
     }
 
     public function messages()

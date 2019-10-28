@@ -31,12 +31,20 @@ class PlaceRequest extends FormRequest
             ];
         }
 
+        if ($this->routeIs('place.update')) {
+            return [
+                'title'   => 'required',
+                'code'   => 'required|unique:places,code,'.$this->id,
+                'address' => 'required'
+            ];
+        }
 
         if ($this->routeIs('place.update-logo')) {
             return [
                 'logo' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
             ];
         }
+
         return [];
     }
 }
