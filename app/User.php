@@ -52,4 +52,14 @@ class User extends Authenticatable
         return $this->orWhere('name', $identifier)->orWhere('email', $identifier)->orWhere('phone', $identifier)
             ->first();
     }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 }

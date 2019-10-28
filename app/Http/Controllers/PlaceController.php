@@ -40,9 +40,10 @@ class PlaceController extends Controller
 
         \DB::transaction(function () use ($user, &$place) {
             $place           = new \App\Models\Place;
+            $place->uuid    = $this->nanoId();
             $place->title    = request()->title;
 
-            $place->code     = Str::slug(request()->title);
+            $place->code     = request()->code;
             $place->address  = request()->address;
 
             $place->contact_name  = $user->display_name;

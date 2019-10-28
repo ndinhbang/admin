@@ -53,7 +53,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 
     Route::group(['prefix' => 'employee'], function () {
-        Route::post('/update-avatar/{id}', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
+        Route::post('/update-avatar/{uuid}', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
     });
     Route::resource('employee', 'EmployeeController');
 

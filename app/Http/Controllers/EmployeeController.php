@@ -25,20 +25,6 @@ class EmployeeController extends Controller
         return $users->toJson();
     }
 
-    public function changePassword(EmployeeRequest $request)
-    {
-        $user = $request->user();
-
-        if (!Hash::check(request('current_password'), $user->password)) {
-            return response()->json(['errors' => ['current_password' => ['Mặt khẩu cũ không khớp! Vui lòng thử lại!']]], 422);
-        }
-
-        $user->password = Hash::make(request('new_password'));
-        $user->save();
-
-        return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
-    }
-
     public function store(EmployeeRequest $request)
     {
         $user = $request->user();
@@ -50,6 +36,7 @@ class EmployeeController extends Controller
         }
 
         $employee = new \App\User;
+        $employee->uuid = $this->nanoId();
         $employee->display_name = request()->display_name;
         $employee->name = request()->name;
         $employee->email = request()->email;
@@ -64,16 +51,8 @@ class EmployeeController extends Controller
         return response()->json(['message' => 'Thêm nhân viên thành công!', 'employee' => $employee]);
     }
 
-    public function update(EmployeeRequest $request, $id)
+    public function update(EmployeeRequest $request, \App\User $employee)
     {
-        $user = $request->user();
-
-        $employee = \App\User::find($id);
-
-        if (!$employee) {
-            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin nhân viên!']]], 422);
-        }
-
         $employee->display_name = request('display_name');
         $employee->name = request('name');
         $employee->email = request('email');
@@ -89,18 +68,16 @@ class EmployeeController extends Controller
         return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
     }
 
-    public function updateAvatar(EmployeeRequest $request, $id)
+    public function updateAvatar(EmployeeRequest $request, $uuid)
     {
-        $user = $request->user();
-
-        $employee = \App\User::find($id);
+        $employee = \App\User::where('uuid', $uuid)->first();
 
         if (!$employee) {
             return response()->json(['errors' => ['' => ['Không tìm thấy thông tin nhân viên!']]], 422);
         }
 
         $extension = $request->file('avatar')->getClientOriginalExtension();
-        $filename  = $employee->id.'-'.$employee->name. "-goido.net.";
+        $filename  = $employee->uuid.'-'.$employee->name. "-goido.net.";
 
         $img       = \Image::make($request->file('avatar'));
 
