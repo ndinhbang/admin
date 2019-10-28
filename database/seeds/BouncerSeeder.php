@@ -19,7 +19,7 @@ class BouncerSeeder extends Seeder
                 Bouncer::role()->firstOrCreate(Arr::only($role, ['name', 'title', 'level']));
             }
 
-            // Create default abilities
+            // Create default root abilities
             $abilities = config('default.permissions.root');
             foreach ($abilities as $ability) {
 //                foreach ($grouped as $ability) {
