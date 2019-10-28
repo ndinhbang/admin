@@ -33,7 +33,7 @@ class BouncerSeeder extends Seeder
             }
 
             // superadmin role can do everything
-            Bouncer::allow('superadmin')->everything();
+//            Bouncer::allow('superadmin')->everything();
         });
     }
 }

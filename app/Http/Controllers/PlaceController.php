@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Place;
 use App\Http\Requests\PlaceRequest;
+use App\Models\Place;
+use Bouncer;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Validator;
 
 class PlaceController extends Controller
 {
@@ -27,7 +28,7 @@ class PlaceController extends Controller
         // if (!$this->data['u']->admin) {
         //     $netrooms->join('netroom_user', 'netroom_user.netroom_id', '=', 'netrooms.id')->where('netroom_user.user_id', $this->data['u']->id);
         // }
-        
+
         // $netrooms->orderBy('netrooms.'.request('sortBy', 'created_at'), 'netrooms.'.request('order', 'desc'));
 
         // return $netrooms->paginate((int) request('pageLength'));
@@ -35,6 +36,8 @@ class PlaceController extends Controller
 
     public function store(PlaceRequest $request)
     {
+        $request->validated();
+
         $user = $request->user();
         $place = null;
 
@@ -54,97 +57,32 @@ class PlaceController extends Controller
 
             $place->save();
 
-            // add default roles
-            // foreach (config('demo.roles') as $slug => $r) {
-
-            //     $role = new Role;
-            //     $role->name = $slug.'.'.$netroom->id;
-            //     $role->display_name = $r['display_name'];
-            //     $role->netroom_id = $netroom->id;
-            //     $role->save();
-
-            //     switch ($role->name) {
-            //         case 'manager'.'.'.$netroom->id:
-            //             $role->givePermissionTo(Permission::all());
-            //             $user->assignRole('manager'.'.'.$netroom->id);
-            //             break;
-
-            //         case 'cashier'.'.'.$netroom->id:
-            //             $role->givePermissionTo(config('demo.roles')['cashier']['permissions']);
-            //             break;
-
-            //         case 'waiter'.'.'.$netroom->id:
-            //             $role->givePermissionTo(config('demo.roles')['waiter']['permissions']);
-            //             break;
-
-            //         case 'chef'.'.'.$netroom->id:
-            //             $role->givePermissionTo(config('demo.roles')['chef']['permissions']);
-            //             break;
-
-            //         default:
-            //             # code...
-            //             break;
-            //     }
-            // }
-
-            // add order status records for netroom
-            // $defaultStates = config('order.states');
-
-            // $managerRole = Role::where('name', 'manager'.'.'.$netroom->id)->where('guard_name', 'api')->first();
-
-            // $stateDatas = [];
-            // foreach ($defaultStates as $status) {
-            //     $data = $status;
-            //     $data['netroom_id'] = $netroom->id;
-            //     $data['levels'] = json_encode([$managerRole->toArray()]);
-            //     $data['created_at'] = Carbon::now();
-            //     $data['updated_at'] = Carbon::now();
-            //     $stateDatas[] = $data;
-            // }
-
-            // \App\OrderState::insert($stateDatas);
-
-            // $suppliesArr = [];
-
-            // // init supplies
-            // foreach (config('demo.supplies') as $key => $s) {
-            //     $supply = new \App\Supply;
-            //     $supply->name = $s['name'];
-            //     $supply->unit_id = $s['unit_id'];
-            //     $supply->netroom_id = $netroom->id;
-            //     $supply->save();
-
-            //     $suppliesArr[$supply->name] = $supply->id;
-            // }
-
-            // // init products
-            // foreach (config('demo.products') as $key => $s) {
-            //     $product = new \App\Product;
-            //     $product->name = $s['name'];
-            //     $product->price = $s['price'];
-            //     $product->thumbnail = $s['thumbnail'];
-            //     $product->category_id = $s['category_id'];
-            //     $product->netroom_id = $netroom->id;
-            //     $product->status = 1;
-            //     $product->save();
-
-            //     if(isset($s['supplies']) && count($s['supplies'])) {
-            //         foreach ($s['supplies'] as $key => $ps) {
-            //             if(isset($ps['supply_name']) && isset($suppliesArr[$ps['supply_name']]) && $suppliesArr[$ps['supply_name']])
-            //                 $product->supplies()->attach($suppliesArr[$ps['supply_name']], ['quantity' => (int) $ps['quantity']]);
-            //         }
-            //     }
-            // }
+            // scope to place id
+            Bouncer::scope()->to($place->id);
+            // asign owner for place
+            Bouncer::allow($user)->toOwn($place);
+            // give user abilities with this place
+            $abilities = config('default.permissions.tenants');
+            $assignedAbilities = [];
+            foreach ($abilities as $ability) {
+//                foreach ($grouped as $ability) {
+                Bouncer::ability()->firstOrCreate(Arr::only($ability, ['name', 'title']));
+                Bouncer::allow($user)->to($ability['name']);
+//                }
+            }
 
             // attach manager role
             $user->places()->attach($place->id);
-
-            // set active netroom
-            // $this->data['u']->place_id = $netroom->id;
-            // $this->data['u']->save();
         }, 5);
 
-        return response()->json(['message' => 'Thêm thông tin cửa hàng thành công!', 'place' => $place, 'places' => $user->places]);
+//        }
+
+
+        return response()->json([
+            'message' => 'Thêm thông tin cửa hàng thành công!',
+            'place'   => $place,
+            'places'  => $user->places,
+        ]);
     }
 
     public function destroy(Request $request, $id)
@@ -196,19 +134,23 @@ class PlaceController extends Controller
         }
 
         \DB::transaction(function () use ($user, &$place) {
-            $place->title    = request()->title;
+            $place->title = request()->title;
 
-            $place->code     = request()->code;
-            $place->address  = request()->address;
+            $place->code = request()->code;
+            $place->address = request()->address;
 
-            $place->contact_name  = request()->contact_name;
-            $place->contact_phone  = request()->contact_phone;
-            $place->contact_email  = request()->contact_email;
+            $place->contact_name = request()->contact_name;
+            $place->contact_phone = request()->contact_phone;
+            $place->contact_email = request()->contact_email;
 
             $place->save();
         }, 5);
 
-        return response()->json(['message' => 'Cập nhật thông tin cửa hàng thành công!', 'place' => $place, 'places' => $user->places]);
+        return response()->json([
+            'message' => 'Cập nhật thông tin cửa hàng thành công!',
+            'place'   => $place,
+            'places'  => $user->places,
+        ]);
 
     }
 
@@ -226,9 +168,9 @@ class PlaceController extends Controller
         }
 
         $extension = $request->file('logo')->getClientOriginalExtension();
-        $filename  = $place->id.'-'.$place->code. "-goido.net.";
+        $filename = $place->id . '-' . $place->code . "-goido.net.";
 
-        $img       = \Image::make($request->file('logo'));
+        $img = \Image::make($request->file('logo'));
 
         $filePath = $this->place_path . $filename . $extension;
         $img->fit(200, 200);

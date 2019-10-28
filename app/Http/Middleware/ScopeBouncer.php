@@ -34,12 +34,9 @@ class ScopeBouncer
      */
     public function handle($request, Closure $next)
     {
-        // Here you may use whatever mechanism you use in your app
-        // to determine the current tenant. To demonstrate, the
-        // $tenantId is set here from the user's account_id.
-        $tenantId = $request->user()->account_id;
-
-        $this->bouncer->scope()->to($tenantId);
+        if (!is_null($tenantId = $request->header('X-Place-Id'))) {
+            $this->bouncer->scope()->to($tenantId);
+        }
 
         return $next($request);
     }

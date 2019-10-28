@@ -30,10 +30,7 @@ Route::group(['prefix' => 'auth'], function () {
     Route::group(['middleware' => 'auth:api'], function () {
         Route::post('logout', 'AuthController@logout')->name('logout');
 
-        Route::get('/user', function (Request $request) {
-            $user = $request->user();
-            return ['user' => $user, 'abilities' => $user->getAbilities(), 'roles' => $user->getRoles()];
-        });
+        Route::get('/user', 'UserController@current')->name('user.current');
     });
 });
     

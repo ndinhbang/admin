@@ -2,10 +2,9 @@
 
 namespace App;
 
-use Laravel\Passport\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\HasApiTokens;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
 
 class User extends Authenticatable
@@ -18,7 +17,11 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'phone', 'email', 'password'
+        'uuid',
+        'name',
+        'phone',
+        'email',
+        'password',
     ];
 
     /**
@@ -27,7 +30,8 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     /**
@@ -48,8 +52,11 @@ class User extends Authenticatable
     }
 
     // change login way form `username` -> `phone`
-    public function findForPassport($identifier) {
-        return $this->orWhere('name', $identifier)->orWhere('email', $identifier)->orWhere('phone', $identifier)
+    public function findForPassport($identifier)
+    {
+        return $this->orWhere('name', $identifier)
+            ->orWhere('email', $identifier)
+            ->orWhere('phone', $identifier)
             ->first();
     }
 

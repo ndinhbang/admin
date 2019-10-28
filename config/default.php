@@ -37,13 +37,24 @@ return [
             'title' => 'Nv Bếp',
             'level' => 10,
         ],
+        'shipper'       => [
+            'name'  => 'sipper',
+            'title' => 'Nv giao hàng',
+            'level' => 5,
+        ],
     ],
     'permissions' => [
         // default permission for a tenant
+        // <action>.<subject>
         'tenants' => [
             'tenant--view.dashboard'  => [
                 'name'  => 'tenant--view.dashboard',
                 'title' => 'Xem tổng quan',
+                'roles' => ['admin', 'superuser', 'boss'],
+            ],
+            'tenant--manage.places' => [
+                'name'  => 'tenant--manage.places',
+                'title' => 'Thiết lập',
                 'roles' => ['admin', 'superuser', 'boss'],
             ],
             'tenant--manage.settings' => [
