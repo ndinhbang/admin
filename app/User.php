@@ -49,9 +49,7 @@ class User extends Authenticatable
 
     // change login way form `username` -> `phone`
     public function findForPassport($identifier) {
-        dd($identifier);
-        return $this->orWhere('phone', $identifier)
-            ->orWhere('email', $identifier)
+        return $this->orWhere('name', $identifier)->orWhere('email', $identifier)->orWhere('phone', $identifier)
             ->first();
     }
 }
