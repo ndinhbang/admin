@@ -26,11 +26,14 @@ class ProfileController extends Controller
         return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(ProfileRequest $request)
     {
         $user = $request->user();
 
         $user->display_name = request('display_name');
+        $user->name = request('name');
+        $user->phone = request('phone');
+        $user->email = request('email');
         $user->save();
 
         return response()->json(['message' => 'Cập nhật thông tin tài khoản thành công!', 'user' => $user]);

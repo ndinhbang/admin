@@ -27,16 +27,26 @@ class EmployeeRequest extends FormRequest
             return [
                 'display_name' => 'bail|required',
                 'name' => 'bail|required|unique:users',
-                'phone' => 'bail|unique:users',
+                'phone' => 'bail|unique:users|min:10|max:11',
                 'email' => 'bail|unique:users',
                 'password' => 'bail|required',
             ];
         }
 
-        if ($this->routeIs('employee.update-avatar')) {
+        if ($this->routeIs('employee.update')) {
             return [
-                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
+                'display_name' => 'bail|required',
+                'name' => 'bail|required|unique:users,name,'.$this->id,
+                'phone' => 'bail|min:10|max:11|unique:users,phone,'.$this->id,
+                'email' => 'bail|unique:users,email,'.$this->id,
             ];
         }
+
+        if ($this->routeIs('employee.update-avatar')) {
+            return [
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ];
+        }
+        return [];
     }
 }
