@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
-class PlaceScope implements Scope
+class PlaceM2MScope implements Scope
 {
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -18,6 +18,10 @@ class PlaceScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->where($model->getTable() . '.place_id', request()->place->id ?? 0);
+        if (!is_null($place = (request()->place ?? null))) {
+            $builder->whereHas('places', function ($query) use ($place) {
+                $query->where('places.id', $place->id);
+            });
+        }
     }
 }
