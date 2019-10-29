@@ -41,7 +41,7 @@ class PlaceController extends Controller
         $user = $request->user();
         $place = null;
 
-        \DB::transaction(function () use ($user, &$place) {
+        \DB::transaction(function () use ($user, &$place, $request) {
             $place           = new Place;
             $place->uuid    = $this->nanoId();
             $place->title    = $request->title;

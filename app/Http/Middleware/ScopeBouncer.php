@@ -48,7 +48,7 @@ class ScopeBouncer
         $this->bouncer->scope()->to($place->id);
         // pass down place
         $request->request->set('place', $place);
-        return $next($request);
 
+        return $next($request);
     }
 }

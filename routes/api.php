@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
  */
 
 
+/** =============== Authentication ================= **/
 
 Route::group(['prefix' => 'auth'], function () {
     Route::post('/login', 'AuthController@login')->name('auth.login');
@@ -36,11 +37,15 @@ Route::group(['prefix' => 'auth'], function () {
     
 Route::group(['middleware' => 'auth:api'], function () {
 
+     /** =============== Profile ================= **/
+
     Route::group(['prefix' => 'profile'], function () {
         Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
         Route::post('/update-profile', 'ProfileController@updateProfile')->name('profile.update-profile');
         Route::post('/update-avatar', 'ProfileController@updateAvatar')->name('profile.update-avatar');
     });
+
+    /** =============== Place ================= **/
 
     Route::group(['prefix' => 'place'], function () {
         Route::get('/my', 'PlaceController@getMy')->name('place.my');
@@ -48,12 +53,16 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
     Route::resource('place', 'PlaceController');
 
+    /** =============== Employee ================= **/
 
     Route::group(['prefix' => 'employee'], function () {
         Route::post('/update-avatar/{uuid}', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
     });
     Route::resource('employee', 'EmployeeController');
-
-
     Route::resource('users', 'EmployeeController');
+
+    /** =============== Role ================= **/
+    Route::apiResource('roles', 'RoleController');
+
 });
+

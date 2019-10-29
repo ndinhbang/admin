@@ -30,6 +30,7 @@ class EmployeeRequest extends FormRequest
                 'phone' => 'bail|unique:users|min:10|max:11',
                 'email' => 'bail|unique:users',
                 'password' => 'bail|required',
+                'roles' => 'bail|required|array|min:1|exists:roles,name'
             ];
         }
 

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
@@ -20,22 +23,28 @@ class EmployeeController extends Controller
 
     public function store(EmployeeRequest $request)
     {
-        $user = $request->user();
+        $employee = DB::transaction(function () use ($request) {
+            $arr = $request->all();
+            $arr['uuid'] = $this->nanoId();
+            $arr['password'] = \Hash::make($request->password);
+            // create employee
+            $employee = User::create($arr);
+            // assign employee to place
+            $employee->places()->attach($request->place->id);
 
-        $employee = new \App\User;
-        $employee->uuid = $this->nanoId();
-        $employee->display_name = $request->display_name;
-        $employee->name = $request->name;
-        $employee->email = $request->email;
-        $employee->phone = $request->phone;
-        $employee->password = \Hash::make($request->password);
+            $roles = $request->input('roles');
+            // assign roles for employee
+            foreach ($roles as $role) {
+                $employee->assign($role);
+            }
 
-        $employee->save();
+            return $employee;
+        }, 5);
 
-        // thêm nhân viên vào cửa hàng
-        $employee->places()->attach($request->place->id);
-
-        return response()->json(['message' => 'Thêm nhân viên thành công!', 'employee' => $employee]);
+        return response()->json([
+            'message' => 'Thêm nhân viên thành công!',
+            'employee' => $employee
+        ]);
     }
 
     public function update(EmployeeRequest $request, \App\User $employee)
