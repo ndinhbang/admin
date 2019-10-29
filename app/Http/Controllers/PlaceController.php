@@ -7,7 +7,6 @@ use App\Models\Place;
 use Bouncer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class PlaceController extends Controller
 {
@@ -23,39 +22,38 @@ class PlaceController extends Controller
 
     public function index()
     {
-        // $netrooms = \App\Models\Place::select('netrooms.*')->whereNotNull('netrooms.id');
 
-        // if (!$this->data['u']->admin) {
-        //     $netrooms->join('netroom_user', 'netroom_user.netroom_id', '=', 'netrooms.id')->where('netroom_user.user_id', $this->data['u']->id);
-        // }
-
-        // $netrooms->orderBy('netrooms.'.request('sortBy', 'created_at'), 'netrooms.'.request('order', 'desc'));
-
-        // return $netrooms->paginate((int) request('pageLength'));
     }
 
     public function store(PlaceRequest $request)
     {
-        $request->validated();
+        $place = \DB::transaction(function () use ($request) {
+            $user = $request->user();
+            $arr = array_merge($request->all(), [
+                'uuid' => $this->nanoId(),
+                'contact_name' => $user->display_name,
+                'contact_phone' => $user->phone,
+                'contact_email' => $user->email,
+                'status' => 'trial',
+                'user_id' => $user->id,
+            ]);
+//            dump($arr);
+            $place = Place::create($arr);
+//            $arr = $request->all();
+//            $place = new Place;
+//            $place->uuid = $this->nanoId();
+//            $place->title = $request->title;
+//
+//            $place->code = $request->code;
+//            $place->address = $request->address;
 
-        $user = $request->user();
-        $place = null;
+//            $place->contact_name = $user->display_name;
+//            $place->contact_phone = $user->phone;
+//            $place->contact_email = $user->email;
+//            $place->status = 'trial';
+//            $place->user_id = $user->id;
 
-        \DB::transaction(function () use ($user, &$place, $request) {
-            $place           = new Place;
-            $place->uuid    = $this->nanoId();
-            $place->title    = $request->title;
-
-            $place->code     = $request->code;
-            $place->address  = $request->address;
-
-            $place->contact_name  = $user->display_name;
-            $place->contact_phone  = $user->phone;
-            $place->contact_email  = $user->email;
-            $place->status  = 'trial';
-            $place->user_id  = $user->id;
-
-            $place->save();
+//            $place->save();
 
             // scope to place id
             Bouncer::scope()->to($place->id);
@@ -73,6 +71,8 @@ class PlaceController extends Controller
 
             // attach manager role
             $user->places()->attach($place->id);
+
+            return $place;
         }, 5);
 
 //        }
@@ -81,7 +81,7 @@ class PlaceController extends Controller
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',
             'place'   => $place,
-            'places'  => $user->places,
+            'places'  => $request->user()->places,
         ]);
     }
 

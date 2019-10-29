@@ -2,11 +2,11 @@
 
 namespace App;
 
+use App\Scopes\PlaceScope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
-use App\Scopes\PlaceScope;
 
 class User extends Authenticatable
 {
@@ -23,6 +23,7 @@ class User extends Authenticatable
         'phone',
         'email',
         'password',
+        'display_name',
     ];
 
     /**
@@ -55,7 +56,7 @@ class User extends Authenticatable
 
         static::addGlobalScope(new PlaceScope);
     }
-    
+
     /**
      * The roles that belong to the user.
      */
@@ -67,9 +68,7 @@ class User extends Authenticatable
     // change login way form `username` -> `phone`
     public function findForPassport($identifier)
     {
-        return $this->orWhere('name', $identifier)
-            ->orWhere('email', $identifier)
-            ->orWhere('phone', $identifier)
+        return $this->orWhere('name', $identifier)->orWhere('email', $identifier)->orWhere('phone', $identifier)
             ->first();
     }
 

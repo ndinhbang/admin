@@ -21,7 +21,20 @@ class PlaceScope implements Scope
 
         if (!is_null($uuid = request()->header('X-Place-Id'))) {
             $placeId = request()->place->id ?? 0;
-            $builder->where('place_id', $placeId);
+            // many to many
+            if ($model->relationLoaded('places')) {
+                $builder->whereHas('places', function ($query) use ($placeId) {
+                    $query->where('places.id', $placeId);
+                });
+                // one to many
+            } elseif ($model->relationLoaded('place')) {
+                $builder->whereHas('place', function ($query) use ($placeId) {
+                    $query->where('places.id', $placeId);
+                });
+                // query by place_id collumn
+            } else {
+                $builder->where($model->getTable() . '.place_id', $placeId);
+            }
         }
     }
 }

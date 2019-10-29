@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Place extends Model
 {
     protected $fillable = [
+        'uuid',
         'title',
         'code',
         'address',
         'status',
-        'expired_date'
+        'expired_date',
+        'contact_name',
+        'contact_phone',
+        'contact_email',
+        'user_id',
     ];
     protected $primaryKey = 'id';
     protected $table = 'places';

@@ -3,10 +3,17 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Request;
 use Silber\Bouncer\Bouncer;
 
 class ScopeBouncer
 {
+    protected $except = [
+        'api/auth*',
+        'api/place*',
+        'api/roles*',
+    ];
+
     /**
      * The Bouncer instance.
      *
@@ -33,10 +40,10 @@ class ScopeBouncer
      */
     public function handle($request, Closure $next)
     {
-        if (is_null($uuid = $request->header('X-Place-Id'))) {
+        if (is_null($uuid = $request->header('X-Place-Id'))
+        || $this->inExceptArray($request)) {
             return $next($request);
         }
-
         if (is_null($place = \App\Models\Place::where('uuid', $uuid)->first())) {
             if (!$request->expectsJson()) {
                 return response('Place not found', 404);
@@ -50,5 +57,19 @@ class ScopeBouncer
         $request->request->set('place', $place);
 
         return $next($request);
+    }
+
+    protected function inExceptArray(Request $request) {
+        foreach ($this->except as $except) {
+            if ($except !== '/') {
+                $except = trim($except, '/');
+            }
+
+            if ($request->fullUrlIs($except) || $request->is($except)) {
+                return true;
+            }
+        }
+
+        return  false;
     }
 }
