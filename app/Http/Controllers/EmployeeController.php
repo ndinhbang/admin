@@ -14,7 +14,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
 
-        $users = Place::curr()->users()->paginate(10);
+        $users = \App\User::paginate(10);
 
         return $users->toJson();
     }
@@ -23,7 +23,7 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        $place = \App\Models\Place::find(request()->place_id);
+        $place = \App\Models\Place::find($request->place_id);
 
         if (!$place) {
             return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
@@ -31,11 +31,11 @@ class EmployeeController extends Controller
 
         $employee = new \App\User;
         $employee->uuid = $this->nanoId();
-        $employee->display_name = request()->display_name;
-        $employee->name = request()->name;
-        $employee->email = request()->email;
-        $employee->phone = request()->phone;
-        $employee->password = \Hash::make(request()->password);
+        $employee->display_name = $request->display_name;
+        $employee->name = $request->name;
+        $employee->email = $request->email;
+        $employee->phone = $request->phone;
+        $employee->password = \Hash::make($request->password);
 
         $employee->save();
 
@@ -47,14 +47,14 @@ class EmployeeController extends Controller
 
     public function update(EmployeeRequest $request, \App\User $employee)
     {
-        $employee->display_name = request('display_name');
-        $employee->name = request('name');
-        $employee->email = request('email');
-        $employee->phone = request('phone');
+        $employee->display_name = $request->display_name;
+        $employee->name = $request->name;
+        $employee->email = $request->email;
+        $employee->phone = $request->phone;
 
-        if(request()->password)
+        if($request->password)
         {
-            $employee->password = \Hash::make(request()->password);
+            $employee->password = \Hash::make($request->password);
         }
         
         $employee->save();

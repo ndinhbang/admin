@@ -44,10 +44,10 @@ class PlaceController extends Controller
         \DB::transaction(function () use ($user, &$place) {
             $place           = new Place;
             $place->uuid    = $this->nanoId();
-            $place->title    = request()->title;
+            $place->title    = $request->title;
 
-            $place->code     = request()->code;
-            $place->address  = request()->address;
+            $place->code     = $request->code;
+            $place->address  = $request->address;
 
             $place->contact_name  = $user->display_name;
             $place->contact_phone  = $user->phone;
@@ -129,14 +129,14 @@ class PlaceController extends Controller
         $user = $request->user();
         // $place = Place::curr();
 
-        $place->title = request()->title;
+        $place->title = $request->title;
 
-        $place->code = request()->code;
-        $place->address = request()->address;
+        $place->code = $request->code;
+        $place->address = $request->address;
 
-        $place->contact_name = request()->contact_name;
-        $place->contact_phone = request()->contact_phone;
-        $place->contact_email = request()->contact_email;
+        $place->contact_name = $request->contact_name;
+        $place->contact_phone = $request->contact_phone;
+        $place->contact_email = $request->contact_email;
 
         $place->save();
 
