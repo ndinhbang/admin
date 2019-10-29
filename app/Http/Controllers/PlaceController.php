@@ -42,7 +42,7 @@ class PlaceController extends Controller
         $place = null;
 
         \DB::transaction(function () use ($user, &$place) {
-            $place           = new \App\Models\Place;
+            $place           = new Place;
             $place->uuid    = $this->nanoId();
             $place->title    = request()->title;
 
@@ -123,28 +123,22 @@ class PlaceController extends Controller
         // return response()->json(compact('netroom'));
     }
 
-    public function update(PlaceRequest $request, $id)
+    public function update(PlaceRequest $request, Place $place)
     {
 
         $user = $request->user();
-        $place = \App\Models\Place::find($id);
+        // $place = Place::curr();
 
-        if (!$place) {
-            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
-        }
+        $place->title = request()->title;
 
-        \DB::transaction(function () use ($user, &$place) {
-            $place->title = request()->title;
+        $place->code = request()->code;
+        $place->address = request()->address;
 
-            $place->code = request()->code;
-            $place->address = request()->address;
+        $place->contact_name = request()->contact_name;
+        $place->contact_phone = request()->contact_phone;
+        $place->contact_email = request()->contact_email;
 
-            $place->contact_name = request()->contact_name;
-            $place->contact_phone = request()->contact_phone;
-            $place->contact_email = request()->contact_email;
-
-            $place->save();
-        }, 5);
+        $place->save();
 
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
@@ -157,7 +151,7 @@ class PlaceController extends Controller
     public function updateLogo(PlaceRequest $request)
     {
         $user = $request->user();
-        $place = \App\Models\Place::find(request()->place_id);
+        $place = Place::curr();
 
         if (!$place) {
             return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
+use App\Scopes\PlaceScope;
 
 class User extends Authenticatable
 {
@@ -43,6 +44,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new PlaceScope);
+    }
+    
     /**
      * The roles that belong to the user.
      */

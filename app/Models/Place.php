@@ -16,6 +16,15 @@ class Place extends Model
     protected $primaryKey = 'id';
     protected $table = 'places';
 
+    public function scopeCurr($query)
+    {
+        if (!is_null($placeId = request()->header('X-Place-Id'))) {
+            return $query->where('uuid', $placeId)->first();
+        }
+        
+        return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+    }
+
     public function user()
     {
         return $this->belongsTo('App\User');
