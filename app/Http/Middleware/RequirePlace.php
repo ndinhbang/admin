@@ -8,8 +8,9 @@ use Closure;
 class RequirePlace
 {
     protected $except = [
-        'api/auth/*',
-        'api/place/*',
+        'api/auth*',
+        'api/place*',
+        'api/roles*',
     ];
 
     /**
