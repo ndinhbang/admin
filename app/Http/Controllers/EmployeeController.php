@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\EmployeeRequest;
-use App\Models\Place;
+use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
 
     protected $avatar_path = 'medias/avatars/';
-    
+
     public function index(Request $request)
     {
 
@@ -23,12 +22,6 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        $place = \App\Models\Place::find($request->place_id);
-
-        if (!$place) {
-            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
-        }
-
         $employee = new \App\User;
         $employee->uuid = $this->nanoId();
         $employee->display_name = $request->display_name;
@@ -40,7 +33,7 @@ class EmployeeController extends Controller
         $employee->save();
 
         // thêm nhân viên vào cửa hàng
-        $employee->places()->attach($place->id);
+        $employee->places()->attach($request->place->id);
 
         return response()->json(['message' => 'Thêm nhân viên thành công!', 'employee' => $employee]);
     }
@@ -52,11 +45,10 @@ class EmployeeController extends Controller
         $employee->email = $request->email;
         $employee->phone = $request->phone;
 
-        if($request->password)
-        {
+        if ($request->password) {
             $employee->password = \Hash::make($request->password);
         }
-        
+
         $employee->save();
 
         return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
@@ -71,9 +63,9 @@ class EmployeeController extends Controller
         }
 
         $extension = $request->file('avatar')->getClientOriginalExtension();
-        $filename  = $employee->uuid.'-'.$employee->name. "-goido.net.";
+        $filename = $employee->uuid . '-' . $employee->name . "-goido.net.";
 
-        $img       = \Image::make($request->file('avatar'));
+        $img = \Image::make($request->file('avatar'));
 
         $filePath = $this->avatar_path . $filename . $extension;
         $img->fit(200, 200);
