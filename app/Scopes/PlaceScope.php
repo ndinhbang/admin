@@ -18,10 +18,10 @@ class PlaceScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        if (!is_null($placeId = request()->header('X-Place-Id'))) {
-            $builder->whereHas('places', function ($query) use ($placeId) {
-                $query->where('places.uuid', $placeId);
-            });
+
+        if (!is_null($uuid = request()->header('X-Place-Id'))) {
+            $placeId = request()->place->id ?? 0;
+            $builder->where('place_id', $placeId);
         }
     }
 }
