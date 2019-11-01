@@ -24,7 +24,7 @@ class AccountController extends Controller
                     $query->orWhere('unsigned_name', 'like', '%'.$request->keyword.'%');
                     $query->orWhere('phone', 'like', '%'.$request->keyword.'%');
                 }
-            })->orderBy('id', 'desc')->paginate(20);
+            })->orderBy('id', 'desc')->paginate($request->per_page);
         return $account->toJson();
     }
 

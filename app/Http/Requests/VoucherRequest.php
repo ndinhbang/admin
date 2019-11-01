@@ -28,7 +28,7 @@ class VoucherRequest extends FormRequest
                 'amount'   => 'required|numeric',
                 'imported_at'   => 'required',
                 'payment_method' => 'required',
-                'category_id' => 'required|numeric',
+                'category_uuid' => 'required',
             ];
         }
 

@@ -17,7 +17,7 @@ class VoucherController extends Controller
      */
     public function index(Request $request)
     {
-        $vouchers = Voucher::with(['creator', 'approver', 'category', 'payer_payee'])->orderBy('id', 'desc')->paginate(20);
+        $vouchers = Voucher::with(['creator', 'approver', 'category', 'payer_payee'])->orderBy('id', 'desc')->paginate($request->per_page);
         return $vouchers->toJson();
     }
 
