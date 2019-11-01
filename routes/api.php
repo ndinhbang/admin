@@ -38,7 +38,6 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
      /** =============== Profile ================= **/
-
     Route::group(['prefix' => 'profile'], function () {
         Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
         Route::post('/update-profile', 'ProfileController@updateProfile')->name('profile.update-profile');
@@ -46,7 +45,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 
     /** =============== Place ================= **/
-
     Route::group(['prefix' => 'place'], function () {
         Route::get('/my', 'PlaceController@getMy')->name('place.my');
         Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
@@ -54,12 +52,20 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::resource('place', 'PlaceController');
 
     /** =============== Employee ================= **/
-
     Route::group(['prefix' => 'employee'], function () {
         Route::post('/update-avatar/{uuid}', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
     });
     Route::resource('employee', 'EmployeeController');
     Route::resource('users', 'EmployeeController');
+
+    /** =============== Voucher ================= **/
+    Route::resource('voucher', 'VoucherController');
+
+    /** =============== Category ================= **/
+    Route::resource('category', 'CategoryController');
+
+    /** =============== Account: customer, supplier, shipper, employee ==== **/
+    Route::resource('account', 'AccountController');
 
     /** =============== Role ================= **/
     Route::apiResource('roles', 'RoleController');

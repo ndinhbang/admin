@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CategoryRequest extends FormRequest
+class VoucherRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,8 +23,15 @@ class CategoryRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            //
-        ];
+        if ($this->routeIs('voucher.store')) {
+            return [
+                'amount'   => 'required|numeric',
+                'imported_at'   => 'required',
+                'payment_method' => 'required',
+                'category_id' => 'required|numeric',
+            ];
+        }
+
+        return [];
     }
 }

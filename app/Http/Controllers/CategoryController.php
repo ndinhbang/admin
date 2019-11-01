@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\CategoryRequest;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
@@ -14,19 +15,14 @@ class CategoryController extends Controller
      */
     public function index(CategoryRequest $request)
     {
-        $user = $request->user();
-
-        return $users->toJson();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        $categories = Category::where(function ($query) use ($request) {
+                if($request->type) {
+                    $query->where('type', $request->type);
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(20);
+        return $categories->toJson();
     }
 
     /**
@@ -37,7 +33,14 @@ class CategoryController extends Controller
      */
     public function store(CategoryRequest $request)
     {
-        //
+        $category = new Category;
+        $category->uuid = $this->nanoId();
+        $category->name = $request->name;
+        $category->description = $request->description;
+        $category->parent_id = $request->parent_id;
+        $category->type = $request->type;
+        $category->place_id = $request->place->id;
+        $category->save();
     }
 
     /**
@@ -46,20 +49,9 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Category $category)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        return $category->toJson();
     }
 
     /**
@@ -69,9 +61,15 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Category $category)
     {
-        //
+        $category->name = $request->name;
+        $category->description = $request->description;
+        $category->parent_id = $request->parent_id;
+        $category->position = $request->position;
+        $category->save();
+
+        return response()->json(['message' => 'Cập nhật danh mục thành công!', 'category' => $category]);
     }
 
     /**

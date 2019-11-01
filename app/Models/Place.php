@@ -21,6 +21,15 @@ class Place extends Model
     protected $primaryKey = 'id';
     protected $table = 'places';
 
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'id'
+    ];
+
     public function scopeCurr($query)
     {
         if (!is_null($placeId = request()->header('X-Place-Id'))) {
