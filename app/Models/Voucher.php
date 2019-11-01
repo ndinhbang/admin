@@ -42,6 +42,11 @@ class Voucher extends Model
     {
         return $this->belongsTo('App\User', 'creator_id');
     }
+
+    public function approver()
+    {
+        return $this->belongsTo('App\User', 'approver_id');
+    }
     
     /**
      * The roles that belong to the category.

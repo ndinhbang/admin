@@ -14,6 +14,7 @@ class Category extends Model
      * @var array
      */
     protected $hidden = [
+        'id',
         'place_id'
     ];
 
@@ -27,6 +28,14 @@ class Category extends Model
         parent::boot();
 
         static::addGlobalScope(new PlaceScope);
+    }
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return Category::where('uuid', $uuid)->first();
+
+        return null;
     }
     
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\VoucherRequest;
 use App\Models\Voucher;
+use App\Models\Category;
 use App\Models\Account;
 
 class VoucherController extends Controller
@@ -16,7 +17,7 @@ class VoucherController extends Controller
      */
     public function index(Request $request)
     {
-        $vouchers = Voucher::with(['creator', 'category', 'payer_payee'])->orderBy('id', 'desc')->paginate(20);
+        $vouchers = Voucher::with(['creator', 'approver', 'category', 'payer_payee'])->orderBy('id', 'desc')->paginate(20);
         return $vouchers->toJson();
     }
 
@@ -41,11 +42,13 @@ class VoucherController extends Controller
         $voucher->type = $request->type; // 0:chi | 1:thu
         $voucher->imported_at = $request->imported_at;
         $voucher->amount = $request->amount;
-        $voucher->category_id = $request->category_id;
         $voucher->payment_method = $request->payment_method;
 
+        $category = Category::findUuid($request->category_uuid);
+        if(!is_null($category))
+            $voucher->category_id = $category->id;
 
-        $account = Account::findUuid($request->payer_payee_id);
+        $account = Account::findUuid($request->payer_payee_uuid);
         if(!is_null($account))
             $voucher->payer_payee_id = $account->id;
 
@@ -87,7 +90,11 @@ class VoucherController extends Controller
         $voucher->category_id = $request->category_id;
         $voucher->payment_method = $request->payment_method;
 
-        $account = Account::findUuid($request->payer_payee_id);
+        $category = Category::findUuid($request->category_uuid);
+        if(!is_null($category))
+            $voucher->category_id = $category->id;
+
+        $account = Account::findUuid($request->payer_payee_uuid);
         if(!is_null($account))
             $voucher->payer_payee_id = $account->id;
 
