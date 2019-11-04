@@ -72,6 +72,7 @@ class AccountController extends Controller
         $account->phone = $request->phone;
         $account->tax_code = $request->tax_code;
         $account->note = $request->note;
+        $account->is_corporate = $request->is_corporate;
 
         $account->place_id = $request->place->id;
 
@@ -113,6 +114,7 @@ class AccountController extends Controller
         $account->phone = $request->phone;
         $account->tax_code = $request->tax_code;
         $account->note = $request->note;
+        $account->is_corporate = $request->is_corporate;
 
         $account->save();
 

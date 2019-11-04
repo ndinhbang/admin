@@ -44,11 +44,11 @@ class VoucherController extends Controller
         $voucher->amount = $request->amount;
         $voucher->payment_method = $request->payment_method;
 
-        $category = Category::findUuid($request->category_uuid);
+        $category = Category::findUuid($request->category['uuid']);
         if(!is_null($category))
             $voucher->category_id = $category->id;
 
-        $account = Account::findUuid($request->payer_payee_uuid);
+        $account = Account::findUuid($request->payer_payee['uuid']);
         if(!is_null($account))
             $voucher->payer_payee_id = $account->id;
 
@@ -71,7 +71,19 @@ class VoucherController extends Controller
      */
     public function show(Voucher $voucher)
     {
-        return $voucher->toJson();
+
+        $voucherCreator = $voucher->creator;
+        $voucherCategory = $voucher->category;
+        $voucherApprover = $voucher->approver;
+        $voucherPayerPayee = $voucher->payer_payee;
+
+        return json_encode([
+            'voucher' => $voucher->toArray(),
+            'creator' => !is_null($voucherCreator) ? $voucherCreator->toArray() : [],
+            'approver' => !is_null($voucherApprover) ? $voucherApprover->toArray() : [],
+            'category' => !is_null($voucherCategory) ? $voucherCategory->toArray() : [],
+            'payer_payee' => !is_null($voucherPayerPayee) ? $voucherPayerPayee->toArray() : []
+        ]);
     }
 
     /**
@@ -90,11 +102,11 @@ class VoucherController extends Controller
         $voucher->category_id = $request->category_id;
         $voucher->payment_method = $request->payment_method;
 
-        $category = Category::findUuid($request->category_uuid);
+        $category = Category::findUuid($request->category['uuid']);
         if(!is_null($category))
             $voucher->category_id = $category->id;
 
-        $account = Account::findUuid($request->payer_payee_uuid);
+        $account = Account::findUuid($request->payer_payee['uuid']);
         if(!is_null($account))
             $voucher->payer_payee_id = $account->id;
 
