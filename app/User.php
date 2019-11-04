@@ -54,8 +54,7 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-
-//        static::addGlobalScope(new PlaceM2MScope);
+        static::addGlobalScope(new PlaceM2MScope);
     }
 
     /**
