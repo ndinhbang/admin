@@ -12,7 +12,6 @@ class RequirePlace
         'api/auth*',
         'api/place*',
         'api/roles*',
-        'telescope*'
     ];
 
     /**
@@ -47,6 +46,9 @@ class RequirePlace
      */
     protected function inExceptArray(Request $request)
     {
+        if (app()->isLocal()) {
+            $this->except[] = 'telescope*';
+        }
         foreach ($this->except as $except) {
             if ($except !== '/') {
                 $except = trim($except, '/');
