@@ -2,7 +2,6 @@
 
 namespace App\Http;
 
-use App\Http\Middleware\RequirePlace;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -22,8 +21,8 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \Barryvdh\Cors\HandleCors::class,
         \App\Http\Middleware\RequirePlace::class,
+        \App\Http\Middleware\BindCurrentPlaceIfExists::class,
         \App\Http\Middleware\SantinizeInput::class,
-        \App\Http\Middleware\ScopeBouncer::class,
     ];
 
     /**
@@ -70,6 +69,9 @@ class Kernel extends HttpKernel
         'scopes'        => \Laravel\Passport\Http\Middleware\CheckScopes::class,
         'scope'         => \Laravel\Passport\Http\Middleware\CheckForAnyScope::class,
         'require.place' => \App\Http\Middleware\RequirePlace::class,
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
     ];
 
     /**

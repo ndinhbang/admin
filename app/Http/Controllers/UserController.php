@@ -24,13 +24,12 @@ class UserController extends Controller
 
     public function current(Request $request)
     {
+        \DB::enableQueryLog();
         // current logged in user
         $user = $request->user();
-        //
-        $roles = $user->getRoles();
-
-        $abilities = $user->getAbilities();
-
+        $roles = $user->roles;
+        $abilities = $user->getAllPermissions();
+        dump(\DB::getQueryLog());
         return response()->json([
             'user' => $user,
             'roles' => $roles,

@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Silber\Bouncer\Database\Role as Model;
+use Spatie\Permission\Models\Role as SpatieRole;
+use App\Traits\AppendPlace;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-
+    use AppendPlace;
 }

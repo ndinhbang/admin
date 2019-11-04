@@ -5,9 +5,8 @@ namespace App\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Support\Facades\App;
 
-class PlaceM2MScope implements Scope
+class PermissionScope implements Scope
 {
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -18,10 +17,10 @@ class PlaceM2MScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
+        $placeIds = [0];
         if (!is_null($currentPlace = currentPlace())) {
-            $builder->whereHas('places', function ($query) use ($currentPlace) {
-                $query->where('places.id', $currentPlace->id);
-            });
+            $placeIds[] = $currentPlace->id;
         }
+        $builder->whereIn($model->getTable() . '.place_id', $placeIds);
     }
 }

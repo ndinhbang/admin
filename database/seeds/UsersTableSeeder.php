@@ -12,11 +12,11 @@ class UsersTableSeeder extends Seeder
     public function run()
     {
         // create first user and assign superadmin role
-        if (App\User::all()->isEmpty()) {
+        if (\App\User::all()->isEmpty()) {
             // create a user
-            $user = factory(App\User::class)->create();
+            $user = factory(\App\User::class)->create();
             // assign superuser role to user
-            Bouncer::assign('superadmin')->to($user);
+            $user->assignRole('superadmin');
         }
     }
 }

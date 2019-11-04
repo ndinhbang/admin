@@ -165,9 +165,8 @@ return [
         /*
          * Package Service Providers...
          */
-        Silber\Bouncer\BouncerServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
         Barryvdh\Cors\ServiceProvider::class,
-        
         /*
          * Application Service Providers...
          */

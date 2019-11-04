@@ -1,110 +1,101 @@
 <?php
 
 return [
-    'roles'       => [
-        'superadmin' => [
-            'name'  => 'superadmin',
-            'title' => 'superadmin',
-            'level' => 100,
-        ],
-        'admin'      => [
-            'name'  => 'admin',
-            'title' => 'Quản trị hệ thống',
-            'level' => 80,
-        ],
-        'boss'       => [
-            'name'  => 'boss',
-            'title' => 'Chủ cửa hàng',
-            'level' => 50,
-        ],
-        'manager'    => [
-            'name'  => 'manager',
-            'title' => 'Quản lý',
-            'level' => 40,
-        ],
-        'cashier'    => [
-            'name'  => 'cashier',
-            'title' => 'Thu ngân',
-            'level' => 30,
-        ],
-        'waiter'     => [
-            'name'  => 'waiter',
-            'title' => 'Bồi bàn',
-            'level' => 20,
-        ],
-        'chef'       => [
-            'name'  => 'chef',
-            'title' => 'Nv Bếp',
-            'level' => 10,
-        ],
-        'shipper'       => [
-            'name'  => 'sipper',
-            'title' => 'Nv giao hàng',
-            'level' => 5,
-        ],
-    ],
-    'permissions' => [
-        // default permission for a tenant
-        // <action>.<subject>
-        'tenants' => [
-            'tenant--view.dashboard'  => [
-                'name'  => 'tenant--view.dashboard',
-                'title' => 'Xem tổng quan',
-                'roles' => ['admin', 'superuser', 'boss'],
+    'root' => [
+        'roles' => [
+            'superadmin' => [
+                'name'  => 'superadmin',
+                'title' => 'superadmin',
+                'level' => 100,
             ],
-            'tenant--manage.places' => [
-                'name'  => 'tenant--manage.places',
-                'title' => 'Thiết lập',
-                'roles' => ['admin', 'superuser', 'boss'],
+            'admin'      => [
+                'name'  => 'admin',
+                'title' => 'Quản trị hệ thống',
+                'level' => 80,
             ],
-            'tenant--manage.settings' => [
-                'name'  => 'tenant--manage.settings',
-                'title' => 'Thiết lập',
-                'roles' => ['admin', 'superuser', 'boss'],
-            ],
-            'tenant--manage.roles'    => [
-                'name'  => 'tenant--manage.roles',
-                'title' => 'Phân quyền nhân viên',
-                'roles' => ['admin', 'superuser', 'boss'],
-            ],
-            'tenant--manage.users'    => [
-                'name'  => 'tenant--manage.users',
-                'title' => 'Quản lý nhân sự',
-                'roles' => ['admin', 'superuser', 'boss'],
-            ],
-            'tenant--view.reports'    => [
-                'name'  => 'tenant--view.reports',
-                'title' => 'Xem báo cáo',
-                'roles' => ['admin', 'superuser', 'boss'],
-            ],
-            'tenant--view.categories' => [
-                'name'  => 'tenant--view.categories',
-                'title' => 'Xem danh mục hàng bán',
-                'roles' => ['admin', 'superuser', 'boss', 'manager', 'cahsier', 'waiter', 'chef'],
+            'boss'       => [
+                'name'  => 'boss',
+                'title' => 'Chủ cửa hàng',
+                'level' => 50,
             ],
         ],
-        // default permissions for all
-        'root'    => [
-            'manage.tenants'   => [
-                'name'  => 'manage.tenants',
-                'title' => 'Quản lý cửa hàng',
-                'roles' => ['admin', 'superuser', 'boss'],
-            ],
-            'manage.users'     => [
-                'name'  => 'manage.users',
-                'title' => 'Quảng lý tài khoản',
-                'roles' => ['admin', 'superuser'],
+        'permissions' => [
+            'manage.abilities' => [
+                'name'        => 'manage.abilities',
+                'title'       => 'Quản lý quyền hạn',
+                'roles'       => array('admin', 'superadmin'),
             ],
             'manage.roles'     => [
-                'name'  => 'manage.roles',
-                'title' => 'Phân quyền',
-                'roles' => ['admin', 'superuser'],
+                'name'        => 'manage.roles',
+                'title'       => 'Quản lý chức vụ',
+                'roles'       => ['admin', 'superadmin'],
             ],
-            'manage.abilities' => [
-                'name'  => 'manage.abilities',
-                'title' => 'Quản lý quyền hạn',
-                'roles' => ['admin', 'superuser'],
+            'manage.users'     => [
+                'name'        => 'manage.users',
+                'title'       => 'Quảng lý tài khoản',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+            'own.places'       => [
+                'name'        => 'own.places',
+                'title'       => 'Quyền sở hữu của hàng',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+        ]
+    ],
+    'place' => [
+        'roles' => [
+            'manager'    => [
+                'name'  => 'manager__%s',
+                'title' => 'Quản lý',
+                'level' => 40,
+            ],
+            'cashier'    => [
+                'name'  => 'cashier__%s',
+                'title' => 'Thu ngân',
+                'level' => 30,
+            ],
+            'waiter'     => [
+                'name'  => 'waiter__%s',
+                'title' => 'Bồi bàn',
+                'level' => 20,
+            ],
+            'chef'       => [
+                'name'  => 'chef__%s',
+                'title' => 'Nv Bếp',
+                'level' => 10,
+            ],
+            'shipper'    => [
+                'name'  => 'shipper__%s',
+                'title' => 'Nv giao hàng',
+                'level' => 5,
             ],
         ],
+        'permissions' => [
+            'manage.places'   => [
+                'name'        => 'manage.places__%s',
+                'title'       => 'Quản lý của hàng',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+            'manage.staffs'   => [
+                'name'        => 'manage.staffs__%s',
+                'title'       => 'Quản lý nhân viên',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s'],
+            ],
+            'view.dashboard'  => [
+                'name'        => 'view.dashboard__%s',
+                'title'       => 'Xem tổng quan',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+            'manage.settings' => [
+                'name'        => 'manage.settings__%s',
+                'title'       => 'Thiết lập',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+            'view.reports'    => [
+                'name'        => 'view.reports__%s',
+                'title'       => 'Xem báo cáo',
+                'roles'       => ['admin', 'superadmin', 'boss'],
+            ],
+        ]
     ],
 ];

@@ -6,11 +6,11 @@ use App\Scopes\PlaceM2MScope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
-use Silber\Bouncer\Database\HasRolesAndAbilities;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasRolesAndAbilities, Notifiable;
+    use HasApiTokens, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -55,7 +55,7 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        static::addGlobalScope(new PlaceM2MScope);
+//        static::addGlobalScope(new PlaceM2MScope);
     }
 
     /**

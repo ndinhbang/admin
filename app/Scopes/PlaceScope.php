@@ -2,7 +2,6 @@
 
 namespace App\Scopes;
 
-use App\Models\Place;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
@@ -18,6 +17,6 @@ class PlaceScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->where($model->getTable() . '.place_id', request()->place->id ?? 0);
+        $builder->where($model->getTable() . '.place_id', currentPlace() ?? 0);
     }
 }

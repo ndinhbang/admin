@@ -18,6 +18,7 @@ use Faker\Generator as Faker;
 
 $factory->define(User::class, function (Faker $faker) {
     return [
+        'uuid' => nanoId(),
         'name' => 'admin',
         'phone' => '0012345678',
         'email' => 'admin@goido.local',

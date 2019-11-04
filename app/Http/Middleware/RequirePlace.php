@@ -2,8 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
+use App\Models\Place;
 use Closure;
+use Illuminate\Http\Request;
 
 class RequirePlace
 {
@@ -27,14 +28,12 @@ class RequirePlace
         }
 
         if (is_null($uuid = $request->header('X-Place-Id'))) {
-            if (!$request->expectsJson()) {
-                return response('Bad request', 400);
-            }
-            return response()->json(['message' => 'Bad request'], 400);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Bad request'], 400)
+                : response('Bad request', 400);
         }
-
-        // pass down place_uuid
-        $request->merge(['place_uuid' => $uuid]);
+        // mark request require place
+        $request->merge(['requirePlace' => true]);
 
         return $next($request);
     }
@@ -45,7 +44,8 @@ class RequirePlace
      * @param Request $request
      * @return bool
      */
-    protected function inExceptArray(Request $request) {
+    protected function inExceptArray(Request $request)
+    {
         foreach ($this->except as $except) {
             if ($except !== '/') {
                 $except = trim($except, '/');
@@ -56,6 +56,6 @@ class RequirePlace
             }
         }
 
-        return  false;
+        return false;
     }
 }
