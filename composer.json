@@ -29,6 +29,7 @@
         "doctrine/dbal": "^2.9",
         "facade/ignition": "^1.4",
         "fzaninotto/faker": "^1.4",
+        "laravel/telescope": "^2.1",
         "laravel/ui": "^1.1",
         "mockery/mockery": "^1.0",
         "nunomaduro/collision": "^3.0",
@@ -52,7 +53,9 @@
             "database/seeds",
             "database/factories"
         ],
-        "files": ["app/Helper/helper.php"]
+        "files": [
+            "app/Helpers/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

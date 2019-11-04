@@ -12,6 +12,7 @@ class RequirePlace
         'api/auth*',
         'api/place*',
         'api/roles*',
+        'telescope*'
     ];
 
     /**
