@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
+use App\Models\Role;
 use App\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
@@ -15,7 +15,6 @@ class EmployeeController extends Controller
 
     public function index(Request $request)
     {
-
         $users = \App\User::paginate(10);
 
         return $users->toJson();
@@ -23,27 +22,34 @@ class EmployeeController extends Controller
 
     public function store(EmployeeRequest $request)
     {
+        \DB::enableQueryLog();
         $employee = DB::transaction(function () use ($request) {
+            $currentPlace = currentPlace();
             $arr = $request->all();
-            $arr['uuid'] = $this->nanoId();
+            $arr['uuid'] = nanoId();
             $arr['password'] = \Hash::make($request->password);
             // create employee
             $employee = User::create($arr);
             // assign employee to place
-            $employee->places()->attach($request->place->id);
+            $employee->places()->attach($currentPlace->id);
 
-            $roles = $request->input('roles');
             // assign roles for employee
-            foreach ($roles as $role) {
-                $employee->assign($role);
-            }
+            $uuids = $request->input('role_uuids', []);
+            if(!empty($uuids)) {
+                $roles = Role::findByUuids($uuids)->get();
 
+                foreach ($roles as $role) {
+                    $employee->assignRole($role);
+                }
+            }
             return $employee;
         }, 5);
 
+        dump(\DB::getQueryLog());
+
         return response()->json([
-            'message' => 'Thêm nhân viên thành công!',
-            'employee' => $employee
+            'message'  => 'Thêm nhân viên thành công!',
+            'employee' => $employee,
         ]);
     }
 

@@ -9,5 +9,6 @@ class Permission extends SpatiePermission
 {
     use AppendPlace;
 
-//    protected $guard_name = 'api';
+    protected $hidden = ['id', 'place_id', 'guard_name', 'pivot', 'created_at'];
+
 }

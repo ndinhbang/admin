@@ -13,7 +13,10 @@ class PlaceRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        if ($this->user()->can('own.places')) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -26,16 +29,16 @@ class PlaceRequest extends FormRequest
         if ($this->routeIs('place.my')) {
             return [
                 'title'   => 'required',
-                'code'   => 'required|unique:places',
-                'address' => 'required'
+                'code'    => 'required|unique:places',
+                'address' => 'required',
             ];
         }
 
         if ($this->routeIs('place.update')) {
             return [
                 'title'   => 'required',
-                'code'   => 'required|unique:places,code,'.$this->id,
-                'address' => 'required'
+                'code'    => 'required|unique:places,code,' . $this->id,
+                'address' => 'required',
             ];
         }
 

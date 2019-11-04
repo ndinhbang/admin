@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('/{vue?}', 'HomeController@index')->where('vue', '[\/\w\.-]*')->name('home');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+//Route::get('/', function () {
+//    return view('welcome');
+//});
 
 // Auth::routes();
 

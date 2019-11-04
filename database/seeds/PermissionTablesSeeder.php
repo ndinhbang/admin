@@ -20,22 +20,31 @@ class PermissionTablesSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-//        \DB::transaction(function () use ($roles, $permissions) {
+        \DB::transaction(function () use ($roles, $permissions) {
             // create roles
             $roleArr = [];
             foreach ($roles as $r) {
-                $role = Role::create(Arr::only($r, ['name', 'title', 'level']));
+                $role = Role::create([
+                    'uuid' => nanoId(),
+                    'name' => $r['name'],
+                    'title' => $r['title'],
+                    'level' => $r['level'],
+                ]);
                 $roleArr[$r['name']] = $role;
             }
             // create permissions
             foreach ($permissions as $perm) {
-                $permission = Permission::create(Arr::only($perm, ['name', 'title']));
+                $permission = Permission::create([
+                    'uuid' => nanoId(),
+                    'name' => $perm['name'],
+                    'title' => $perm['title'],
+                ]);
 
                 foreach ($perm['roles'] as $roleName) {
                     $permission->assignRole($roleArr[$roleName]);
                 }
             }
-//        }, 5);
+        }, 5);
 
 
 

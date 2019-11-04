@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
-use Bouncer;
 
 class RoleController extends Controller
 {
@@ -19,8 +19,7 @@ class RoleController extends Controller
         // lay vi tri co level cao nhat cua user
         $maxRoleLevel = $user->roles()->max('level');
         // chi cho phep nguoi dung phan cac vi tri co level thap hon
-        $roles = Bouncer::role()
-            ->where('level', '<', $maxRoleLevel)
+        $roles = Role::where('level', '<', $maxRoleLevel)
             ->get();
 
         return response()->json($roles);

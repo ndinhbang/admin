@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PlaceRequest;
+use App\Models\Permission;
 use App\Models\Place;
-use Bouncer;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+
+//use Bouncer;
 
 class PlaceController extends Controller
 {
@@ -17,7 +20,7 @@ class PlaceController extends Controller
     {
         $user = $request->user();
         $places = $user->places;
-        return $places->toJson();
+        return response()->json($places);
     }
 
     public function index()
@@ -27,54 +30,58 @@ class PlaceController extends Controller
 
     public function store(PlaceRequest $request)
     {
+        \DB::enableQueryLog();
         $place = \DB::transaction(function () use ($request) {
             $user = $request->user();
             $arr = array_merge($request->all(), [
-                'uuid' => $this->nanoId(),
-                'contact_name' => $user->display_name,
+                'uuid'          => nanoId(),
+                'contact_name'  => $user->display_name,
                 'contact_phone' => $user->phone,
                 'contact_email' => $user->email,
-                'status' => 'trial',
-                'user_id' => $user->id,
+                'status'        => 'trial',
+                'user_id'       => $user->id,
             ]);
-//            dump($arr);
+
             $place = Place::create($arr);
-//            $arr = $request->all();
-//            $place = new Place;
-//            $place->uuid = $this->nanoId();
-//            $place->title = $request->title;
-//
-//            $place->code = $request->code;
-//            $place->address = $request->address;
+            $user->places()->attach($place->id);
 
-//            $place->contact_name = $user->display_name;
-//            $place->contact_phone = $user->phone;
-//            $place->contact_email = $user->email;
-//            $place->status = 'trial';
-//            $place->user_id = $user->id;
+            $roles = config('default.place.roles');
+            $permissions = config('default.place.permissions');
 
-//            $place->save();
-
-            // scope to place id
-            Bouncer::scope()->to($place->id);
-            // asign owner for place
-            Bouncer::allow($user)->toOwn($place);
-            // give user abilities with this place
-            $abilities = config('default.permissions.tenants');
-            $assignedAbilities = [];
-            foreach ($abilities as $ability) {
-//                foreach ($grouped as $ability) {
-                Bouncer::ability()->firstOrCreate(Arr::only($ability, ['name', 'title']));
-                Bouncer::allow($user)->to($ability['name']);
-//                }
+            // create place roles
+            $roleArr = [];
+            foreach ($roles as $r) {
+                $role = Role::create([
+                    'uuid' => nanoId(),
+                    'name' => vsprintf($r['name'], $place->uuid),
+                    'title' => $r['title'],
+                    'level' => $r['level'],
+                    'place_id' => $place->id,
+                ]);
+                $roleArr[$r['name']] = $role;
             }
 
-            // attach manager role
-            $user->places()->attach($place->id);
+            $permissionsArr = [];
+            // give user ab ilities with this place
+            foreach ($permissions as $perm) {
+                $permission = Permission::create([
+                    'uuid' => nanoId(),
+                    'name' => vsprintf($perm['name'], $place->uuid),
+                    'title' => $perm['title'],
+                    'place_id' => $place->id,
+                ]);
+
+                $permissionsArr[] = $permission;
+
+                foreach ($perm['roles'] as $roleName) {
+                    $role = $roleArr[$roleName] ?? Role::findByName(vsprintf($roleName, $place->uuid));
+                    $permission->assignRole($role);
+                }
+            }
 
             return $place;
         }, 5);
-
+        dump(\DB::getQueryLog());
 //        }
 
 

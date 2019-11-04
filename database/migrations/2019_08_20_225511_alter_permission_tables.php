@@ -16,15 +16,17 @@ class AlterPermissionTables extends Migration
         $tableNames = config('permission.table_names');
 
         Schema::table($tableNames['permissions'], function (Blueprint $table) {
+            $table->char('uuid', 21)->unique()->after('id');
             $table->string('title')->after('name');
             $table->unsignedInteger('place_id')->after('id')->default(0);
-            $table->boolean('forbidden')->default(false);
+//            $table->boolean('forbidden')->after('name')->default(false);
         });
 
         Schema::table($tableNames['roles'], function (Blueprint $table) {
+            $table->char('uuid', 21)->unique()->after('id');
             $table->string('title')->after('name');
             $table->unsignedInteger('place_id')->after('id')->default(0);
-            $table->unsignedInteger('level')->after('id')->default(0);
+            $table->unsignedInteger('level')->after('name')->default(0);
         });
     }
 
@@ -38,11 +40,11 @@ class AlterPermissionTables extends Migration
         $tableNames = config('permission.table_names');
 
         Schema::table($tableNames['permissions'], function (Blueprint $table) {
-            $table->dropColumn(['title', 'scope', 'forbidden']);
+            $table->dropColumn(['uuid', 'title', 'place_id']);
         });
 
         Schema::table($tableNames['roles'], function (Blueprint $table) {
-            $table->dropColumn(['title', 'scope', 'level']);
+            $table->dropColumn(['uuid', 'title', 'place_id', 'level']);
         });
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EmployeeRequest extends FormRequest
@@ -13,7 +14,18 @@ class EmployeeRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        // Todo: need test carefully
+        $user  = $this->user();
+        $uuids = $this->input('role_uuids', []);
+        $count = count($uuids);
+        if (!is_null($currentPlace = currentPlace())
+            && $user->can(vsprintf('manage.staffs__%s', $currentPlace->uuid))
+            && $count == Role::findByUuids($uuids)
+                ->where('level', '<', $user->roles()->max('level') ?? 0)
+                ->count()) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -30,7 +42,7 @@ class EmployeeRequest extends FormRequest
                 'phone' => 'bail|unique:users|min:10|max:11',
                 'email' => 'bail|unique:users',
                 'password' => 'bail|required',
-                'roles' => 'bail|required|array|min:1|exists:roles,name'
+                'role_uuids' => 'bail|required|array|min:1|max:5'
             ];
         }
 
@@ -40,6 +52,7 @@ class EmployeeRequest extends FormRequest
                 'name' => 'bail|required|unique:users,name,'.$this->uuid.',uuid',
                 'phone' => 'bail|min:10|max:11|unique:users,phone,'.$this->uuid.',uuid',
                 'email' => 'bail|unique:users,email,'.$this->uuid.',uuid',
+                'role_uuids' => 'bail|required|array|min:1|max:5'
             ];
         }
 
