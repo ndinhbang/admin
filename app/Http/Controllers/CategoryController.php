@@ -21,7 +21,7 @@ class CategoryController extends Controller
                 }
             })
             ->orderBy('position', 'asc')
-            ->paginate(20);
+            ->paginate(100);
         return $categories->toJson();
     }
 
@@ -73,6 +73,23 @@ class CategoryController extends Controller
         $category->save();
 
         return response()->json(['message' => 'Cập nhật danh mục thành công!', 'category' => $category]);
+    }
+
+    public function updatePosition(Request $request) {
+        $categories = $request->categories;
+        if(is_null($categories) || count($categories) < 1)
+            return response()->json(['message' => 'Có lỗi xảy ra!']);
+
+        \DB::transaction(function () use ($request, $categories) {
+            $position = 0;
+            foreach ($categories as $key => $category) {
+                $cat = Category::findUuid($category['uuid']);
+                $cat->position = $position++;
+                $cat->save();
+            }
+        });
+
+        return response()->json(['message' => 'Cập nhật vị trí thành công!']);
     }
 
     /**

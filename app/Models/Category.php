@@ -8,6 +8,9 @@ use App\Scopes\PlaceScope;
 class Category extends Model
 {
 
+    protected $fillable = [
+        'position'
+    ];
     /**
      * The attributes that should be hidden for arrays.
      *

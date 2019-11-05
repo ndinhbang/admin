@@ -62,6 +62,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::resource('voucher', 'VoucherController');
 
     /** =============== Category ================= **/
+    Route::post('/category/position', 'CategoryController@updatePosition')->name('category.update-position');
     Route::resource('category', 'CategoryController');
 
     /** =============== Account: customer, supplier, shipper, employee ==== **/
