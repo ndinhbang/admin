@@ -21,7 +21,12 @@ class PlaceController extends Controller
         $user = $request->user();        
         \DB::enableQueryLog();
 
-        $places = $user->places;
+        // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
+        $places = Place::select('places.*')
+            ->with('user')
+            ->join('place_user', 'place_user.place_id', '=', 'places.id')
+            ->where('place_user.user_id', $user->id)
+            ->get();
         
         dump(\DB::getQueryLog());
 
