@@ -2,22 +2,40 @@
 
 namespace App\Models;
 
+use App\Traits\AppendPlace;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Guard;
 use Spatie\Permission\Models\Role as SpatieRole;
-use App\Traits\AppendPlace;
 
 class Role extends SpatieRole
 {
     use AppendPlace;
 
-    protected $hidden = ['id', 'place_id', 'guard_name', 'pivot', 'created_at'];
+    protected $hidden = [
+        'id',
+        'place_id',
+        'guard_name',
+        'level',
+        'created_at',
+        'pivot',
+        'permissions',
+    ];
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 
     /**
      * Scope a query to include guard name.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  string|null  $guardName
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|null                           $guardName
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeOfGuard(Builder $query, $guardName = null)
@@ -30,9 +48,9 @@ class Role extends SpatieRole
     /**
      * Query roles by uuid(s)
      *
-     * @param \Illuminate\Database\Eloquent\Builder  $query
-     * @param array       $uuids
-     * @param string|null $guardName
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array                                 $uuids
+     * @param string|null                           $guardName
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFindByUuids(Builder $query, array $uuids, $guardName = null): Builder

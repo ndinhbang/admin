@@ -20,7 +20,7 @@ class Voucher extends Model
      */
     protected $hidden = [
         'id', 
-        'place_id'
+        'place_id',
     ];
 
     /**

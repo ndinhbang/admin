@@ -78,7 +78,7 @@ class CategoryController extends Controller
     public function updatePosition(Request $request) {
         $categories = $request->categories;
         if(is_null($categories) || count($categories) < 1)
-            return response()->json(['message' => 'Có lỗi xảy ra!']);
+            return response()->json(['message' => 'Có lỗi xảy ra!'], 500);
 
         \DB::transaction(function () use ($request, $categories) {
             $position = 0;
