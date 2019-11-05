@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Filters\UserFilter;
 use Illuminate\Http\Request;
-use Bouncer;
 
 class UserController extends Controller
 {
@@ -26,12 +25,11 @@ class UserController extends Controller
     {
         // current logged in user
         $user = $request->user();
-        $roles = $user->roles;
-        $abilities = $user->getAllPermissions();
+
         return response()->json([
-            'user' => $user,
-            'roles' => $roles,
-            'abilities' => $abilities
+            'user'        => $user->attributesToArray(),
+            'roles'       => $user->roles,
+            'permissions' => $user->getAllPermissions(),
         ]);
     }
 }

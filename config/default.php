@@ -96,6 +96,41 @@ return [
                 'title'       => 'Xem báo cáo',
                 'roles'       => ['admin', 'superadmin', 'boss'],
             ],
+            'manage.printers'    => [
+                'name'        => 'manage.printers__%s',
+                'title'       => 'Cài đặt máy in',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s'],
+            ],
+            'manage.orders'    => [
+                'name'        => 'manage.orders__%s',
+                'title'       => 'Quản lý đơn hàng',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s', 'cashier__%s'],
+            ],
+            'manage.customers'    => [
+                'name'        => 'manage.customers__%s',
+                'title'       => 'Quản lý khách hàng',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s', 'cashier__%s'],
+            ],
+            'manage.suppliers'    => [
+                'name'        => 'manage.suppliers__%s',
+                'title'       => 'Quản lý nhà cung cấp',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s', 'cashier__%s'],
+            ],
+            'manage.supplies'    => [
+                'name'        => 'manage.supplies__%s',
+                'title'       => 'Quản lý nhà cung cấp',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s', 'cashier__%s'],
+            ],
+            'manage.invoices'    => [
+                'name'        => 'manage.invoices__%s',
+                'title'       => 'Quản lý thu chi',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s'],
+            ],
+            'manage.order_states'    => [
+                'name'        => 'manage.order_states__%s',
+                'title'       => 'Quản lý trạng thái đơn hàng',
+                'roles'       => ['admin', 'superadmin', 'boss', 'manager__%s', 'cashier__%s'],
+            ],
         ]
     ],
 ];
