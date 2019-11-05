@@ -56,7 +56,7 @@ class VoucherController extends Controller
         $voucher->note = $request->note;
 
         $voucher->creator_id = $request->user()->id;
-        $voucher->place_id = $request->place->id;
+        $voucher->place_id = currentPlace()->id;
 
         $voucher->save();
 

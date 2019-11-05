@@ -20,7 +20,7 @@ class CategoryController extends Controller
                     $query->where('type', $request->type);
                 }
             })
-            ->orderBy('id', 'desc')
+            ->orderBy('position', 'asc')
             ->paginate(20);
         return $categories->toJson();
     }
@@ -39,8 +39,10 @@ class CategoryController extends Controller
         $category->description = $request->description;
         $category->parent_id = $request->parent_id;
         $category->type = $request->type;
-        $category->place_id = $request->place->id;
+        $category->place_id = currentPlace()->id;
         $category->save();
+
+        return response()->json(['message' => 'Tạo danh mục thành công!', 'category' => $category]);
     }
 
     /**
@@ -67,6 +69,7 @@ class CategoryController extends Controller
         $category->description = $request->description;
         $category->parent_id = $request->parent_id;
         $category->position = $request->position;
+        $category->state = $request->state;
         $category->save();
 
         return response()->json(['message' => 'Cập nhật danh mục thành công!', 'category' => $category]);
