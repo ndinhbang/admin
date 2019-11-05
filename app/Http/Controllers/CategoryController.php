@@ -37,7 +37,7 @@ class CategoryController extends Controller
         $category->uuid = nanoId();
         $category->name = $request->name;
         $category->description = $request->description;
-        $category->parent_id = $request->parent_id;
+        $category->parent_id = $request->parent_id ?? 0;
         $category->type = $request->type;
         $category->place_id = currentPlace()->id;
         $category->save();
@@ -67,7 +67,7 @@ class CategoryController extends Controller
     {
         $category->name = $request->name;
         $category->description = $request->description;
-        $category->parent_id = $request->parent_id;
+        $category->parent_id = $request->parent_id ?? 0;
         $category->position = $request->position;
         $category->state = $request->state;
         $category->save();
