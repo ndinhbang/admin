@@ -20,6 +20,7 @@ $factory->define(User::class, function (Faker $faker) {
     return [
         'uuid' => nanoId(),
         'name' => 'admin',
+        'display_name' => 'Super Admin',
         'phone' => '0012345678',
         'email' => 'admin@goido.local',
         'email_verified_at' => now(),
