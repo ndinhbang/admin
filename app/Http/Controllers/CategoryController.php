@@ -34,7 +34,7 @@ class CategoryController extends Controller
     public function store(CategoryRequest $request)
     {
         $category = new Category;
-        $category->uuid = $this->nanoId();
+        $category->uuid = nanoId();
         $category->name = $request->name;
         $category->description = $request->description;
         $category->parent_id = $request->parent_id;

@@ -56,7 +56,7 @@ class AccountController extends Controller
 
         // $request->validated();
         $account = new Account;
-        $account->uuid = $this->nanoId();
+        $account->uuid = nanoId();
         $account->code = $prefixCode.str_pad($vId, 6, "0", STR_PAD_LEFT);
         $account->type = $request->type; // 0:chi | 1:thu
         $account->name = $request->name;
@@ -74,7 +74,7 @@ class AccountController extends Controller
         $account->note = $request->note;
         $account->is_corporate = $request->is_corporate;
 
-        $account->place_id = $request->place->id;
+        $account->place_id = currentPlace()->id;
 
         $account->save();
 

@@ -37,7 +37,7 @@ class VoucherController extends Controller
 
         // $request->validated();
         $voucher = new Voucher;
-        $voucher->uuid = $this->nanoId();
+        $voucher->uuid = nanoId();
         $voucher->code = $prefixCode.str_pad($vId, 6, "0", STR_PAD_LEFT);
         $voucher->type = $request->type; // 0:chi | 1:thu
         $voucher->imported_at = $request->imported_at;

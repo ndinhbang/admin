@@ -26,6 +26,7 @@ class CreateAccountsTable extends Migration
             $table->tinyInteger('birth_month')->default(0);
             $table->date('birth_day')->nullable();
             $table->string('address')->nullable();
+            $table->tinyInteger('is_corporate')->default(0); // Persional
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('tax_code')->nullable();
