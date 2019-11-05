@@ -18,8 +18,13 @@ class PlaceController extends Controller
 
     public function getMy(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user();        
+        \DB::enableQueryLog();
+
         $places = $user->places;
+        
+        dump(\DB::getQueryLog());
+
         return response()->json($places);
     }
 
@@ -30,7 +35,6 @@ class PlaceController extends Controller
 
     public function store(PlaceRequest $request)
     {
-        \DB::enableQueryLog();
         $place = \DB::transaction(function () use ($request) {
             $user = $request->user();
             $arr = array_merge($request->all(), [
@@ -81,9 +85,6 @@ class PlaceController extends Controller
 
             return $place;
         }, 5);
-        dump(\DB::getQueryLog());
-//        }
-
 
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',

@@ -44,12 +44,5 @@ class PermissionTablesSeeder extends Seeder
                 }
             }
         }, 5);
-
-
-
-
-
-
-
     }
 }
