@@ -18,8 +18,18 @@ class PlaceController extends Controller
 
     public function getMy(Request $request)
     {
-        $user = $request->user();
-        $places = $user->places;
+        $user = $request->user();        
+        \DB::enableQueryLog();
+
+        // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
+        $places = Place::select('places.*')
+            ->with('user')
+            ->join('place_user', 'place_user.place_id', '=', 'places.id')
+            ->where('place_user.user_id', $user->id)
+            ->get();
+        
+        dump(\DB::getQueryLog());
+
         return response()->json($places);
     }
 
@@ -30,7 +40,6 @@ class PlaceController extends Controller
 
     public function store(PlaceRequest $request)
     {
-        \DB::enableQueryLog();
         $place = \DB::transaction(function () use ($request) {
             $user = $request->user();
             $arr = array_merge($request->all(), [
@@ -81,9 +90,6 @@ class PlaceController extends Controller
 
             return $place;
         }, 5);
-        dump(\DB::getQueryLog());
-//        }
-
 
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',

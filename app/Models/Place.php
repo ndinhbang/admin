@@ -27,7 +27,9 @@ class Place extends Model
      * @var array
      */
     protected $hidden = [
-        'id'
+        'id',
+        'user_id',
+        'pivot',
     ];
 
     public function scopeCurr($query)
