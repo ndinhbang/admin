@@ -82,12 +82,11 @@ class PlaceController extends Controller
                 }
             }
 
-            return $place;
         }, 5);
 
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',
-            'place'   => $place,
+            'place'   => $place->with('user')->first(),
             'places'  => $request->user()->places,
         ]);
     }
@@ -149,7 +148,7 @@ class PlaceController extends Controller
 
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
-            'place'   => $place,
+            'place'   => $place->with('user')->first(),
             'places'  => $user->places,
         ]);
 
@@ -180,6 +179,6 @@ class PlaceController extends Controller
         $place->logo = $filename . $extension;
         $place->save();
 
-        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'place' => $place]);
+        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'place' => $place->with('user')->first()]);
     }
 }
