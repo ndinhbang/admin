@@ -54,11 +54,10 @@ class PlaceController extends Controller
             $place = Place::create($arr);
             $user->places()->attach($place->id);
 
-            $roles = config('default.place.roles');
-            $permissions = config('default.place.permissions');
+            $roles = config('default.roles.place');
+            $permissions = config('default.permissions');
 
             // create place roles
-            $roleArr = [];
             foreach ($roles as $r) {
                 $role = Role::create([
                     'uuid' => nanoId(),
@@ -67,24 +66,19 @@ class PlaceController extends Controller
                     'level' => $r['level'],
                     'place_id' => $place->id,
                 ]);
-                $roleArr[$r['name']] = $role;
-            }
 
-            $permissionsArr = [];
-            // give user ab ilities with this place
-            foreach ($permissions as $perm) {
-                $permission = Permission::create([
-                    'uuid' => nanoId(),
-                    'name' => vsprintf($perm['name'], $place->uuid),
-                    'title' => $perm['title'],
-                    'place_id' => $place->id,
-                ]);
+                // Gán role chủ cửa hàng cho người tạo
+                if($role->level == 50) {
+                    $user->assignRole($role);
+                }
 
-                $permissionsArr[] = $permission;
-
-                foreach ($perm['roles'] as $roleName) {
-                    $role = $roleArr[$roleName] ?? Role::findByName(vsprintf($roleName, $place->uuid));
-                    $permission->assignRole($role);
+                // Gán permission cho role tương ứng
+                foreach ($permissions as $perm) {
+                    foreach ($perm['roles'] as $roleName) {
+                        if($role->name==vsprintf($roleName, $place->uuid)) {
+                            $role->givePermissionTo([$perm['name']]);
+                        }
+                    }
                 }
             }
 

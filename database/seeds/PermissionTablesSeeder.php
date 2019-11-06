@@ -13,8 +13,8 @@ class PermissionTablesSeeder extends Seeder
      */
     public function run()
     {
-        $roles = config('default.root.roles');
-        $permissions = config('default.root.permissions');
+        $roles = config('default.roles.root');
+        $permissions = config('default.permissions');
 
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
@@ -40,7 +40,8 @@ class PermissionTablesSeeder extends Seeder
                 ]);
 
                 foreach ($perm['roles'] as $roleName) {
-                    $permission->assignRole($roleArr[$roleName]);
+                    if(isset($roleArr[$roleName]))
+                        $permission->assignRole($roleArr[$roleName]);
                 }
             }
         }, 5);

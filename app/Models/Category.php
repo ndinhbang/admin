@@ -41,6 +41,11 @@ class Category extends Model
         return null;
     }
     
+    public function place()
+    {
+        return $this->belongsTo('App\Models\Place');
+    }
+
     /**
      * Get the route key for the model.
      *
