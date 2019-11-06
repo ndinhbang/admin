@@ -15,7 +15,7 @@ class EmployeeController extends Controller
 
     public function index(Request $request)
     {
-        $users = \App\User::paginate(10);
+        $users = \App\User::with('roles')->paginate(10);
 
         return $users->toJson();
     }
@@ -34,14 +34,10 @@ class EmployeeController extends Controller
             $employee->places()->attach($currentPlace->id);
 
             // assign roles for employee
-            $uuids = $request->input('role_uuids', []);
-            if(!empty($uuids)) {
-                $roles = Role::findByUuids($uuids)->get();
+            $roleNames = $request->input('role_names', []);
+            
+            $employee->assignRole($roleNames);
 
-                foreach ($roles as $role) {
-                    $employee->assignRole($role);
-                }
-            }
             return $employee;
         }, 5);
 
@@ -59,6 +55,9 @@ class EmployeeController extends Controller
         $employee->name = $request->name;
         $employee->email = $request->email;
         $employee->phone = $request->phone;
+
+        $roleNames = $request->input('role_names', []);
+        $employee->syncRoles($roleNames);
 
         if ($request->password) {
             $employee->password = \Hash::make($request->password);

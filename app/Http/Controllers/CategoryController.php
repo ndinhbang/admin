@@ -20,6 +20,7 @@ class CategoryController extends Controller
                     $query->where('type', $request->type);
                 }
             })
+            ->with('place')
             ->orderBy('position', 'asc')
             ->paginate(100);
         return $categories->toJson();
@@ -81,11 +82,13 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Có lỗi xảy ra!']);
 
         \DB::transaction(function () use ($request, $categories) {
-            $position = 0;
+            $position = 100;
             foreach ($categories as $key => $category) {
-                $cat = Category::findUuid($category['uuid']);
-                $cat->position = $position++;
-                $cat->save();
+                if(isset($category['place']) && !is_null($category['place'])) {
+                    $cat = Category::findUuid($category['uuid']);
+                    $cat->position = $position++;
+                    $cat->save();
+                }
             }
         });
 

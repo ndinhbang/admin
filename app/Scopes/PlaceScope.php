@@ -17,6 +17,11 @@ class PlaceScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->where($model->getTable() . '.place_id', currentPlace()->id ?? 0);
+        $placeIds = [0];
+        if (!is_null($currentPlace = currentPlace())) {
+            $placeIds[] = $currentPlace->id;
+        }
+
+        $builder->whereIn($model->getTable() . '.place_id', $placeIds);
     }
 }
