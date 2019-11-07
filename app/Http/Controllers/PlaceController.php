@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PlaceRequest;
-use App\Models\Permission;
 use App\Models\Place;
 use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 //use Bouncer;
 
@@ -18,17 +16,13 @@ class PlaceController extends Controller
 
     public function getMy(Request $request)
     {
-        $user = $request->user();        
-        \DB::enableQueryLog();
-
+        $user = $request->user();
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
         $places = Place::select('places.*')
             ->with('user')
             ->join('place_user', 'place_user.place_id', '=', 'places.id')
             ->where('place_user.user_id', $user->id)
             ->get();
-        
-        dump(\DB::getQueryLog());
 
         return response()->json($places);
     }
@@ -60,28 +54,29 @@ class PlaceController extends Controller
             // create place roles
             foreach ($roles as $r) {
                 $role = Role::create([
-                    'uuid' => nanoId(),
-                    'name' => vsprintf($r['name'], $place->uuid),
-                    'title' => $r['title'],
-                    'level' => $r['level'],
+                    'uuid'     => nanoId(),
+                    'name'     => vsprintf($r['name'], $place->uuid),
+                    'title'    => $r['title'],
+                    'level'    => $r['level'],
                     'place_id' => $place->id,
                 ]);
 
                 // Gán role chủ cửa hàng cho người tạo
-                if($role->level == 50) {
+                if ($role->level == 50) {
                     $user->assignRole($role);
                 }
 
                 // Gán permission cho role tương ứng
                 foreach ($permissions as $perm) {
                     foreach ($perm['roles'] as $roleName) {
-                        if($role->name==vsprintf($roleName, $place->uuid)) {
+                        if ($role->name == vsprintf($roleName, $place->uuid)) {
                             $role->givePermissionTo([$perm['name']]);
                         }
                     }
                 }
             }
-
+            // return data from within transaction
+            return $place;
         }, 5);
 
         return response()->json([
@@ -179,6 +174,9 @@ class PlaceController extends Controller
         $place->logo = $filename . $extension;
         $place->save();
 
-        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'place' => $place->with('user')->first()]);
+        return response()->json([
+            'message' => 'Cập nhật ảnh đại diện thành công!',
+            'place'   => $place->with('user')->first(),
+        ]);
     }
 }
