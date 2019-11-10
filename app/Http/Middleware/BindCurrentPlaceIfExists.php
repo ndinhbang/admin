@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use App\Models\Place;
 use Closure;
-use Illuminate\Support\Facades\App;
 
 class BindCurrentPlaceIfExists
 {
@@ -21,16 +20,14 @@ class BindCurrentPlaceIfExists
         $place = Place::where('uuid', $uuid)->first();
 
         // return error if place is not exists in case of requiring place uuid
-        if ($request->requirePlace && is_null($place)) {
+        if (getBindVal('_requirePlace') && is_null($place)) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Bad request'], 400)
                 : response('Bad request', 400);
         }
 
-        if (!App::offsetExists('currentPlace')) {
-            // make current place instance available as a global
-            App::instance('currentPlace', $place);
-        }
+        // make current place instance available as a global
+        app()->instance('_currentPlace', $place);
 
         return $next($request);
     }

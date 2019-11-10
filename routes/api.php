@@ -71,6 +71,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     /** =============== Role ================= **/
     Route::apiResource('roles', 'RoleController');
 
+    /** =============== Supplies ================= **/
+    Route::apiResource('supplies', 'SupplyController');
+
     /** =============== Product ================= **/
     Route::apiResource('products', 'ProductController');
 });

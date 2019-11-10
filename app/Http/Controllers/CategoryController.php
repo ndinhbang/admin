@@ -22,7 +22,7 @@ class CategoryController extends Controller
             })
             ->with('place')
             ->orderBy('position', 'asc')
-            ->paginate(100);
+            ->simplePaginate(100);
         return $categories->toJson();
     }
 

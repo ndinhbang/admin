@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Place;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -32,8 +31,9 @@ class RequirePlace
                 ? response()->json(['message' => 'Bad request'], 400)
                 : response('Bad request', 400);
         }
-        // mark request require place
-        $request->merge(['requirePlace' => true]);
+
+        // mark require place
+        app()->instance('_requirePlace', true);
 
         return $next($request);
     }

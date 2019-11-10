@@ -8,7 +8,43 @@ if (! function_exists('nanoId')) {
 }
 
 if (! function_exists('currentPlace')) {
+    /**
+     * @return \App\Models\Place|null
+     * @throws Exception
+     */
     function currentPlace() {
-        return app()->offsetExists('currentPlace') ? resolve('currentPlace') : null;
+        if (app()->offsetExists('_currentPlace')) {
+            return app('_currentPlace');
+        }
+        if (getBindVal('_requirePlace')) {
+            throw new \Exception('Place is required');
+        }
+        return null;
+    }
+}
+
+if (! function_exists('getBindVal')) {
+    /**
+     * @param      $key
+     * @param null $default
+     * @return mixed|null
+     */
+    function getBindVal($key, $default = null)
+    {
+        return app()->offsetExists($key)
+            ? app($key)
+            : $default;
+    }
+}
+
+if (! function_exists('getClassShortName')) {
+    /**
+     * @param $object
+     * @return string
+     * @throws ReflectionException
+     */
+    function getClassShortName($object)
+    {
+        return (new \ReflectionClass($object))->getShortName();
     }
 }
