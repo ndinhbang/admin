@@ -136,26 +136,29 @@ class ProductController extends Controller
      */
     public function update(ProductRequest $request, Product $product)
     {
-        $request->validated();
-
         $product = DB::transaction(function () use ($request, $product) {
-            $product->update($request->except(['supplies', 'netroom_id']));
-
-            $supplies = collect($request->input('supplies'));
-            $keyed = $supplies->mapWithKeys(function ($item) {
-                return [$item['id'] => ['quantity' => $item['quantity']]];
-            });
-
-            $product->supplies()->sync($keyed->toArray());
+            $placeId = currentPlace()->id;
+            $category = getBindVal('category');
+            // create product
+            $product->guard(['id', 'uuid', 'place_id']);
+            $product->update($request->except(['supplies', 'category_uuid']));
+            // tao supply neu san pham co quan ly ton kho
+            if ($product->can_stock) {
+                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ??  []);
+                $product->supplies()->sync($keyedArr);
+            }
 
             return $product;
         }, 5);
 
         $product->load(['supplies', 'category']);
 
-        broadcast(new ProductChanged($product));
+//        broadcast(new ProductChanged($product));
 
-        return response()->json(['message' => 'Product updated!', 'data' => $product]);
+        return response()->json([
+            'message' => 'Product added!',
+            'data'    => $product,
+        ]);
     }
 
     /**
