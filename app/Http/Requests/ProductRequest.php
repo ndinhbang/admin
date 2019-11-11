@@ -35,6 +35,14 @@ class ProductRequest extends FormRequest
                 'can_stock'           => ['bail', 'boolean'],
                 'state'               => ['bail', 'boolean'],
                 'supplies'            => ['bail', 'array', 'max:25'],
+                'thumbnail'           => [
+                    'bail',
+                    'nullable',
+                    'sometimes',
+                    'image',
+                    'mimes:jpeg,jpg,png,gif',
+                    'max:2048',
+                ],
                 'category_uuid'       => [
                     'bail',
                     'required',
@@ -47,10 +55,6 @@ class ProductRequest extends FormRequest
                     'numeric',
                     Rule::requiredIf(count($this->input('supplies')) > 0),
                 ],
-            ];
-        } elseif ($this->routeIs(['products.thumbnail'])) {
-            return [
-                'thumbnail' => ['bail', 'required', 'image'],
             ];
         }
 

@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
+    protected $thumbnail_path = 'medias/products/';
+    protected $exceptAttributes = ['supplies', 'category_uuid', 'category', 'thumbnail'];
+
     /**
      * Display a listing of the resource.
      *
@@ -20,9 +23,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::with(['supplies', 'category'])
-            ->orderBy('products.id', 'desc')
-            ->simplePaginate(100);
+        $products = Product::with(['supplies', 'category'])->orderBy('products.id', 'desc')->simplePaginate(100);
         return response()->json($products);
     }
 
@@ -48,17 +49,19 @@ class ProductController extends Controller
         $product = DB::transaction(function () use ($request) {
             $placeId = currentPlace()->id;
             $category = getBindVal('category');
+            // Upload image
+            $filePath = $this->uploadThumbnail($request);
             // create product
-            $product = Product::create(
-                array_merge($request->except(['supplies', 'category_uuid', 'category']), [
-                    'category_id' => $category->id,
-                    'uuid'     => nanoId(),
-                    'place_id' => $placeId,
-                ])
-            );
+            $product = Product::create(array_merge($request->except($this->exceptAttributes), [
+                'category_id' => $category->id,
+                'uuid'        => nanoId(),
+                'place_id'    => $placeId,
+                'thumbnail'   => $filePath,
+            ]));
+
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {
-                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ??  []);
+                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ?? []);
                 $product->supplies()->attach($keyedArr);
             }
 
@@ -144,14 +147,12 @@ class ProductController extends Controller
             $category = getBindVal('category');
             // create product
             $product->guard(['id', 'uuid', 'place_id']);
-            $product->update(
-                array_merge($request->except(['supplies', 'category_uuid', 'category']), [
-                    'category_id' => $category->id,
-                ])
-            );
+            $product->update(array_merge($request->except($this->exceptAttributes), [
+                'category_id' => $category->id,
+            ]));
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {
-                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ??  []);
+                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ?? []);
                 $product->supplies()->sync($keyedArr);
             }
 
@@ -209,21 +210,32 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product updated!', 'product' => $product]);
     }
 
-    public function uploadThumbnail(ProductRequest $request)
+    protected function uploadThumbnail(ProductRequest $request)
     {
-        $request->validated();
+        // Upload image
+        if ($file = $request->file('thumbnail')) {
+            $extension = $file->getClientOriginalExtension();
+            $filename = uniqid();
+            $file = $file->move($this->thumbnail_path, $filename . "." . $extension);
 
-        $extension = $request->file('thumbnail')->getClientOriginalExtension();
-        $filename = uniqid();
-        $file = $request->file('thumbnail')->move($this->thumbnail_path, $filename . "." . $extension);
+            $filePath = $this->thumbnail_path . $filename . "." . $extension;
+            $img = \Image::make($filePath);
 
-        $filePath = $this->thumbnail_path . $filename . "." . $extension;
-        $img = \Image::make($filePath);
+            if ($img->width() > 1024) {
+                $img->resize(1024, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+            } elseif ($img->height() > 600) {
+                $img->resize(null, 600, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+            }
 
-        $img->fit(600, 358);
-        $img->save($filePath);
+            $img->save($filePath);
 
-        return response()->json(['message' => 'Thumbnail updated!', 'filePath' => $filePath]);
+            return '/' . trim($filePath, '/');
+        }
+        return '';
     }
 
 
