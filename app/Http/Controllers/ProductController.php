@@ -20,7 +20,9 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::orderBy('products.id', 'desc')->simplePaginate(100);
+        $products = Product::with(['supplies', 'category'])
+            ->orderBy('products.id', 'desc')
+            ->simplePaginate(100);
         return response()->json($products);
     }
 
@@ -48,7 +50,8 @@ class ProductController extends Controller
             $category = getBindVal('category');
             // create product
             $product = Product::create(
-                array_merge($request->except(['supplies', 'category_uuid']), [
+                array_merge($request->except(['supplies', 'category_uuid', 'category']), [
+                    'category_id' => $category->id,
                     'uuid'     => nanoId(),
                     'place_id' => $placeId,
                 ])
@@ -141,7 +144,11 @@ class ProductController extends Controller
             $category = getBindVal('category');
             // create product
             $product->guard(['id', 'uuid', 'place_id']);
-            $product->update($request->except(['supplies', 'category_uuid']));
+            $product->update(
+                array_merge($request->except(['supplies', 'category_uuid', 'category']), [
+                    'category_id' => $category->id,
+                ])
+            );
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {
                 $keyedArr = $this->suppliesOfProduct($product, $request->supplies ??  []);

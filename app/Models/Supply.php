@@ -16,4 +16,21 @@ class Supply extends Model
         'place_id',
         'created_at',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['quantity'];
+
+    /**
+     * Get the administrator flag for the user.
+     *
+     * @return bool
+     */
+    public function getQuantityAttribute()
+    {
+        return $this->pivot->quantity ?? null;
+    }
 }
