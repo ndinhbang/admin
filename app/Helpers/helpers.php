@@ -1,18 +1,20 @@
 <?php
 
-if (! function_exists('nanoId')) {
-    function nanoId() {
+if (!function_exists('nanoId')) {
+    function nanoId()
+    {
         $client = new \Hidehalo\Nanoid\Client();
         return $client->generateId($size = 21, $mode = \Hidehalo\Nanoid\Client::MODE_DYNAMIC);
     }
 }
 
-if (! function_exists('currentPlace')) {
+if (!function_exists('currentPlace')) {
     /**
      * @return \App\Models\Place|null
      * @throws Exception
      */
-    function currentPlace() {
+    function currentPlace()
+    {
         if (app()->offsetExists('_currentPlace')) {
             return app('_currentPlace');
         }
@@ -23,7 +25,7 @@ if (! function_exists('currentPlace')) {
     }
 }
 
-if (! function_exists('getBindVal')) {
+if (!function_exists('getBindVal')) {
     /**
      * @param      $key
      * @param null $default
@@ -31,13 +33,11 @@ if (! function_exists('getBindVal')) {
      */
     function getBindVal($key, $default = null)
     {
-        return app()->offsetExists($key)
-            ? app($key)
-            : $default;
+        return app()->offsetExists($key) ? app($key) : $default;
     }
 }
 
-if (! function_exists('getClassShortName')) {
+if (!function_exists('getClassShortName')) {
     /**
      * @param $object
      * @return string
@@ -46,5 +46,36 @@ if (! function_exists('getClassShortName')) {
     function getClassShortName($object)
     {
         return (new \ReflectionClass($object))->getShortName();
+    }
+}
+
+if (!function_exists('uploadImage')) {
+
+    function uploadImage(\Illuminate\Http\UploadedFile $file = null, $targetPath = 'medias/')
+    {
+        if (!is_null($file)) {
+            $extension = $file->getClientOriginalExtension();
+            $filename = uniqid();
+            $file = $file->move($targetPath, $filename . "." . $extension);
+
+            $filePath = $targetPath . $filename . "." . $extension;
+            $img = \Image::make($filePath);
+
+            if ($img->width() > 1024) {
+                $img->resize(1024, null, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+            } elseif ($img->height() > 600) {
+                $img->resize(null, 600, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+            }
+
+            $img->save($filePath);
+
+            return '/' . trim($filePath, '/');
+        }
+
+        return '';
     }
 }

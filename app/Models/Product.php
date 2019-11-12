@@ -29,6 +29,7 @@ class Product extends Model
         'price'       => 'double',
         'opened'      => 'boolean',
         'can_stock'   => 'boolean',
+        'thumbnail'   => 'string',
     ];
 
     // ======================= Overrided ================= //
@@ -46,17 +47,17 @@ class Product extends Model
      *
      * @var array
      */
-    protected $appends = ['category_uuid'];
+//    protected $appends = ['category_uuid'];
 
     /**
      * Get the administrator flag for the user.
      *
      * @return bool
      */
-    public function getCategoryUuidAttribute()
-    {
-        return $this->category->uuid ?? null;
-    }
+//    public function getCategoryUuidAttribute()
+//    {
+//        return $this->category->uuid ?? null;
+//    }
 
     // ======================= Mutators ================= //
     public function setThumbnailAttribute($value)

@@ -35,7 +35,8 @@ class ProductRequest extends FormRequest
                 'can_stock'           => ['bail', 'boolean'],
                 'state'               => ['bail', 'boolean'],
                 'supplies'            => ['bail', 'array', 'max:25'],
-                'thumbnail'           => [
+                'thumbnail'           => ['bail', 'nullable', 'string'],
+                'thumbnailFile'       => [
                     'bail',
                     'nullable',
                     'sometimes',

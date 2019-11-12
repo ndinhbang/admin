@@ -22,15 +22,15 @@ class Supply extends Model
      *
      * @var array
      */
-    protected $appends = ['quantity'];
+//    protected $appends = ['quantity'];
 
     /**
      * Get the administrator flag for the user.
      *
      * @return bool
      */
-    public function getQuantityAttribute()
-    {
-        return $this->pivot->quantity ?? null;
-    }
+//    public function getQuantityAttribute()
+//    {
+//        return $this->pivot->quantity ?? null;
+//    }
 }

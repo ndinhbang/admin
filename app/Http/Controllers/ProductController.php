@@ -9,32 +9,34 @@ use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\ProductResource;
 
 class ProductController extends Controller
 {
     protected $thumbnail_path = 'medias/products/';
-    protected $exceptAttributes = ['supplies', 'category_uuid', 'category', 'thumbnail'];
+    protected $exceptAttributes = [
+        'supplies',
+        'category_uuid',
+        'category_name',
+        'thumbnail',
+        'thumbnailFile',
+        'updated_at',
+        'created_at',
+    ];
 
     /**
      * Display a listing of the resource.
      *
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
     {
-        $products = Product::with(['supplies', 'category'])->orderBy('products.id', 'desc')->simplePaginate(100);
-        return response()->json($products);
-    }
+        $products = Product::with(['supplies', 'category', 'place'])->orderBy('products.id', 'desc')
+            ->simplePaginate(100);
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return ProductResource::collection($products);
+
     }
 
     /**
@@ -50,18 +52,18 @@ class ProductController extends Controller
             $placeId = currentPlace()->id;
             $category = getBindVal('category');
             // Upload image
-            $filePath = $this->uploadThumbnail($request);
+            $filePath = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
             // create product
             $product = Product::create(array_merge($request->except($this->exceptAttributes), [
                 'category_id' => $category->id,
                 'uuid'        => nanoId(),
                 'place_id'    => $placeId,
-                'thumbnail'   => $filePath,
+                'thumbnail'   => $filePath ??  $request->input('thumbnail'),
             ]));
 
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {
-                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ?? []);
+                $keyedArr = $this->addSupplies($product, $request->input('supplies',[]));
                 $product->supplies()->attach($keyedArr);
             }
 
@@ -74,7 +76,7 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Product added!',
-            'data'    => $product,
+            'data'    => new ProductResource($product),
         ]);
     }
 
@@ -85,7 +87,7 @@ class ProductController extends Controller
      * @param array   $arrSupplies
      * @return array
      */
-    protected function suppliesOfProduct(Product $product, array $arrSupplies)
+    protected function addSupplies(Product $product, array $arrSupplies)
     {
         $result = [];
         $collection = new Collection($arrSupplies);
@@ -145,14 +147,17 @@ class ProductController extends Controller
         $product = DB::transaction(function () use ($request, $product) {
             $placeId = currentPlace()->id;
             $category = getBindVal('category');
+
+            $filePath = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
             // create product
             $product->guard(['id', 'uuid', 'place_id']);
             $product->update(array_merge($request->except($this->exceptAttributes), [
                 'category_id' => $category->id,
+                'thumbnail'   => $filePath ?? $request->input('thumbnail'),
             ]));
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {
-                $keyedArr = $this->suppliesOfProduct($product, $request->supplies ?? []);
+                $keyedArr = $this->addSupplies($product, $request->input('supplies',[]));
                 $product->supplies()->sync($keyedArr);
             }
 
@@ -208,34 +213,6 @@ class ProductController extends Controller
         broadcast(new ProductChanged($product->load(['supplies', 'category'])));
 
         return response()->json(['message' => 'Product updated!', 'product' => $product]);
-    }
-
-    protected function uploadThumbnail(ProductRequest $request)
-    {
-        // Upload image
-        if ($file = $request->file('thumbnail')) {
-            $extension = $file->getClientOriginalExtension();
-            $filename = uniqid();
-            $file = $file->move($this->thumbnail_path, $filename . "." . $extension);
-
-            $filePath = $this->thumbnail_path . $filename . "." . $extension;
-            $img = \Image::make($filePath);
-
-            if ($img->width() > 1024) {
-                $img->resize(1024, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            } elseif ($img->height() > 600) {
-                $img->resize(null, 600, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            }
-
-            $img->save($filePath);
-
-            return '/' . trim($filePath, '/');
-        }
-        return '';
     }
 
 
