@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\PlaceRequest;
 use App\Models\Place;
 use App\Models\Role;
+use App\Models\Permission;
+use App\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 //use Bouncer;
 
@@ -14,73 +17,71 @@ class PlaceController extends Controller
 
     protected $place_path = 'medias/places/';
 
-    public function getMy(Request $request)
+    public function index(Request $request)
     {
-        $user = $request->user();
-
-        $roles = $user->roles;
-        $permissions = $user->getAllPermissions();
-
-        // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
         $places = Place::select('places.*')
             ->with('user')
             ->join('place_user', 'place_user.place_id', '=', 'places.id')
-            ->where('place_user.user_id', $user->id)
-            ->get();
+            ->groupBy('places.id')
+            ->orderBy('id', 'desc')
+            ->paginate($request->per_page);
 
-        return response()->json(compact('user', 'roles', 'permissions', 'places'));
-    }
-
-    public function index()
-    {
-
+        return $places->toJson();
     }
 
     public function store(PlaceRequest $request)
     {
         $place = \DB::transaction(function () use ($request) {
-            $user = $request->user();
-            $arr = array_merge($request->all(), [
-                'uuid'          => nanoId(),
-                'contact_name'  => $user->display_name,
-                'contact_phone' => $user->phone,
-                'contact_email' => $user->email,
-                'status'        => 'trial',
-                'user_id'       => $user->id,
-            ]);
 
-            $place = Place::create($arr);
-            $user->places()->attach($place->id);
-
-            $roles = config('default.roles.place');
-            $permissions = config('default.permissions');
-
-            // create place roles
-            foreach ($roles as $r) {
-                $role = Role::create([
-                    'uuid'     => nanoId(),
-                    'name'     => vsprintf($r['name'], $place->uuid),
-                    'title'    => $r['title'],
-                    'level'    => $r['level'],
-                    'place_id' => $place->id,
+            if($user = User::findUuid($request->user['uuid'])) {
+                $arr = array_merge($request->all(), [
+                    'uuid'          => nanoId(),
+                    'contact_name'  => $user->display_name,
+                    'contact_phone' => $user->phone,
+                    'contact_email' => $user->email,
+                    'status'        => 'trial',
+                    'user_id'       => $user->id,
                 ]);
 
-                // Gán role chủ cửa hàng cho người tạo
-                if ($role->level == 50) {
-                    $user->assignRole($role);
-                }
+                $place = Place::create($arr);
+                $user->places()->attach($place->id);
 
-                // Gán permission cho role tương ứng
-                foreach ($permissions as $perm) {
-                    foreach ($perm['roles'] as $roleName) {
-                        if ($role->name == vsprintf($roleName, $place->uuid)) {
-                            $role->givePermissionTo([$perm['name']]);
+                $roles = config('default.roles.place');
+                $permissions = config('default.permissions');
+
+                // create place roles
+                foreach ($roles as $r) {
+                    $role = Role::create([
+                        'uuid'     => nanoId(),
+                        'name'     => vsprintf($r['name'], $place->uuid),
+                        'title'    => $r['title'],
+                        'level'    => $r['level'],
+                        'place_id' => $place->id,
+                    ]);
+
+                    // Gán role chủ cửa hàng cho chủ quản
+                    if ($role->level == 50) {
+                        $user->assignRole($role);
+                    }
+
+                    $rolePermissions = [];
+
+                    // Gán permission cho role tương ứng
+                    foreach ($permissions as $perm) {
+                        foreach ($perm['roles'] as $roleName) {
+                            if ($role->name == vsprintf($roleName, $place->uuid)) {
+                                $rolePermissions[] = $perm['name'];
+                            }
                         }
                     }
+
+                    if(count($rolePermissions))
+                        $role->givePermissionTo($rolePermissions);
+
                 }
+                // return data from within transaction
+                return $place;
             }
-            // return data from within transaction
-            return $place;
         }, 5);
 
         return response()->json([
@@ -131,24 +132,46 @@ class PlaceController extends Controller
     public function update(PlaceRequest $request, Place $place)
     {
 
-        $user = $request->user();
-        // $place = Place::curr();
+        $place = \DB::transaction(function () use ($place, $request) {
+            $place->title = $request->title;
 
-        $place->title = $request->title;
+            $place->code = $request->code;
+            $place->address = $request->address;
 
-        $place->code = $request->code;
-        $place->address = $request->address;
+            $place->contact_name = $request->contact_name;
+            $place->contact_phone = $request->contact_phone;
+            $place->contact_email = $request->contact_email;
 
-        $place->contact_name = $request->contact_name;
-        $place->contact_phone = $request->contact_phone;
-        $place->contact_email = $request->contact_email;
+            $oldBoss = User::find($place->user_id);
 
-        $place->save();
+            $bossRole = Role::findByName('boss__'.$place->uuid);
+
+            if($request->user['uuid'] !== $oldBoss->uuid) {
+                $newBoss = User::findUuid($request->user['uuid']);
+
+                if(!is_null($newBoss)) {
+                    // Bỏ quyền boss user cũ
+                    if($oldBoss->hasRole([$bossRole])) {
+                        $oldBoss->removeRole($bossRole);
+                        $oldBoss->places()->dettach($place->id);
+                    }
+
+                    // Gán quyền boss cho user mới
+                    $newBoss->assignRole($bossRole);
+                    $newBoss->places()->attach($place->id);
+
+                    $place->user_id = $newBoss->id;
+                }
+            }
+
+            $place->save();
+
+            return $place;
+        });
 
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
-            'place'   => $place->with('user')->first(),
-            'places'  => $user->places,
+            'place'   => $place->with('user')->first()
         ]);
 
     }

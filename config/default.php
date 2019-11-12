@@ -5,7 +5,7 @@ return [
         'root' => [
             'superadmin' => [
                 'name'  => 'superadmin',
-                'title' => 'superadmin',
+                'title' => 'Siêu quản trị',
                 'level' => 100,
             ],
             'admin'      => [
@@ -63,18 +63,13 @@ return [
             'title'       => 'Quản lý tài khoản',
             'roles'       => ['admin', 'superadmin'],
         ],
+        // Quản lý cửa hàng - gia hạn, hợp đồng, tạo thêm/chỉnh sửa cửa hàng...
         'admin.places'       => [
             'name'        => 'admin.places',
             'title'       => 'Quản lý của hàng',
-            'roles'       => ['admin', 'superadmin'],
+            'roles'       => ['admin', 'superadmin']
         ],
         
-        // Quản lý cửa hàng - gia hạn, hợp đồng, tạo thêm/chỉnh sửa cửa hàng...
-        'manage.places'   => [
-            'name'        => 'manage.places',
-            'title'       => 'Quản lý của hàng',
-            'roles'       => ['admin', 'superadmin', 'boss__%s'],
-        ],
         // Quản lý
         'pos'  => [
             'name'        => 'pos',

@@ -37,6 +37,20 @@ Route::group(['prefix' => 'auth'], function () {
     
 Route::group(['middleware' => 'auth:api'], function () {
 
+     /** =============== Administrator =========== **/
+    Route::group(['prefix' => 'admin'], function () {
+
+        Route::get('/places', 'Admin\PlaceController@index')->name('admin.places');
+        Route::post('/place', 'Admin\PlaceController@store')->name('admin.place.store');
+        Route::put('/place/{place}', 'Admin\PlaceController@update')->name('admin.place.update');
+
+        // Admin Users
+        Route::get('/users', 'Admin\UserController@index')->name('admin.users');
+        Route::post('/user', 'Admin\UserController@store')->name('admin.user.store');
+        Route::put('/user/{user}', 'Admin\UserController@update')->name('admin.user.update');
+    });
+
+
      /** =============== Profile ================= **/
     Route::group(['prefix' => 'profile'], function () {
         Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');

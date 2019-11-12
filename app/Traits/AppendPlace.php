@@ -5,6 +5,7 @@ trait AppendPlace
 {
     public static function bootAppendPlace()
     {
-        static::addGlobalScope(new \App\Scopes\PermissionScope());
+        if(!request()->is('api/admin/*'))
+            static::addGlobalScope(new \App\Scopes\PermissionScope());
     }
 }

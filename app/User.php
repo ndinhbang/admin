@@ -54,7 +54,19 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(new PlaceM2MScope);
+
+        if(!is_null(request()->user()) && !request()->user()->hasAnyRole(['admin', 'superadmin'])) {
+            static::addGlobalScope(new PlaceM2MScope);
+        }
+    }
+
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return User::where('uuid', $uuid)->first();
+
+        return null;
     }
 
     /**
