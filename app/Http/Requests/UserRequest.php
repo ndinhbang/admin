@@ -27,8 +27,8 @@ class UserRequest extends FormRequest
             return [
                 'display_name' => 'bail|required',
                 'name' => 'bail|required|unique:users',
-                'phone' => 'bail|unique:users|min:10|max:11',
-                'email' => 'bail|unique:users',
+                'phone' => 'bail|required|unique:users|min:10|max:11',
+                'email' => 'bail|required|unique:users',
                 'password' => 'bail|required',
             ];
         }

@@ -18,7 +18,7 @@ class PlaceM2MScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        if(!request()->is('api/admin/*') && request()->user() && !request()->user()->hasAnyRole(['admin', 'superadmin'])) {
+        if(!request()->is('api/admin/*')) {
             if (!is_null($currentPlace = currentPlace())) {
                 $builder->whereHas('places', function ($query) use ($currentPlace) {
                     $query->where('places.id', $currentPlace->id);
