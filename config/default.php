@@ -5,7 +5,7 @@ return [
         'root' => [
             'superadmin' => [
                 'name'  => 'superadmin',
-                'title' => 'superadmin',
+                'title' => 'Siêu quản trị',
                 'level' => 100,
             ],
             'admin'      => [

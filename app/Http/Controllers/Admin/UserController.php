@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\User;
+use App\Models\Role;
+use App\Http\Requests\UserRequest;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-
-    protected $avatar_path = 'images/users/';
-
     /**
      * Display a listing of the resource.
      *
@@ -19,62 +19,55 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        // \DB::enableQueryLog();
         $account = User::where(function ($query) use ($request) {
                 if($request->keyword) {
-                    $query->orWhere('display_name', 'like', '%'.$request->keyword.'%');
+                    $query->orWhere('name', 'like', '%'.$request->keyword.'%');
                     $query->orWhere('email', 'like', '%'.$request->keyword.'%');
                     $query->orWhere('phone', 'like', '%'.$request->keyword.'%');
                 }
-            })->orderBy('id', 'desc')->take(20)->get();
-        
+            })
+            ->with('places')
+            ->with('roles')
+            ->orderBy('id', 'desc')->paginate($request->get('per_page', 8));
+        // dump(\DB::getQueryLog());
+
         return $account->toJson();
     }
 
-    public function store(EmployeeRequest $request)
+    public function store(UserRequest $request)
     {
-        \DB::enableQueryLog();
-        $employee = DB::transaction(function () use ($request) {
-            $currentPlace = currentPlace();
+        $user = DB::transaction(function () use ($request) {
             $arr = $request->all();
             $arr['uuid'] = nanoId();
             $arr['password'] = \Hash::make($request->password);
-            // create employee
-            $employee = User::create($arr);
-            // assign employee to place
-            $employee->places()->attach($currentPlace->id);
+            // create user
+            $user = User::create($arr);
 
-            // assign roles for employee
-            $roleNames = $request->input('role_names', []);
-            
-            $employee->assignRole($roleNames);
-
-            return $employee;
+            return $user;
         }, 5);
 
-        dump(\DB::getQueryLog());
-
         return response()->json([
-            'message'  => 'Thêm nhân viên thành công!',
-            'employee' => $employee,
+            'message'  => 'Thêm chủ quản thành công!',
+            'employee' => $user,
         ]);
     }
 
-    public function update(EmployeeRequest $request, \App\User $employee)
+    public function update(UserRequest $request, User $user)
     {
-        $employee->display_name = $request->display_name;
-        $employee->name = $request->name;
-        $employee->email = $request->email;
-        $employee->phone = $request->phone;
+        $user->display_name = $request->display_name;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
 
-        $roleNames = $request->input('role_names', []);
-        $employee->syncRoles($roleNames);
+        $user->status = $request->status;
 
         if ($request->password) {
-            $employee->password = \Hash::make($request->password);
+            $user->password = \Hash::make($request->password);
         }
 
-        $employee->save();
+        $user->save();
 
-        return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
+        return response()->json(['message' => 'Cập nhật thông tin tài khoản thành công!', 'user' => $user]);
     }
 }

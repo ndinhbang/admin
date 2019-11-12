@@ -57,6 +57,15 @@ class User extends Authenticatable
         static::addGlobalScope(new PlaceM2MScope);
     }
 
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return User::where('uuid', $uuid)->first();
+
+        return null;
+    }
+
     /**
      * The roles that belong to the user.
      */

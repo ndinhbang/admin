@@ -24,7 +24,7 @@ class PlaceRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->routeIs('place.my')) {
+        if ($this->routeIs('place.my') || $this->routeIs('admin.place.store')) {
             return [
                 'title'   => 'required',
                 'code'    => 'required|unique:places',
@@ -32,7 +32,7 @@ class PlaceRequest extends FormRequest
             ];
         }
 
-        if ($this->routeIs('place.update')) {
+        if ($this->routeIs('place.update') || $this->routeIs('admin.place.update')) {
             return [
                 'title'   => 'required',
                 'code'    => 'required|unique:places,code,'.$this->uuid.',uuid',

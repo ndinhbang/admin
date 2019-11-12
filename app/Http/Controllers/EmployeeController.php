@@ -22,7 +22,7 @@ class EmployeeController extends Controller
 
     public function store(EmployeeRequest $request)
     {
-        \DB::enableQueryLog();
+        // \DB::enableQueryLog();
         $employee = DB::transaction(function () use ($request) {
             $currentPlace = currentPlace();
             $arr = $request->all();
@@ -41,7 +41,7 @@ class EmployeeController extends Controller
             return $employee;
         }, 5);
 
-        dump(\DB::getQueryLog());
+        // dump(\DB::getQueryLog());
 
         return response()->json([
             'message'  => 'Thêm nhân viên thành công!',
