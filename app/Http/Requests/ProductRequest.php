@@ -16,8 +16,7 @@ class ProductRequest extends FormRequest
      */
     public function authorize()
     {
-        if  ($this->user()->hasAnyRole(['admin', 'superadmin'])
-            || $this->user()->can('manage.products')) {
+        if ($this->user()->hasAnyRole(['admin', 'superadmin']) || $this->user()->can('manage.products')) {
             return true;
         }
     }
@@ -38,6 +37,7 @@ class ProductRequest extends FormRequest
                 'can_stock'           => ['bail', 'boolean'],
                 'state'               => ['bail', 'boolean'],
                 'supplies'            => ['bail', 'array', 'max:25'],
+                'code'                => ['bail', 'nullable', 'sometimes', 'alpha_dash', 'max:20'],
                 'thumbnail'           => ['bail', 'nullable', 'string'],
                 'thumbnailFile'       => [
                     'bail',

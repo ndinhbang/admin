@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $table = 'products';
+    protected $codePrefix = 'P';
 
     // ======================= Hidden Attributes ================= //
     protected $hidden = [
@@ -42,10 +43,15 @@ class Product extends Model
         return 'uuid';
     }
 
+    // ======================= Accessors ================= //
+
     // ======================= Mutators ================= //
-    public function setThumbnailAttribute($value)
+
+    public function setCodeAttribute($value)
     {
-        $this->attributes['thumbnail'] = '/' . trim($value, '/');
+        $this->attributes['code'] = is_null($value)
+            ? $this->codePrefix . str_pad(static::count() + 1, 6, "0", STR_PAD_LEFT)
+            : $value;
     }
 
     // ======================= Local Scopes ================= //

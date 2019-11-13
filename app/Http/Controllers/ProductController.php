@@ -52,13 +52,14 @@ class ProductController extends Controller
             $placeId = currentPlace()->id;
             $category = getBindVal('category');
             // Upload image
-            $filePath = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
+            $baseName = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
             // create product
             $product = Product::create(array_merge($request->except($this->exceptAttributes), [
                 'category_id' => $category->id,
                 'uuid'        => nanoId(),
                 'place_id'    => $placeId,
-                'thumbnail'   => $filePath ??  $request->input('thumbnail'),
+                'thumbnail'   => $baseName ?? '',
+                'code'        => $request->input('code')
             ]));
 
             // tao supply neu san pham co quan ly ton kho
@@ -148,12 +149,12 @@ class ProductController extends Controller
             $placeId = currentPlace()->id;
             $category = getBindVal('category');
 
-            $filePath = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
+            $baseName = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
             // create product
-            $product->guard(['id', 'uuid', 'place_id']);
+            $product->guard(['id', 'uuid', 'place_id', 'code']);
             $product->update(array_merge($request->except($this->exceptAttributes), [
                 'category_id' => $category->id,
-                'thumbnail'   => $filePath ?? $request->input('thumbnail'),
+                'thumbnail'   => $baseName ?? $product->thumbnail,
             ]));
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {

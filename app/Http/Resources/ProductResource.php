@@ -16,6 +16,7 @@ class ProductResource extends JsonResource
     {
         return [
             'uuid'          => $this->uuid,
+            'code'          => $this->code,
             $this->mergeWhen($this->resource->relationLoaded('category'), [
                 'category_uuid' => $this->category->uuid,
                 'category_name' => $this->category->name,
@@ -28,7 +29,7 @@ class ProductResource extends JsonResource
             'position'      => $this->position,
             'price'         => $this->price,
             'state'         => $this->state,
-            'thumbnail'     => $this->thumbnail,
+            'thumbnail'     => $this->thumbnail ? '/products/' . $this->thumbnail : '',
             'thumbnailFile' => null,
             'updated_at'    => $this->updated_at,
         ];

@@ -56,9 +56,10 @@ if (!function_exists('uploadImage')) {
         if (!is_null($file)) {
             $extension = $file->getClientOriginalExtension();
             $filename = uniqid();
-            $file = $file->move($targetPath, $filename . "." . $extension);
+            $baseName = $filename . "." . $extension;
+            $file = $file->move($targetPath, $baseName);
 
-            $filePath = $targetPath . $filename . "." . $extension;
+            $filePath = $targetPath . $baseName;
             $img = \Image::make($filePath);
 
             if ($img->width() > 1024) {
@@ -73,7 +74,7 @@ if (!function_exists('uploadImage')) {
 
             $img->save($filePath);
 
-            return '/' . trim($filePath, '/');
+            return $baseName;
         }
 
         return '';
