@@ -18,9 +18,6 @@ class PlaceController extends Controller
     {
         $user = $request->user();
 
-        $roles = $user->roles;
-        $permissions = $user->getAllPermissions();
-
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
         $places = Place::select('places.*')
             ->with('user')
@@ -28,7 +25,38 @@ class PlaceController extends Controller
             ->where('place_user.user_id', $user->id)
             ->get();
 
-        return response()->json(compact('user', 'roles', 'permissions', 'places'));
+        $currentPlace = null;
+        $permissions = [];
+
+        // lấy điểm đầu tiên nếu ko chỉ định
+        if($places->count() == 1) {
+            $currentPlace = $places->first();
+        } else {
+
+            $placeUuid = request()->header('X-Place-Id');
+            if (!is_null($placeUuid) || $placeUuid != 'undefined') {
+                $currentPlace = Place::findUuid($placeUuid);
+            }
+
+            if(is_null($currentPlace)) {
+                $currentPlace = $places->first();
+            }
+        }
+
+        if(!is_null($currentPlace)) {
+            $currentPlace->load(['user']);
+        }
+        
+        // $roles = $user->roles($currentPlace->id)->get();
+        if($user->hasAnyRole(['superadmin', 'admin'])) {
+            $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+        } else {
+            if(isset($currentPlace->id))
+                $permissions = $user->getPermissionsOnPlace($currentPlace->id)->pluck('name')->toArray();
+        }
+
+        // dd($user);
+        return response()->json(compact('user', 'permissions', 'places', 'currentPlace'));
     }
 
     public function index()

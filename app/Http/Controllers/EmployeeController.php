@@ -57,7 +57,7 @@ class EmployeeController extends Controller
         $employee->phone = $request->phone;
 
         $roleNames = $request->input('role_names', []);
-        $employee->syncRoles($roleNames);
+        $employee->syncPlaceRoles(currentPlace()->id, $roleNames);
 
         if ($request->password) {
             $employee->password = \Hash::make($request->password);
