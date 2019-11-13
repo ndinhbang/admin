@@ -117,16 +117,19 @@ class PlaceController extends Controller
         // return response()->json(['message' => 'Netroom deleted!']);
     }
 
-    public function show($id)
+    public function show(Place $place)
     {
-        // $netroom = \App\Netroom::where('netrooms.id', $id)->with('roles')
-        //     ->first();
+        $place->load(['user']);
 
-        // if (!$netroom) {
-        //     return response()->json(['message' => 'Couldnot find netroom!'], 422);
-        // }
+        $placeUsers = \App\User::select('users.*')
+            ->join('place_user', 'place_user.user_id', '=', 'users.id')
+            ->join('places', 'places.id', '=', 'place_user.place_id')
+            ->where('places.id', $place->id)
+            ->groupBy('users.id')->with(['roles' => function($q) use ($place){
+                $q->where('roles.place_id', $place->id);
+            }])->get();
 
-        // return response()->json(compact('netroom'));
+        return response()->json(compact('place', 'placeUsers'));
     }
 
     public function update(PlaceRequest $request, Place $place)
@@ -142,27 +145,27 @@ class PlaceController extends Controller
             $place->contact_phone = $request->contact_phone;
             $place->contact_email = $request->contact_email;
 
-            $oldBoss = User::find($place->user_id);
+            // $oldBoss = User::find($place->user_id);
 
-            $bossRole = Role::findByName('boss__'.$place->uuid);
+            // $bossRole = Role::findByName('boss__'.$place->uuid);
 
-            if($request->user['uuid'] !== $oldBoss->uuid) {
-                $newBoss = User::findUuid($request->user['uuid']);
+            // if($request->user['uuid'] !== $oldBoss->uuid) {
+            //     $newBoss = User::findUuid($request->user['uuid']);
 
-                if(!is_null($newBoss)) {
-                    // Bỏ quyền boss user cũ
-                    if($oldBoss->hasRole([$bossRole])) {
-                        $oldBoss->removeRole($bossRole);
-                        $oldBoss->places()->dettach($place->id);
-                    }
+            //     if(!is_null($newBoss)) {
+            //         // Bỏ quyền boss user cũ
+            //         if($oldBoss->hasRole([$bossRole])) {
+            //             $oldBoss->removeRole($bossRole);
+            //             $oldBoss->places()->dettach($place->id);
+            //         }
 
-                    // Gán quyền boss cho user mới
-                    $newBoss->assignRole($bossRole);
-                    $newBoss->places()->attach($place->id);
+            //         // Gán quyền boss cho user mới
+            //         $newBoss->assignRole($bossRole);
+            //         $newBoss->places()->attach($place->id);
 
-                    $place->user_id = $newBoss->id;
-                }
-            }
+            //         $place->user_id = $newBoss->id;
+            //     }
+            // }
 
             $place->save();
 

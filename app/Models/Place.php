@@ -32,15 +32,25 @@ class Place extends Model
         'pivot',
     ];
 
-    public function scopeCurr($query)
+    public function scopeCurr()
     {
-        if (!is_null($placeId = request()->header('X-Place-Id'))) {
-            return $query->where('uuid', $placeId)->first();
+        $placeId = request()->header('X-Place-Id');
+        if (!is_null($placeId) || $placeId != 'undefined') {
+            return Place::where('uuid', $placeId)->first();
         }
-        
-        return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+
+        return null;
     }
 
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return Place::where('uuid', $uuid)->first();
+
+        return null;
+    }
+    
     public function user()
     {
         return $this->belongsTo('App\User');

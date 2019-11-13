@@ -42,6 +42,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::get('/places', 'Admin\PlaceController@index')->name('admin.places');
         Route::post('/place', 'Admin\PlaceController@store')->name('admin.place.store');
+        Route::get('/place/{place}', 'Admin\PlaceController@show')->name('admin.place.show');
         Route::put('/place/{place}', 'Admin\PlaceController@update')->name('admin.place.update');
 
         // Admin Users

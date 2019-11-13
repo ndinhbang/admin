@@ -27,9 +27,7 @@ class UserController extends Controller
         $user = $request->user();
 
         return response()->json([
-            'user'        => $user->attributesToArray(),
-            'roles'       => $user->roles,
-            'permissions' => $user->getAllPermissions(),
+            'user'        => $user->attributesToArray()
         ]);
     }
 }
