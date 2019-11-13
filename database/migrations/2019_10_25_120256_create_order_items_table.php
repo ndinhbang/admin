@@ -17,9 +17,9 @@ class CreateOrderItemsTable extends Migration
             $table->increments('id');
             $table->integer('order_id')->unsigned();
             $table->integer('product_id')->unsigned()->index();
-            $table->integer('discount_id')->unsigned()->default(0)->index();
             $table->tinyInteger('quantity')->default(1);
-            $table->integer('total_price'); // tong gia
+            $table->integer('total_price')->unsigned(); // tong gia
+            $table->integer('discount_id')->unsigned()->default(0)->index();
             $table->timestamps();
 
             $table->unique(['order_id', 'product_id']);

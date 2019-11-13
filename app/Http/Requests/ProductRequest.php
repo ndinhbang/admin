@@ -16,7 +16,10 @@ class ProductRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        if  ($this->user()->hasAnyRole(['admin', 'superadmin'])
+            || $this->user()->can('manage.products')) {
+            return true;
+        }
     }
 
     /**

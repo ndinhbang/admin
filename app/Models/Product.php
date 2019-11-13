@@ -42,27 +42,10 @@ class Product extends Model
         return 'uuid';
     }
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-//    protected $appends = ['category_uuid'];
-
-    /**
-     * Get the administrator flag for the user.
-     *
-     * @return bool
-     */
-//    public function getCategoryUuidAttribute()
-//    {
-//        return $this->category->uuid ?? null;
-//    }
-
     // ======================= Mutators ================= //
     public function setThumbnailAttribute($value)
     {
-        $this->attributes['thumbnail'] = '/' . ltrim($value, '/');
+        $this->attributes['thumbnail'] = '/' . trim($value, '/');
     }
 
     // ======================= Local Scopes ================= //
