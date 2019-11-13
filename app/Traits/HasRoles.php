@@ -169,7 +169,7 @@ trait HasRoles
      *
      * @return $this
      */
-    public function syncNetroomRoles($place_id, ...$roles)
+    public function syncPlaceRoles($place_id, ...$roles)
     {
         DB::table($this->roles()->getTable())
             ->join('roles', 'roles.id', '=', $this->roles()->getTable().'.role_id')

@@ -20,6 +20,7 @@ class PlaceController extends Controller
 
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
         $places = Place::select('places.*')
+            ->with('user')
             ->join('place_user', 'place_user.place_id', '=', 'places.id')
             ->where('place_user.user_id', $user->id)
             ->get();
@@ -42,6 +43,10 @@ class PlaceController extends Controller
             }
         }
 
+        if(!is_null($currentPlace)) {
+            $currentPlace->load(['user']);
+        }
+        
         // $roles = $user->roles($currentPlace->id)->get();
         if($user->hasAnyRole(['superadmin', 'admin'])) {
             $permissions = $user->getAllPermissions()->pluck('name')->toArray();
