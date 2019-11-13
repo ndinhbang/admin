@@ -17,10 +17,10 @@ class PermissionScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $placeIds = [0];
         if (!is_null($currentPlace = currentPlace())) {
+            $placeIds = [0];
             $placeIds[] = $currentPlace->id;
+            $builder->whereIn($model->getTable() . '.place_id', $placeIds);
         }
-        $builder->whereIn($model->getTable() . '.place_id', $placeIds);
     }
 }

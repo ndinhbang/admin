@@ -85,7 +85,7 @@ class PlaceController extends Controller
 
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',
-            'place'   => $place->with('user')->first(),
+            'place'   => $place->load(['user']),
             'places'  => $request->user()->places,
         ]);
     }
@@ -147,7 +147,7 @@ class PlaceController extends Controller
 
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
-            'place'   => $place->with('user')->first(),
+            'place'   => $place->load(['user']),
             'places'  => $user->places,
         ]);
 
