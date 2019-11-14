@@ -14,7 +14,7 @@ class AlterOrdersTables extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->char('code', 20)->unique()->after('uuid');
+            $table->char('code', 20)->after('uuid');
             $table->float('debt', 10, 2)->default(0)->after('amount'); // số tiền nợ
             $table->float('paid', 10, 2)->default(0)->after('debt'); // số tiền đã trả
             $table->integer('quantity')->default(0)->after('paid'); // số món
