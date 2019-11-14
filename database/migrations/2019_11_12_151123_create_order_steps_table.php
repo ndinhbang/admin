@@ -14,7 +14,7 @@ class CreateOrderStepsTable extends Migration
     public function up()
     {
         Schema::create('order_steps', function (Blueprint $table) {
-            $table->integer('id');
+            $table->increments('id');
             $table->char('uuid', 21)->unique();
             $table->string('name', 50);
             $table->boolean('is_pending')->default(0);

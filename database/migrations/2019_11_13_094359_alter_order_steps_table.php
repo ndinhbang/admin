@@ -21,7 +21,7 @@ class AlterOrderStepsTable extends Migration
                 $table->renameColumn('is_finsihed', 'is_served');
             }
             if (!Schema::hasColumn('order_steps', 'next_id')) {
-                $table->integer('next_id')->unsigned()->index();
+                $table->integer('next_id')->unsigned()->index()->default(0);
             }
         });
         Schema::table('order_items', function (Blueprint $table) {
