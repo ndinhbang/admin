@@ -24,7 +24,7 @@ class RenameExpensesToVouchersTable extends Migration
             $table->string('note')->nullable();
             $table->char('payment_method', 10)->default('cash');
             $table->string('attachments')->default('');
-            $table->integer('amount');
+            $table->float('amount', 12, 2)->default(0);
             $table->boolean('state')->default(1); // trang thai phe duyet
             $table->timestamp('imported_at');
             $table->integer('category_id')->unsigned()->index();

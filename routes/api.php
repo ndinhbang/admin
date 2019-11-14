@@ -91,5 +91,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /** =============== Product ================= **/
     Route::apiResource('products', 'ProductController');
+
+    /** =============== Product ================= **/
+    Route::apiResource('orders', 'OrderController');
 });
 

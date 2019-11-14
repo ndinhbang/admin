@@ -15,7 +15,7 @@ class AccountController extends Controller
      */
     public function index(Request $request)
     {
-        $account = Account::where(function ($query) use ($request) {
+        $accounts = Account::where(function ($query) use ($request) {
                 if($request->type) {
                     $query->where('type', $request->type);
                 }
@@ -25,7 +25,7 @@ class AccountController extends Controller
                     $query->orWhere('phone', 'like', '%'.$request->keyword.'%');
                 }
             })->orderBy('id', 'desc')->paginate($request->per_page);
-        return $account->toJson();
+        return $accounts->toJson();
     }
 
     /**
