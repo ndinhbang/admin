@@ -29,7 +29,7 @@ class ProductResource extends JsonResource
             'position'      => $this->position,
             'price'         => $this->price,
             'state'         => $this->state,
-            'thumbnail'     => $this->thumbnail ? '/products/' . $this->thumbnail : '',
+            'thumbnail'     => config('app.media_url') . ($this->thumbnail ? '/products/' . $this->thumbnail : ''),
             'thumbnailFile' => null,
             'updated_at'    => $this->updated_at,
         ];

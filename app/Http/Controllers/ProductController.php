@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\ProductResource;
+use App\Http\Filters\ProductFilter;
 
 class ProductController extends Controller
 {
@@ -30,9 +31,11 @@ class ProductController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(Request $request)
+    public function index(ProductRequest $request)
     {
-        $products = Product::with(['supplies', 'category', 'place'])->orderBy('products.id', 'desc')
+        $products = Product::with(['supplies', 'category', 'place'])
+            ->filter(new ProductFilter($request))
+            ->orderBy('products.id', 'desc')
             ->simplePaginate(100);
 
         return ProductResource::collection($products);

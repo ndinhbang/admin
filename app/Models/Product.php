@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    use Filterable;
+
     protected $table = 'products';
     protected $codePrefix = 'P';
 
@@ -49,8 +52,13 @@ class Product extends Model
 
     public function setCodeAttribute($value)
     {
+        $codeId = 0;
+        if (!is_null($row = static::select('code')->orderBy('id', 'desc')->take(1)->first())) {
+            $codeId = (int)str_replace($this->codePrefix, '', $row->code);
+        }
+
         $this->attributes['code'] = is_null($value)
-            ? $this->codePrefix . str_pad(static::count() + 1, 6, "0", STR_PAD_LEFT)
+            ? $this->codePrefix . str_pad($codeId + 1, 6, "0", STR_PAD_LEFT)
             : $value;
     }
 

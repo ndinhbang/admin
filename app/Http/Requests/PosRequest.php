@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CategoryRequest extends FormRequest
+class PosRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,7 @@ class CategoryRequest extends FormRequest
     public function rules()
     {
         return [
-            'type' => 'sometimes|in:menu,unit,revenue,expense',
-            'state' => 'sometimes|boolean'
+            'kind' => 'sometimes|numeric'
         ];
     }
 }

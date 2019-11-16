@@ -62,7 +62,11 @@ class ProductRequest extends FormRequest
             ];
         }
 
-        return [];
+        return [
+            'is_hot' => ['bail', 'sometimes', 'boolean'],
+            'opened' => ['bail', 'sometimes', 'boolean'],
+            'state'  => ['bail', 'sometimes', 'boolean'],
+        ];
     }
 
     public function messages()

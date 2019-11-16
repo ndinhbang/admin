@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use App\Scopes\PlaceScope;
 
 class Category extends Model
 {
+    use Filterable;
 
     protected $fillable = [
         'position'

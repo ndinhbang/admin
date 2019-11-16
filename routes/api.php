@@ -92,7 +92,18 @@ Route::group(['middleware' => 'auth:api'], function () {
     /** =============== Product ================= **/
     Route::apiResource('products', 'ProductController');
 
-    /** =============== Product ================= **/
+    /** =============== Order ================= **/
     Route::apiResource('orders', 'OrderController');
+
+    /** =============== Areas & Tables ================= **/
+    Route::apiResource('areas', 'AreaController');
+    Route::apiResource('tables', 'TableController');
+
+    /** =============== Order ================= **/
+    Route::get('pos/orders', 'PosController@index')->name('pos.index');
+    Route::post('pos/orders', 'PosController@store')->name('pos.store');
+    Route::get('pos/orders/{order}', 'PosController@show')->name('pos.show');
+    Route::put('pos/orders/{order}', 'PosController@update')->name('pos.update');
+    Route::delete('pos/orders/{order}', 'PosController@destroy')->name('pos.destroy');
 });
 

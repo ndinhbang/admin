@@ -14,11 +14,11 @@ class AddKindColumnToOrdersTable extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->unsignedTinyInteger('kind')->default(0)->after('type');
+            $table->unsignedTinyInteger('kind')->default(0)->after('state');
             // 0: Mang về
             // 1: tại của hàng
-            // 2: giao hàng
-            // 3: đặt chỗ
+            // 2: đặt hàng (cần ship)
+            // 3: đặt chỗ (đặt giữ chỗ)
         });
     }
 

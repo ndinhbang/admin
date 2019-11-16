@@ -33,12 +33,23 @@ class ProductFilter extends QueryFilter
         return $this->builder->where('products.state', (int)$status);
     }
 
-    public function category_id($category_id)
+    public function opened($opened)
     {
-        if (is_null($category_id)) {
+        if (is_null($opened)) {
             return $this->builder;
         }
 
-        return $this->builder->where('products.category_id', (int)$category_id);
+        return $this->builder->where('products.opened', (int)$opened);
+    }
+
+    public function category_uuid($category_uuid)
+    {
+        if (is_null($category_uuid)) {
+            return $this->builder;
+        }
+
+        return $this->builder->whereHas('category', function ($query) use ($category_uuid)  {
+            $query->where('categories.uuid', '=', $category_uuid);
+        });
     }
 }

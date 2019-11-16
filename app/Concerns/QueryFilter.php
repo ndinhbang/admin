@@ -8,13 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 abstract class QueryFilter
 {
     protected $request;
-
     protected $builder;
 
     public function __construct(Request $request)
     {
-        // sanitize input before set
-        $this->request = $request->merge(app('binput')->all());
+        $this->request = $request;
     }
 
     /**
