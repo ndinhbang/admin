@@ -7,6 +7,7 @@ use App\Http\Requests\VoucherRequest;
 use App\Models\Voucher;
 use App\Models\Category;
 use App\Models\Account;
+use Carbon\Carbon;
 
 class VoucherController extends Controller
 {
@@ -17,7 +18,28 @@ class VoucherController extends Controller
      */
     public function index(Request $request)
     {
-        $vouchers = Voucher::with(['creator', 'approver', 'category', 'payer_payee'])->orderBy('id', 'desc')->paginate($request->per_page);
+
+        $vouchers = Voucher::where(function ($query) use ($request) {
+                if($request->keyword) {
+                    $query->orWhere('code', 'like', '%'.$request->keyword.'%');
+                }
+                // by type; 0:chi | 1: thu
+                if($request->type) {
+                    $query->where('type', $request->type);
+                }
+                // date time range
+                if(!is_null($request->get('start', null)) && !is_null($request->get('end', null))) {
+
+                    $startDate = Carbon::parse($request->get('start', null))->format('Y-m-d 00:00:00');
+                    $endDate = Carbon::parse($request->get('end', null))->format('Y-m-d 23:59:59');
+                    
+                    $query->whereBetween('created_at', [$startDate, $endDate]);
+                }
+            })
+            ->with(['creator', 'approver', 'category', 'payer_payee'])
+            ->orderBy('id', 'desc')
+            ->paginate($request->per_page);
+
         return $vouchers->toJson();
     }
 
