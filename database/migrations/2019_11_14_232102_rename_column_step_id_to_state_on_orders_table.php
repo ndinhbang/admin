@@ -19,14 +19,14 @@ class RenameColumnStepIdToStateOnOrdersTable extends Migration
         Schema::registerCustomDoctrineType(TinyInteger::class, TinyInteger::NAME, 'TINYINT');
 
         Schema::table('orders', function (Blueprint $table) {
-            $table->renameColumn('step_id', 'state');
+            $table->renameColumn('step_id', 'state')->comment('0: pending / 1: accepted / 2: processing / 3: done / 4: delivering / 5: served / 6: completed');
             // 0 - pending
-            // 10 - accepted: khi item đầu tiên chuyển sang trangj thái accepted
-            // 20 - processing: khi item đầu tiên chuyển sang trạng thái processing
-            // 30 - done: tất cả các món đã làm xong
-            // 40 - delivering:  đang giao khách
-            // 50 - delivered: tất cả các món đã được giao cho khách
-            // 100 - served: order đã được  phục vụ xong khi tất cả các items đã được served
+            // 1 - accepted: khi item đầu tiên chuyển sang trangj thái accepted
+            // 2 - processing: khi item đầu tiên chuyển sang trạng thái processing
+            // 3 - done: tất cả các món đã làm xong
+            // 4 - delivering:  đang giao khách
+            // 5 - served: tất cả các món đã được giao cho khách
+            // 6 - completed: order đã được  phục vụ xong khi tất cả các items đã được served
         });
 
         Schema::table('orders', function (Blueprint $table) {

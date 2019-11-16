@@ -14,7 +14,7 @@ class AddKindColumnToOrdersTable extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->unsignedTinyInteger('kind')->default(0)->after('state');
+            $table->unsignedTinyInteger('kind')->default(0)->after('state')->comment('0: mang về / 1: tại cửa hàng / 2: đặt hàng / 3: đặt chỗ ');
             // 0: Mang về
             // 1: tại của hàng
             // 2: đặt hàng (cần ship)

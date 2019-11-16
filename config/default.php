@@ -242,22 +242,22 @@ return [
             0   => [
                 'name' => 'Chờ',
             ],
-            10  => [
+            1  => [
                 'name' => 'Đã báo bếp',
             ],
-            20  => [
+            2  => [
                 'name' => 'Đang chế biến',
             ],
-            30  => [
+            3  => [
                 'name' => 'Đã làm xong',
             ],
-            40  => [
+            4  => [
                 'name' => 'Đang giao khách',
             ],
-            50  => [
+            5  => [
                 'name' => 'Đã phục vụ',
             ],
-            100 => [
+            6 => [
                 'name' => 'Hoàn thành',
             ],
         ],

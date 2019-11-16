@@ -21,12 +21,12 @@ class RenameColumnStepIdToStateOnOrderItemsTable extends Migration
         Schema::table('order_items', function (Blueprint $table) {
             $table->renameColumn('step_id', 'state');
             // 0 - pending
-            // 10 - accepted: chấp nhận / báo bếp
-            // 20 - processing: đang làm
-            // 30 - done: đã làm xong
-            // 40 - delivering:  đang giao khách
-            // 50 - delivered: đã giao khách
-            // 100 - served: đã hoàn thành
+            // 1 - accepted: chấp nhận / báo bếp
+            // 2 - processing: đang làm
+            // 3 - done: đã làm xong
+            // 4 - delivering:  đang giao khách
+            // 5 - served: đã giao khách
+            // 6 - completed: đã hoàn thành
         });
 
         Schema::table('order_items', function (Blueprint $table) {

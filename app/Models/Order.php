@@ -10,32 +10,26 @@ class Order extends Model
     use Filterable;
 
     protected $table = 'orders';
-    protected $codePrefix = [
-        0 => 'DX',  // Đơn xuất
-        1 => 'DN',  // Đơn nhập
-        2 => 'DKT', // Đơn khác trả hàng
-        3 => 'DTN', // Đơn trả nhà cung cấp
-    ];
+    protected $codePrefix = 'HD';
 
     // ======================= Hidden Attributes ================= //
     protected $hidden = [
         'id',
         'place_id',
         'creator_id',
-        'payer_payee_id',
+        'customer_id',
     ];
 
     // ======================= Attribute Casting ================= //
     protected $casts = [
-        'uuid'           => 'string',
-        'place_id'       => 'integer',
-        'creator_id'     => 'integer',
-        'payer_payee_id' => 'integer',
-        'state'          => 'boolean',
-        'kind'           => 'integer',
-        'quantity'       => 'integer',
-        'on_date'        => 'date',
-        'type'           => 'integer',
+        'uuid'        => 'string',
+        'place_id'    => 'integer',
+        'creator_id'  => 'integer',
+        'customer_id' => 'integer',
+        'state'       => 'boolean',
+        'kind'        => 'integer',
+        'total_dish'  => 'integer',
+        'total_eater' => 'integer',
     ];
 
     /**
@@ -48,6 +42,8 @@ class Order extends Model
         'amount'       => 0,
         'debt'         => 0,
         'paid'         => 0,
+        'total_dish'   => 0,
+        'total_eater'  => 0,
         'is_returned'  => false,
         'is_canceled'  => false,
         'is_served'    => false,
@@ -71,12 +67,11 @@ class Order extends Model
     public function setCodeAttribute($value)
     {
         $codeId = 0;
-        $type = $this->type ?? 1;
         if (!is_null($row = static::select('code')->orderBy('id', 'desc')->take(1)->first())) {
-            $codeId = (int)str_replace($this->codePrefix[$type], '', $row->code);
+            $codeId = (int)str_replace($this->codePrefix, '', $row->code);
         }
 
-        $this->attributes['code'] = is_null($value) ? $this->codePrefix[$type] . str_pad($codeId + 1, 6, "0",
+        $this->attributes['code'] = is_null($value) ? $this->codePrefix . str_pad($codeId + 1, 6, "0",
                 STR_PAD_LEFT) : $value;
     }
 
@@ -85,6 +80,7 @@ class Order extends Model
     {
         return $query->where('is_returned', 0)
             ->where('is_canceled', 0)
+            ->where('is_served', 0)
             ->where('is_completed', 0);
     }
 
