@@ -56,27 +56,28 @@ if (!function_exists('uploadImage')) {
         if (!is_null($file)) {
             $extension = $file->getClientOriginalExtension();
             $filename = uniqid();
+
             $baseName = $filename . "." . $extension;
-            $file = $file->move($targetPath, $baseName);
 
             $filePath = $targetPath . $baseName;
-            $img = \Image::make($filePath);
+            $img = \Image::make($file);
 
-            if ($img->width() > 1024) {
-                $img->resize(1024, null, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            } elseif ($img->height() > 600) {
-                $img->resize(null, 600, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            }
+            // if ($img->width() > 1024) {
+            //     $img->resize(1024, null, function ($constraint) {
+            //         $constraint->aspectRatio();
+            //     });
+            // } elseif ($img->height() > 600) {
+            //     $img->resize(null, 600, function ($constraint) {
+            //         $constraint->aspectRatio();
+            //     });
+            // }
 
+            $img->fit(500, 320);
             $img->save($filePath);
 
             return $baseName;
         }
 
-        return '';
+        return false;
     }
 }

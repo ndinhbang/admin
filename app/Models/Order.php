@@ -10,7 +10,7 @@ class Order extends Model
     protected $codePrefix = [
         0 => 'DX', // Đơn xuất
         1 => 'DN', // Đơn nhập
-        2 => 'DKT', // Đơn khác trả hàng
+        2 => 'DKT', // Đơn khách trả hàng
         3 => 'DTN', // Đơn trả nhà cung cấp
     ];
 

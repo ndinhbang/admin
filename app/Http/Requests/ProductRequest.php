@@ -28,7 +28,7 @@ class ProductRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->routeIs(['products.store', 'products.update'])) {
+        if ($this->routeIs(['product.store', 'product.update'])) {
             return [
                 'price'               => ['bail', 'required', 'numeric'],
                 'name'                => ['bail', 'required', 'string', 'max:191'],
