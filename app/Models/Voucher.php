@@ -44,6 +44,7 @@ class Voucher extends Model {
 		'category_id' => 'integer',
 		'payer_payee_id' => 'integer',
 		'payment_method' => 'string',
+		'title' => 'string',
 		'amount' => 'double',
 		'type' => 'integer',
 		'note' => 'string',

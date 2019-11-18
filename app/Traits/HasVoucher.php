@@ -30,12 +30,14 @@ trait HasVoucher {
 		if (static::getTable() == 'inventory_orders') {
 			$voucherData['inventory_order_id'] = $this->id;
 			$voucherData['payer_payee_id'] = $this->supplier_id;
-			$voucherData['category_id'] = $this->type ? 20 : 29; // Chi mua hàng : Thu xuất trả
+			$voucherData['category_id'] = $this->type ? 29 : 20;
+			// Chi mua hàng : Thu xuất trả
 
 		} elseif (static::getTable() == 'orders') {
 			$voucherData['order_id'] = $this->id;
 			$voucherData['payer_payee_id'] = $this->customer_id;
-			$voucherData['category_id'] = $this->type ? 28 : 21; // Thu bán hàng : Tiền trả hàng
+			$voucherData['category_id'] = $this->type ? 28 : 21;
+			// Thu bán hàng : Tiền trả hàng
 		}
 
 		$category = Category::find($voucherData['category_id']);

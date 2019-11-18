@@ -15,6 +15,7 @@ class VoucherResource extends JsonResource {
 		return [
 			'uuid' => $this->uuid,
 			'code' => $this->code,
+			'title' => $this->title,
 			$this->mergeWhen($this->resource->relationLoaded('payer_payee'), [
 				'payer_payee_uuid' => $this->payer_payee->uuid,
 				'payer_payee_name' => $this->payer_payee->name,

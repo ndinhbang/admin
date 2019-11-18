@@ -11,8 +11,8 @@ class InventoryOrder extends Model {
 
 	protected $table = 'inventory_orders';
 	protected $codePrefix = [
-		1 => 'DN', // Đơn nhập
-		0 => 'DTN', // Đơn trả nhà cung cấp
+		0 => 'DN', // Đơn nhập
+		1 => 'DTN', // Đơn trả nhà cung cấp
 	];
 
 	// ======================= Hidden Attributes ================= //
