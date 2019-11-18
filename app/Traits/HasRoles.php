@@ -2,329 +2,316 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Collection;
-use Spatie\Permission\Contracts\Role;
 use Illuminate\Database\Eloquent\Builder;
-use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Contracts\Role;
+use Spatie\Permission\PermissionRegistrar;
 
-trait HasRoles
-{
-    use HasPermissions;
+trait HasRoles {
+	use HasPermissions;
 
-    private $roleClass;
+	private $roleClass;
 
-    public static function bootHasRoles()
-    {
-        static::deleting(function ($model) {
-            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
-                return;
-            }
+	public static function bootHasRoles() {
+		static::deleting(function ($model) {
+			if (method_exists($model, 'isForceDeleting') && !$model->isForceDeleting()) {
+				return;
+			}
 
-            $model->roles()->detach();
-        });
-    }
+			$model->roles()->detach();
+		});
+	}
 
-    public function getRoleClass()
-    {
-        if (! isset($this->roleClass)) {
-            $this->roleClass = app(PermissionRegistrar::class)->getRoleClass();
-        }
+	public function getRoleClass() {
+		if (!isset($this->roleClass)) {
+			$this->roleClass = app(PermissionRegistrar::class)->getRoleClass();
+		}
 
-        return $this->roleClass;
-    }
+		return $this->roleClass;
+	}
 
-    /**
-     * A model may have multiple roles.
-     */
-    public function roles($place_id = 0): MorphToMany
-    {
-        if($place_id)
-            return $this->morphToMany(
-                config('permission.models.role'),
-                'model',
-                config('permission.table_names.model_has_roles'),
-                config('permission.column_names.model_morph_key'),
-                'role_id'
-            )->where('roles.place_id', $place_id);
-        else
-            return $this->morphToMany(
-                config('permission.models.role'),
-                'model',
-                config('permission.table_names.model_has_roles'),
-                config('permission.column_names.model_morph_key'),
-                'role_id'
-            );
-    }
+	/**
+	 * A model may have multiple roles.
+	 */
+	public function roles($place_id = 0): MorphToMany {
+		if ($place_id) {
+			return $this->morphToMany(
+				config('permission.models.role'),
+				'model',
+				config('permission.table_names.model_has_roles'),
+				config('permission.column_names.model_morph_key'),
+				'role_id'
+			)->where('roles.place_id', $place_id);
+		} else {
+			return $this->morphToMany(
+				config('permission.models.role'),
+				'model',
+				config('permission.table_names.model_has_roles'),
+				config('permission.column_names.model_morph_key'),
+				'role_id'
+			);
+		}
 
-    /**
-     * Scope the model query to certain roles only.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
-     * @param string $guard
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeRole(Builder $query, $roles, $guard = null): Builder
-    {
-        if ($roles instanceof Collection) {
-            $roles = $roles->all();
-        }
+	}
 
-        if (! is_array($roles)) {
-            $roles = [$roles];
-        }
+	/**
+	 * Scope the model query to certain roles only.
+	 *
+	 * @param \Illuminate\Database\Eloquent\Builder $query
+	 * @param string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+	 * @param string $guard
+	 *
+	 * @return \Illuminate\Database\Eloquent\Builder
+	 */
+	public function scopeRole(Builder $query, $roles, $guard = null): Builder {
+		if ($roles instanceof Collection) {
+			$roles = $roles->all();
+		}
 
-        $roles = array_map(function ($role) use ($guard) {
-            if ($role instanceof Role) {
-                return $role;
-            }
+		if (!is_array($roles)) {
+			$roles = [$roles];
+		}
 
-            $method = is_numeric($role) ? 'findById' : 'findByName';
-            $guard = $guard ?: $this->getDefaultGuardName();
+		$roles = array_map(function ($role) use ($guard) {
+			if ($role instanceof Role) {
+				return $role;
+			}
 
-            return $this->getRoleClass()->{$method}($role, $guard);
-        }, $roles);
+			$method = is_numeric($role) ? 'findById' : 'findByName';
+			$guard = $guard ?: $this->getDefaultGuardName();
 
-        return $query->whereHas('roles', function ($query) use ($roles) {
-            $query->where(function ($query) use ($roles) {
-                foreach ($roles as $role) {
-                    $query->orWhere(config('permission.table_names.roles').'.id', $role->id);
-                }
-            });
-        });
-    }
+			return $this->getRoleClass()->{$method}($role, $guard);
+		}, $roles);
 
-    /**
-     * Assign the given role to the model.
-     *
-     * @param array|string|\Spatie\Permission\Contracts\Role ...$roles
-     *
-     * @return $this
-     */
-    public function assignRole(...$roles)
-    {
-        $roles = collect($roles)
-            ->flatten()
-            ->map(function ($role) {
-                if (empty($role)) {
-                    return false;
-                }
+		return $query->whereHas('roles', function ($query) use ($roles) {
+			$query->where(function ($query) use ($roles) {
+				foreach ($roles as $role) {
+					$query->orWhere(config('permission.table_names.roles') . '.id', $role->id);
+				}
+			});
+		});
+	}
 
-                return $this->getStoredRole($role);
-            })
-            ->filter(function ($role) {
-                return $role instanceof Role;
-            })
-            ->each(function ($role) {
-                $this->ensureModelSharesGuard($role);
-            })
-            ->map->id
-            ->all();
+	/**
+	 * Assign the given role to the model.
+	 *
+	 * @param array|string|\Spatie\Permission\Contracts\Role ...$roles
+	 *
+	 * @return $this
+	 */
+	public function assignRole(...$roles) {
+		$roles = collect($roles)
+			->flatten()
+			->map(function ($role) {
+				if (empty($role)) {
+					return false;
+				}
 
-        $model = $this->getModel();
+				return $this->getStoredRole($role);
+			})
+			->filter(function ($role) {
+				return $role instanceof Role;
+			})
+			->each(function ($role) {
+				$this->ensureModelSharesGuard($role);
+			})
+			->map->id
+			->all();
 
-        if ($model->exists) {
-            $this->roles()->sync($roles, false);
-            $model->load('roles');
-        } else {
-            $class = \get_class($model);
+		$model = $this->getModel();
 
-            $class::saved(
-                function ($object) use ($roles, $model) {
-                    static $modelLastFiredOn;
-                    if ($modelLastFiredOn !== null && $modelLastFiredOn === $model) {
-                        return;
-                    }
-                    $object->roles()->sync($roles, false);
-                    $object->load('roles');
-                    $modelLastFiredOn = $object;
-                });
-        }
+		if ($model->exists) {
+			$this->roles()->sync($roles, false);
+			$model->load('roles');
+		} else {
+			$class = \get_class($model);
 
-        $this->forgetCachedPermissions();
+			$class::saved(
+				function ($object) use ($roles, $model) {
+					static $modelLastFiredOn;
+					if ($modelLastFiredOn !== null && $modelLastFiredOn === $model) {
+						return;
+					}
+					$object->roles()->sync($roles, false);
+					$object->load('roles');
+					$modelLastFiredOn = $object;
+				});
+		}
 
-        return $this;
-    }
+		$this->forgetCachedPermissions();
 
-    /**
-     * Revoke the given role from the model.
-     *
-     * @param string|\Spatie\Permission\Contracts\Role $role
-     */
-    public function removeRole($role)
-    {
-        $this->roles()->detach($this->getStoredRole($role));
+		return $this;
+	}
 
-        $this->load('roles');
-    }
+	/**
+	 * Revoke the given role from the model.
+	 *
+	 * @param string|\Spatie\Permission\Contracts\Role $role
+	 */
+	public function removeRole($role) {
+		$this->roles()->detach($this->getStoredRole($role));
 
+		$this->load('roles');
+	}
 
-    /**
-     * Remove all current roles and set the given ones.
-     *
-     * @param array|\Spatie\Permission\Contracts\Role|string ...$roles
-     *
-     * @return $this
-     */
-    public function syncPlaceRoles($place_id, ...$roles)
-    {
-        DB::table($this->roles()->getTable())
-            ->join('roles', 'roles.id', '=', $this->roles()->getTable().'.role_id')
-            ->where('roles.place_id', $place_id)
-            ->where($this->roles()->getTable().'.model_id', $this->id)
-            ->delete();
+	/**
+	 * Remove all current roles and set the given ones.
+	 *
+	 * @param array|\Spatie\Permission\Contracts\Role|string ...$roles
+	 *
+	 * @return $this
+	 */
+	public function syncPlaceRoles($place_id, ...$roles) {
+		DB::table($this->roles()->getTable())
+			->join('roles', 'roles.id', '=', $this->roles()->getTable() . '.role_id')
+			->where('roles.place_id', $place_id)
+			->where($this->roles()->getTable() . '.model_id', $this->id)
+			->delete();
 
-        $otherRoles = $this->roles->pluck('name')->toArray();
-        $roles = array_merge($roles[0], $otherRoles);
+		$otherRoles = $this->roles->pluck('name')->toArray();
+		$roles = array_merge($roles[0], $otherRoles);
 
-        return $this->assignRole([$roles]);
-    }
+		return $this->assignRole([$roles]);
+	}
 
-    /**
-     * Remove all current roles and set the given ones.
-     *
-     * @param array|\Spatie\Permission\Contracts\Role|string ...$roles
-     *
-     * @return $this
-     */
-    public function syncRoles(...$roles)
-    {
-        $this->roles()->detach();
+	/**
+	 * Remove all current roles and set the given ones.
+	 *
+	 * @param array|\Spatie\Permission\Contracts\Role|string ...$roles
+	 *
+	 * @return $this
+	 */
+	public function syncRoles(...$roles) {
+		$this->roles()->detach();
 
-        return $this->assignRole($roles);
-    }
+		return $this->assignRole($roles);
+	}
 
-    /**
-     * Determine if the model has (one of) the given role(s).
-     *
-     * @param string|int|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
-     *
-     * @return bool
-     */
-    public function hasRole($roles): bool
-    {
-        if (is_string($roles) && false !== strpos($roles, '|')) {
-            $roles = $this->convertPipeToArray($roles);
-        }
+	/**
+	 * Determine if the model has (one of) the given role(s).
+	 *
+	 * @param string|int|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+	 *
+	 * @return bool
+	 */
+	public function hasRole($roles): bool {
+		if (is_string($roles) && false !== strpos($roles, '|')) {
+			$roles = $this->convertPipeToArray($roles);
+		}
 
-        if (is_string($roles)) {
-            return $this->roles->contains('name', $roles);
-        }
+		if (is_string($roles)) {
+			return $this->roles->contains('name', $roles);
+		}
 
-        if (is_int($roles)) {
-            return $this->roles->contains('id', $roles);
-        }
+		if (is_int($roles)) {
+			return $this->roles->contains('id', $roles);
+		}
 
-        if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
-        }
+		if ($roles instanceof Role) {
+			return $this->roles->contains('id', $roles->id);
+		}
 
-        if (is_array($roles)) {
-            foreach ($roles as $role) {
-                if ($this->hasRole($role)) {
-                    return true;
-                }
-            }
+		if (is_array($roles)) {
+			foreach ($roles as $role) {
+				if ($this->hasRole($role)) {
+					return true;
+				}
+			}
 
-            return false;
-        }
+			return false;
+		}
 
-        return $roles->intersect($this->roles)->isNotEmpty();
-    }
+		return $roles->intersect($this->roles)->isNotEmpty();
+	}
 
-    /**
-     * Determine if the model has any of the given role(s).
-     *
-     * @param string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
-     *
-     * @return bool
-     */
-    public function hasAnyRole($roles): bool
-    {
-        return $this->hasRole($roles);
-    }
+	/**
+	 * Determine if the model has any of the given role(s).
+	 *
+	 * @param string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+	 *
+	 * @return bool
+	 */
+	public function hasAnyRole($roles): bool {
+		return $this->hasRole($roles);
+	}
 
-    /**
-     * Determine if the model has all of the given role(s).
-     *
-     * @param string|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
-     *
-     * @return bool
-     */
-    public function hasAllRoles($roles): bool
-    {
-        if (is_string($roles) && false !== strpos($roles, '|')) {
-            $roles = $this->convertPipeToArray($roles);
-        }
+	/**
+	 * Determine if the model has all of the given role(s).
+	 *
+	 * @param string|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection $roles
+	 *
+	 * @return bool
+	 */
+	public function hasAllRoles($roles): bool {
+		if (is_string($roles) && false !== strpos($roles, '|')) {
+			$roles = $this->convertPipeToArray($roles);
+		}
 
-        if (is_string($roles)) {
-            return $this->roles->contains('name', $roles);
-        }
+		if (is_string($roles)) {
+			return $this->roles->contains('name', $roles);
+		}
 
-        if ($roles instanceof Role) {
-            return $this->roles->contains('id', $roles->id);
-        }
+		if ($roles instanceof Role) {
+			return $this->roles->contains('id', $roles->id);
+		}
 
-        $roles = collect()->make($roles)->map(function ($role) {
-            return $role instanceof Role ? $role->name : $role;
-        });
+		$roles = collect()->make($roles)->map(function ($role) {
+			return $role instanceof Role ? $role->name : $role;
+		});
 
-        return $roles->intersect($this->getRoleNames()) == $roles;
-    }
+		return $roles->intersect($this->getRoleNames()) == $roles;
+	}
 
-    /**
-     * Return all permissions directly coupled to the model.
-     */
-    public function getDirectPermissions(): Collection
-    {
-        return $this->permissions;
-    }
+	/**
+	 * Return all permissions directly coupled to the model.
+	 */
+	public function getDirectPermissions(): Collection {
+		return $this->permissions;
+	}
 
-    public function getRoleNames($place_id = 0): Collection
-    {
-        if($place_id)
-            return $this->roles($place_id)->pluck('name');
-        else
-            return $this->roles->pluck('name');
-    }
+	public function getRoleNames($place_id = 0): Collection {
+		if ($place_id) {
+			return $this->roles($place_id)->pluck('name');
+		} else {
+			return $this->roles->pluck('name');
+		}
 
-    protected function getStoredRole($role): Role
-    {
-        $roleClass = $this->getRoleClass();
+	}
 
-        if (is_numeric($role)) {
-            return $roleClass->findById($role, $this->getDefaultGuardName());
-        }
+	protected function getStoredRole($role): Role{
+		$roleClass = $this->getRoleClass();
 
-        if (is_string($role)) {
-            return $roleClass->findByName($role, $this->getDefaultGuardName());
-        }
+		if (is_numeric($role)) {
+			return $roleClass->findById($role, $this->getDefaultGuardName());
+		}
 
-        return $role;
-    }
+		if (is_string($role)) {
+			return $roleClass->findByName($role, $this->getDefaultGuardName());
+		}
 
-    protected function convertPipeToArray(string $pipeString)
-    {
-        $pipeString = trim($pipeString);
+		return $role;
+	}
 
-        if (strlen($pipeString) <= 2) {
-            return $pipeString;
-        }
+	protected function convertPipeToArray(string $pipeString) {
+		$pipeString = trim($pipeString);
 
-        $quoteCharacter = substr($pipeString, 0, 1);
-        $endCharacter = substr($quoteCharacter, -1, 1);
+		if (strlen($pipeString) <= 2) {
+			return $pipeString;
+		}
 
-        if ($quoteCharacter !== $endCharacter) {
-            return explode('|', $pipeString);
-        }
+		$quoteCharacter = substr($pipeString, 0, 1);
+		$endCharacter = substr($quoteCharacter, -1, 1);
 
-        if (! in_array($quoteCharacter, ["'", '"'])) {
-            return explode('|', $pipeString);
-        }
+		if ($quoteCharacter !== $endCharacter) {
+			return explode('|', $pipeString);
+		}
 
-        return explode('|', trim($pipeString, $quoteCharacter));
-    }
+		if (!in_array($quoteCharacter, ["'", '"'])) {
+			return explode('|', $pipeString);
+		}
+
+		return explode('|', trim($pipeString, $quoteCharacter));
+	}
 }

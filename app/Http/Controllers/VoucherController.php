@@ -2,152 +2,129 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\VoucherRequest;
+use App\Http\Resources\VoucherResource;
 use App\Models\Voucher;
-use App\Models\Category;
-use App\Models\Account;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
-class VoucherController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
-    {
+class VoucherController extends Controller {
+	protected $exceptAttributes = [
+		'payer_payee_uuid',
+		'payer_payee_name',
+		'payer_payee_code',
+		'payer_payee_type',
+		'category_uuid',
+		'category_name',
+		'creator_uuid',
+		'creator_name',
+		'updated_at',
+		'created_at',
+		'place',
+	];
 
-        $vouchers = Voucher::where(function ($query) use ($request) {
-                if($request->keyword) {
-                    $query->orWhere('code', 'like', '%'.$request->keyword.'%');
-                }
-                // by type; 0:chi | 1: thu
-                if($request->type) {
-                    $query->where('type', $request->type);
-                }
-                // date time range
-                if(!is_null($request->get('start', null)) && !is_null($request->get('end', null))) {
+	/**
+	 * Display a listing of the resource.
+	 *
+	 * @return \Illuminate\Http\Response
+	 */
+	public function index(Request $request) {
 
-                    $startDate = Carbon::parse($request->get('start', null))->format('Y-m-d 00:00:00');
-                    $endDate = Carbon::parse($request->get('end', null))->format('Y-m-d 23:59:59');
-                    
-                    $query->whereBetween('created_at', [$startDate, $endDate]);
-                }
-            })
-            ->with(['creator', 'approver', 'category', 'payer_payee'])
-            ->orderBy('id', 'desc')
-            ->paginate($request->per_page);
+		$vouchers = Voucher::where(function ($query) use ($request) {
+			if ($request->keyword) {
+				$query->orWhere('code', 'like', '%' . $request->keyword . '%');
+			}
+			// by type; 0:chi | 1: thu
+			if ($request->type) {
+				$query->where('type', $request->type);
+			}
+			// date time range
+			if (!is_null($request->get('start', null)) && !is_null($request->get('end', null))) {
 
-        return $vouchers->toJson();
-    }
+				$startDate = Carbon::parse($request->get('start', null))->format('Y-m-d 00:00:00');
+				$endDate = Carbon::parse($request->get('end', null))->format('Y-m-d 23:59:59');
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(VoucherRequest $request)
-    {
+				$query->whereBetween('created_at', [$startDate, $endDate]);
+			}
+		})
+			->with(['creator', 'approver', 'category', 'payer_payee'])
+			->orderBy('id', 'desc')
+			->paginate($request->per_page);
 
-        $vId = Voucher::where('type', $request->type)->count();
-        $vId++;
-        $prefixCode = $request->type ? 'PT' : 'PC';
-        $typeTxt = $request->type ? 'thu' : 'chi';
+		return VoucherResource::collection($vouchers);
+	}
 
-        // $request->validated();
-        $voucher = new Voucher;
-        $voucher->uuid = nanoId();
-        $voucher->code = $prefixCode.str_pad($vId, 6, "0", STR_PAD_LEFT);
-        $voucher->type = $request->type; // 0:chi | 1:thu
-        $voucher->imported_at = $request->imported_at;
-        $voucher->amount = $request->amount;
-        $voucher->payment_method = $request->payment_method;
+	/**
+	 * Store a newly created resource in storage.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * @return \Illuminate\Http\Response
+	 */
+	public function store(VoucherRequest $request) {
 
-        $category = Category::findUuid($request->category['uuid']);
-        if(!is_null($category))
-            $voucher->category_id = $category->id;
+		$voucher = DB::transaction(function () use ($request) {
+			$placeId = currentPlace()->id;
 
-        $account = Account::findUuid($request->payer_payee['uuid']);
-        if(!is_null($account))
-            $voucher->payer_payee_id = $account->id;
+			$category = getBindVal('category');
+			$payer_payee = getBindVal('account');
 
-        $voucher->title = ucwords($typeTxt).' '.$voucher->category_id;
-        $voucher->note = $request->note;
+			// create voucher
+			$voucher = Voucher::create(array_merge($request->except($this->exceptAttributes), [
+				'uuid' => nanoId(),
+				'payer_payee_id' => $payer_payee->id,
+				'category_id' => $category->id,
+				'creator_id' => $request->user()->id,
+				'place_id' => $placeId,
+				'code' => $request->input('code'),
+			]));
 
-        $voucher->creator_id = $request->user()->id;
-        $voucher->place_id = currentPlace()->id;
+			return $voucher;
+		}, 5);
+	}
 
-        $voucher->save();
+	/**
+	 * Display the specified resource.
+	 *
+	 * @param  int  $id
+	 * @return \Illuminate\Http\Response
+	 */
+	public function show(Voucher $voucher) {
+		return new VoucherResource($voucher->load(['creator', 'category', 'payer_payee', 'approver']));
+	}
 
-        return response()->json(['message' => 'Tạo phiếu '.$typeTxt.' thành công!', 'voucher' => $voucher]);
-    }
+	/**
+	 * Update the specified resource in storage.
+	 *
+	 * @param  \Illuminate\Http\Request  $request
+	 * @param  int  $id
+	 * @return \Illuminate\Http\Response
+	 */
+	public function update(VoucherRequest $request, Voucher $voucher) {
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Voucher $voucher)
-    {
+		$voucher = DB::transaction(function () use ($request, $voucher) {
 
-        $voucherCreator = $voucher->creator;
-        $voucherCategory = $voucher->category;
-        $voucherApprover = $voucher->approver;
-        $voucherPayerPayee = $voucher->payer_payee;
+			$category = getBindVal('category');
+			$payer_payee = getBindVal('account');
 
-        return json_encode([
-            'voucher' => $voucher->toArray(),
-            'creator' => !is_null($voucherCreator) ? $voucherCreator->toArray() : [],
-            'approver' => !is_null($voucherApprover) ? $voucherApprover->toArray() : [],
-            'category' => !is_null($voucherCategory) ? $voucherCategory->toArray() : [],
-            'payer_payee' => !is_null($voucherPayerPayee) ? $voucherPayerPayee->toArray() : []
-        ]);
-    }
+			// update voucher
+			$voucher->guard(['id', 'uuid', 'place_id', 'code']);
+			$voucher->update(array_merge($request->except($this->exceptAttributes), [
+				'payer_payee_id' => $payer_payee->id,
+				'category_id' => $category->id,
+			]));
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Voucher $voucher)
-    {
-        $typeTxt = $request->type ? 'thu' : 'chi';
+			return $voucher;
+		}, 5);
+	}
 
-        $voucher->imported_at = $request->imported_at;
-        $voucher->amount = $request->amount;
-        $voucher->category_id = $request->category_id;
-        $voucher->payment_method = $request->payment_method;
-
-        $category = Category::findUuid($request->category['uuid']);
-        if(!is_null($category))
-            $voucher->category_id = $category->id;
-
-        $account = Account::findUuid($request->payer_payee['uuid']);
-        if(!is_null($account))
-            $voucher->payer_payee_id = $account->id;
-
-        $voucher->title = ucwords($typeTxt).' '.$voucher->category_id;
-        $voucher->note = $request->note;
-
-        $voucher->save();
-
-        return response()->json(['message' => 'Cập nhật phiếu '.$typeTxt.' '.$voucher->code.' thành công!', 'voucher' => $voucher]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+	/**
+	 * Remove the specified resource from storage.
+	 *
+	 * @param  int  $id
+	 * @return \Illuminate\Http\Response
+	 */
+	public function destroy($id) {
+		//
+	}
 }
