@@ -6,13 +6,17 @@ use App\Concerns\QueryFilter;
 
 class ProductFilter extends QueryFilter
 {
-    public function name($search)
+    public function keyword($search)
     {
         if (is_null($search)) {
             return $this->builder;
         }
 
-        return $this->builder->where('products.name', 'like', "%{$search}%");
+        return $this->builder
+            ->where('code', 'like', "%{$search}%")
+            ->orWhere('name', 'like', "%{$search}%");
+
+
     }
 
     public function is_hot($is_hot)
@@ -48,7 +52,7 @@ class ProductFilter extends QueryFilter
             return $this->builder;
         }
 
-        return $this->builder->whereHas('category', function ($query) use ($category_uuid)  {
+        return $this->builder->whereHas('category', function ($query) use ($category_uuid) {
             $query->where('categories.uuid', '=', $category_uuid);
         });
     }

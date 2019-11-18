@@ -36,10 +36,10 @@ class ProductController extends Controller
         $products = Product::with(['supplies', 'category', 'place'])
             ->filter(new ProductFilter($request))
             ->orderBy('products.id', 'desc')
-            ->simplePaginate(100);
+            ->paginate(20);
+
 
         return ProductResource::collection($products);
-
     }
 
     /**
@@ -134,8 +134,9 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show(Product $product)
-    {
-        return response()->json($product->load('supplies'));
+    {        
+        // return response()->json($product->load('supplies'));
+        return new ProductResource($product->load(['supplies', 'category', 'place']));
     }
 
     /**
@@ -157,7 +158,7 @@ class ProductController extends Controller
             $product->guard(['id', 'uuid', 'place_id', 'code']);
             $product->update(array_merge($request->except($this->exceptAttributes), [
                 'category_id' => $category->id,
-                'thumbnail'   => $baseName ?? $product->thumbnail,
+                'thumbnail'   => $baseName ? $baseName : $product->thumbnail,
             ]));
             // tao supply neu san pham co quan ly ton kho
             if ($product->can_stock) {

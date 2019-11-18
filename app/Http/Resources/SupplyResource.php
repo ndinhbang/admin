@@ -17,6 +17,7 @@ class SupplyResource extends JsonResource
         return [
             'uuid'     => $this->uuid,
             'name'     => $this->name,
+            'price_in' => $this->price_in,
             'quantity' => $this->whenPivotLoaded('product_supply', function () {
                 return $this->pivot->quantity;
             }),

@@ -90,9 +90,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('supplies', 'SupplyController');
 
     /** =============== Product ================= **/
-    Route::apiResource('products', 'ProductController');
+    Route::apiResource('product', 'ProductController');
 
-    /** =============== Order ================= **/
+    /** =============== Inventory Orders ================= **/
+    Route::apiResource('inventory_order', 'InventoryOrderController');
+
+    /** =============== Orders ================= **/
     Route::apiResource('orders', 'OrderController');
 
     /** =============== Areas & Tables ================= **/
