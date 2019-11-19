@@ -31,6 +31,10 @@ class PosOrderResource extends JsonResource
             'is_completed' => $this->is_completed,
             'note'         => $this->note,
             'reason'       => $this->reason,
+            'total_dish'   => $this->total_dish,
+            'total_eater'  => $this->total_eater,
+            'table'        => $this->table ?? [],
+            'items'        => PosProductResource::collection($this->whenLoaded('items')),
         ];
     }
 }

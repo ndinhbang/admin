@@ -16,22 +16,22 @@ class ProductResource extends JsonResource
     {
         return [
             'uuid'          => $this->uuid,
+            'name'          => $this->name,
+            'price'         => $this->price,
+            'is_hot'        => $this->is_hot,
+            'thumbnail'     => config('app.media_url') . ($this->thumbnail ? '/products/' . $this->thumbnail : ''),
+            'thumbnailFile' => null,
             'code'          => $this->code,
+            'opened'        => $this->opened,
+            'can_stock'     => $this->can_stock,
+            'position'      => $this->position,
+            'state'         => $this->state,
+            'updated_at'    => $this->updated_at,
+            'supplies'      => SupplyResource::collection($this->whenLoaded('supplies')),
             $this->mergeWhen($this->resource->relationLoaded('category'), [
                 'category_uuid' => $this->category->uuid,
                 'category_name' => $this->category->name,
             ]),
-            'supplies'      => SupplyResource::collection($this->whenLoaded('supplies')),
-            'name'          => $this->name,
-            'opened'        => $this->opened,
-            'can_stock'     => $this->can_stock,
-            'is_hot'        => $this->is_hot,
-            'position'      => $this->position,
-            'price'         => $this->price,
-            'state'         => $this->state,
-            'thumbnail'     => config('app.media_url') . ($this->thumbnail ? '/products/' . $this->thumbnail : ''),
-            'thumbnailFile' => null,
-            'updated_at'    => $this->updated_at,
         ];
     }
 }

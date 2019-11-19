@@ -31,6 +31,7 @@ class ProductRequest extends FormRequest
         if ($this->routeIs(['product.store', 'product.update'])) {
             return [
                 'price'               => ['bail', 'required', 'numeric'],
+                'price_sale'          => ['bail', 'nullable', 'sometimes', 'numeric'],
                 'name'                => ['bail', 'required', 'string', 'max:191'],
                 'is_hot'              => ['bail', 'boolean'],
                 'opened'              => ['bail', 'boolean'],

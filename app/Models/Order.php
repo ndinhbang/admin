@@ -78,9 +78,7 @@ class Order extends Model
     // ======================= Local Scopes ================= //
     public function scopeProgressing($query)
     {
-        return $query->where('is_returned', 0)
-            ->where('is_canceled', 0)
-            ->where('is_served', 0)
+        return $query->where('is_returned', 0)->where('is_canceled', 0)->where('is_served', 0)
             ->where('is_completed', 0);
     }
 
@@ -98,6 +96,37 @@ class Order extends Model
     public function customer()
     {
         return $this->belongsTo('App\User', 'customer_id');
+    }
+
+    public function table()
+    {
+        return $this->hasOne('App\Models\Table', 'order_id');
+    }
+
+    public function batchs()
+    {
+        return $this->hasMany('App\Models\OrderBatch', 'order_id');
+    }
+
+    public function products() {
+        return $this->belongsToMany('App\Models\Product', 'order_items')->withTimestamps();
+    }
+
+    public function items()
+    {
+        return $this->products()
+            ->withPivot([
+                'id',
+                'quantity',
+                'total_price',
+                'reason',
+                'note',
+                'batch',
+                'is_canceled',
+                'is_served',
+                'is_done',
+                'state',
+            ]);
     }
 
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumnsToOrderItemsTable extends Migration
+class AddStateColumnToTablesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddColumnsToOrderItemsTable extends Migration
      */
     public function up()
     {
-        Schema::table('order_items', function (Blueprint $table) {
-            $table->unsignedInteger('batch')->default(0)->after('product_id');
+        Schema::table('tables', function (Blueprint $table) {
+            $table->boolean('state')->default(0);
         });
     }
 
@@ -25,8 +25,8 @@ class AddColumnsToOrderItemsTable extends Migration
      */
     public function down()
     {
-        Schema::table('order_items', function (Blueprint $table) {
-            $table->dropColumn('batch');
+        Schema::table('tables', function (Blueprint $table) {
+            $table->dropColumn('state');
         });
     }
 }

@@ -31,6 +31,7 @@ class Product extends Model
         'state'       => 'boolean',
         'is_hot'      => 'boolean',
         'price'       => 'double',
+        'price_sale'  => 'double',
         'opened'      => 'boolean',
         'can_stock'   => 'boolean',
         'thumbnail'   => 'string',
@@ -57,9 +58,8 @@ class Product extends Model
             $codeId = (int)str_replace($this->codePrefix, '', $row->code);
         }
 
-        $this->attributes['code'] = is_null($value)
-            ? $this->codePrefix . str_pad($codeId + 1, 6, "0", STR_PAD_LEFT)
-            : $value;
+        $this->attributes['code'] = is_null($value) ? $this->codePrefix . str_pad($codeId + 1, 6, "0",
+                STR_PAD_LEFT) : $value;
     }
 
     // ======================= Local Scopes ================= //

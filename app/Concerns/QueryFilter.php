@@ -2,7 +2,7 @@
 
 namespace App\Concerns;
 
-use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class QueryFilter
@@ -10,7 +10,7 @@ abstract class QueryFilter
     protected $request;
     protected $builder;
 
-    public function __construct(Request $request)
+    public function __construct(FormRequest $request)
     {
         $this->request = $request;
     }

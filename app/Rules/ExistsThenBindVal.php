@@ -38,9 +38,7 @@ class ExistsThenBindVal implements Rule
      */
     public function passes($attribute, $value)
     {
-//        \DB::enableQueryLog();
         $record = $this->model->where($this->column, $value)->first();
-//        dump($record, \Db::getQueryLog());
         if (is_null($record)) {
             return false;
         }

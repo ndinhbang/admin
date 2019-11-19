@@ -102,10 +102,19 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('areas', 'AreaController');
 	Route::apiResource('tables', 'TableController');
 
-	/** =============== Order ================= **/
-	Route::get('pos/orders', 'PosController@index')->name('pos.index');
-	Route::post('pos/orders', 'PosController@store')->name('pos.store');
-	Route::get('pos/orders/{order}', 'PosController@show')->name('pos.show');
-	Route::put('pos/orders/{order}', 'PosController@update')->name('pos.update');
-	Route::delete('pos/orders/{order}', 'PosController@destroy')->name('pos.destroy');
+    Route::group(['prefix' => 'pos'], function () {
+        /** =============== Pos Order ================= **/
+        Route::get('orders', 'PosOrderController@index')->name('pos.orders.index');
+        Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
+        Route::get('orders/{order}', 'PosOrderController@show')->name('pos.orders.show');
+        Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
+        Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
+
+        Route::post('orders/{order}/add/{product}', 'PosOrderController@addItem')->name('pos.orders.add-item');
+        Route::post('orders/{order}/update/{product}', 'PosOrderController@updateItem')->name('pos.orders.update-item');
+        Route::post('orders/{order}/delete/{product}', 'PosOrderController@deleteItem')->name('pos.orders.delete-item');
+
+        /** =============== Pos Product ================= **/
+        Route::get('products', 'PosProductController@index')->name('pos.products.index');
+    });
 });

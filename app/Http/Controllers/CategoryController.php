@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Filters\CategoryFilter;
 use Illuminate\Http\Request;
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
@@ -11,16 +12,14 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param CategoryRequest $request
+     * @param CategoryFilter  $filter
      * @return \Illuminate\Http\Response
      */
     public function index(CategoryRequest $request)
     {
-        $categories = Category::where(function ($query) use ($request) {
-                if($request->type) {
-                    $query->where('type', $request->type);
-                }
-            })
-            ->with('place')
+        $categories = Category::with('place')
+            ->filter(new CategoryFilter($request))
             ->orderBy('position', 'asc')
             ->simplePaginate(100);
         return $categories->toJson();
