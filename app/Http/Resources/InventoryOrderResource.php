@@ -13,7 +13,7 @@ class InventoryOrderResource extends JsonResource {
 	 */
 	public function toArray($request) {
 		return [
-			'uuid' => $this->uuid,
+			'uuid' => isset($this->uuid) ? $this->uuid : null,
 			'code' => $this->code,
 			$this->mergeWhen($this->resource->relationLoaded('supplier'), [
 				'supplier_uuid' => $this->supplier->uuid,

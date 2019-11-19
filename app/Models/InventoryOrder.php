@@ -22,7 +22,6 @@ class InventoryOrder extends Model {
 		'creator_id',
 		'user_id',
 		'supplier_id',
-		'created_at',
 	];
 
 	protected $guarded = ['id'];
