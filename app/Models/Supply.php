@@ -32,7 +32,8 @@ class Supply extends Model {
 			->where('inventory_orders.status', 1)
 			->withTimestamps();
 	}
-	public function inventoryOrders() {
+
+	public function orders() {
 		return $this->belongsTo('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')
 			->select('inventory_orders.*', 'accounts.name as supplier_name', 'users.display_name as creator_name')
 			->join('accounts', 'accounts.id', '=', 'inventory_orders.supplier_id')
