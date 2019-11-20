@@ -106,6 +106,7 @@ class PosOrderController extends Controller
 
                 $datas = [];
                 $orderAmount = 0;
+                $totalDish = 0;
                 foreach ($collection as $item) {
                     if (!$products->has($item['uuid'])) {
                         continue;
@@ -118,16 +119,21 @@ class PosOrderController extends Controller
                     } else {
                         $totalPrice = $quantity * $product->price;
                     }
+
                     $orderAmount += $totalPrice;
+                    $totalDish++;
+                    
                     $datas[$product->id] = [
                         'quantity'    => $quantity,
                         'total_price' => $totalPrice,
+                        'note' => $item['note'] ?? '',
                     ];
                 }
                 // cap nhat items trong order
                 $order->products()->sync($datas);
                 // cap nhat tong tien cua order
                 $order->amount = $orderAmount;
+                $order->total_dish = $totalDish;
                 $order->save();
             }
         }, 5);

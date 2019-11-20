@@ -46,6 +46,11 @@ class PosOrderRequest extends FormRequest
                     'numeric',
                     'min:1',
                 ],
+                'items.*.note' => [
+                    'sometimes',
+                    'string',
+                    'max:191',
+                ],
                 'table' => [
                     'sometimes', 'array'
                 ],

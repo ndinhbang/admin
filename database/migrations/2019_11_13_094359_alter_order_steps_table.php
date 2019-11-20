@@ -27,8 +27,8 @@ class AlterOrderStepsTable extends Migration
         Schema::table('order_items', function (Blueprint $table) {
             $table->renameColumn('is_delivered', 'is_served');
             $table->boolean('is_canceled')->default(0)->after('step_id');
-            $table->string('reason')->default(0)->after('is_canceled'); // ly do huy
-            $table->string('note')->default(0)->after('reason'); // ghi chu
+            $table->string('reason')->default('')->after('is_canceled'); // ly do huy
+            $table->string('note')->default('')->after('reason'); // ghi chu
         });
         Schema::table('orders', function (Blueprint $table) {
             $table->renameColumn('is_finished', 'is_served');

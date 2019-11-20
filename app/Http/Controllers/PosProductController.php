@@ -16,8 +16,7 @@ class PosProductController extends Controller
      */
     public function index(PosProductRequest $request)
     {
-        $products = Product::with(['supplies'])
-            ->filter(new ProductFilter($request))
+        $products = Product::filter(new ProductFilter($request))
             ->orderBy('products.id', 'desc')
             ->paginate(20);
 
@@ -32,7 +31,7 @@ class PosProductController extends Controller
      */
     public function show(Product $product)
     {
-        return new PosProductResource($product->load(['supplies', 'category', 'place']));
+        return new PosProductResource($product);
     }
 
 }

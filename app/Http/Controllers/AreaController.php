@@ -53,7 +53,7 @@ class AreaController extends Controller
                     Table::create([
                         'area_id' => $area->id,
                         'uuid'    => nanoId(),
-                        'name'    => $i + 1,
+                        'name'    => $area->name . '-' . ($i + 1),
                     ]);
                 }
             }
