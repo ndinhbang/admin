@@ -3,91 +3,91 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EmployeeRequest;
-use App\Models\Role;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class EmployeeController extends Controller
-{
+class EmployeeController extends Controller {
 
-    protected $avatar_path = 'medias/avatars/';
+	protected $avatar_path = 'medias/avatars/';
 
-    public function index(Request $request)
-    {
-        $users = \App\User::with('roles')->paginate(10);
+	public function index(Request $request) {
+		$users = \App\User::with('roles')
+			->where(function ($query) use ($request) {
+				if ($request->keyword) {
+					$query->where('users.display_name', 'like', '%' . $request->keyword . '%');
+				}
+			})
+			->paginate($request->per_page);
 
-        return $users->toJson();
-    }
+		return $users->toJson();
+	}
 
-    public function store(EmployeeRequest $request)
-    {
-        // \DB::enableQueryLog();
-        $employee = DB::transaction(function () use ($request) {
-            $currentPlace = currentPlace();
-            $arr = $request->all();
-            $arr['uuid'] = nanoId();
-            $arr['password'] = \Hash::make($request->password);
-            // create employee
-            $employee = User::create($arr);
-            // assign employee to place
-            $employee->places()->attach($currentPlace->id);
+	public function store(EmployeeRequest $request) {
+		// \DB::enableQueryLog();
+		$employee = DB::transaction(function () use ($request) {
+			$currentPlace = currentPlace();
+			$arr = $request->all();
+			$arr['uuid'] = nanoId();
+			$arr['password'] = \Hash::make($request->password);
+			// create employee
+			$employee = User::create($arr);
+			// assign employee to place
+			$employee->places()->attach($currentPlace->id);
 
-            // assign roles for employee
-            $roleNames = $request->input('role_names', []);
-            
-            $employee->assignRole($roleNames);
+			// assign roles for employee
+			$roleNames = $request->input('role_names', []);
 
-            return $employee;
-        }, 5);
+			$employee->assignRole($roleNames);
 
-        // dump(\DB::getQueryLog());
+			return $employee;
+		}, 5);
 
-        return response()->json([
-            'message'  => 'Thêm nhân viên thành công!',
-            'employee' => $employee,
-        ]);
-    }
+		// dump(\DB::getQueryLog());
 
-    public function update(EmployeeRequest $request, \App\User $employee)
-    {
-        $employee->display_name = $request->display_name;
-        $employee->name = $request->name;
-        $employee->email = $request->email;
-        $employee->phone = $request->phone;
+		return response()->json([
+			'message' => 'Thêm nhân viên thành công!',
+			'employee' => $employee,
+		]);
+	}
 
-        $roleNames = $request->input('role_names', []);
-        $employee->syncPlaceRoles(currentPlace()->id, $roleNames);
+	public function update(EmployeeRequest $request, \App\User $employee) {
+		$employee->display_name = $request->display_name;
+		$employee->name = $request->name;
+		$employee->email = $request->email;
+		$employee->phone = $request->phone;
 
-        if ($request->password) {
-            $employee->password = \Hash::make($request->password);
-        }
+		$roleNames = $request->input('role_names', []);
+		$employee->syncPlaceRoles(currentPlace()->id, $roleNames);
 
-        $employee->save();
+		if ($request->password) {
+			$employee->password = \Hash::make($request->password);
+		}
 
-        return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
-    }
+		$employee->save();
 
-    public function updateAvatar(EmployeeRequest $request, $uuid)
-    {
-        $employee = \App\User::where('uuid', $uuid)->first();
+		return response()->json(['message' => 'Cập nhật thông tin nhân viên thành công!', 'employee' => $employee]);
+	}
 
-        if (!$employee) {
-            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin nhân viên!']]], 422);
-        }
+	public function updateAvatar(EmployeeRequest $request, $uuid) {
+		$employee = \App\User::where('uuid', $uuid)->first();
 
-        $extension = $request->file('avatar')->getClientOriginalExtension();
-        $filename = $employee->uuid . '-' . $employee->name . "-goido.net.";
+		if (!$employee) {
+			return response()->json(['errors' => ['' => ['Không tìm thấy thông tin nhân viên!']]], 422);
+		}
 
-        $img = \Image::make($request->file('avatar'));
+		$extension = $request->file('avatar')->getClientOriginalExtension();
+		$filename = $employee->uuid . '-' . $employee->name . "-goido.net.";
 
-        $filePath = $this->avatar_path . $filename . $extension;
-        $img->fit(200, 200);
-        $img->save($filePath);
+		$img = \Image::make($request->file('avatar'));
 
-        $employee->avatar = $filename . $extension;
-        $employee->save();
+		$filePath = $this->avatar_path . $filename . $extension;
+		$img->fit(200, 200);
+		$img->save($filePath);
 
-        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'employee' => $employee]);
-    }
+		$employee->avatar = $filename . $extension;
+		$employee->save();
+
+		return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'employee' => $employee]);
+	}
 }
