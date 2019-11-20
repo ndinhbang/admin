@@ -16,10 +16,8 @@ class SupplyInventoryResource extends JsonResource {
 			'uuid' => $this->uuid,
 			'name' => $this->name,
 			'price_in' => $this->price_in,
+			'quantity_total' => $this->quantity_total,
 			'remain_total' => $this->remain_total,
-			// $this->mergeWhen($this->resource->relationLoaded('inventory'), [
-			// 	'inventory' => InventoryResource::collection($this->inventory),
-			// ]),
 			'created_at' => $this->created_at,
 			'updated_at' => $this->updated_at,
 		];

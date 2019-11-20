@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CategoryRequest extends FormRequest {
+class SupplyRequest extends FormRequest {
 	/**
 	 * Determine if the user is authorized to make this request.
 	 *
 	 * @return bool
 	 */
 	public function authorize() {
-		if ($this->user()->hasAnyRole(['admin', 'superadmin']) || $this->user()->can('manage.categories')) {
+		if ($this->user()->hasAnyRole(['admin', 'superadmin']) || $this->user()->can('manage.products')) {
 			return true;
 		}
 	}
@@ -22,10 +22,10 @@ class CategoryRequest extends FormRequest {
 	 * @return array
 	 */
 	public function rules() {
-		if ($this->routeIs(['category.store', 'category.update'])) {
+		if ($this->routeIs(['supply.store', 'supply.update'])) {
 			return [
-				'type' => 'sometimes|in:menu,unit,revenue,expense',
-				'state' => 'sometimes|boolean',
+				'name' => ['bail', 'required', 'string', 'max:191'],
+				'min_stock' => ['bail', 'numeric', 'max:9999999'],
 			];
 		}
 

@@ -83,8 +83,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	/** =============== Role ================= **/
 	Route::apiResource('roles', 'RoleController');
 
-	/** =============== Supplies ================= **/
-	Route::apiResource('supplies', 'SupplyController');
+	/** =============== Supply ================= **/
+	Route::apiResource('supply', 'SupplyController');
 
 	/** =============== Product ================= **/
 	Route::apiResource('product', 'ProductController');
@@ -102,19 +102,19 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('areas', 'AreaController');
 	Route::apiResource('tables', 'TableController');
 
-    Route::group(['prefix' => 'pos'], function () {
-        /** =============== Pos Order ================= **/
-        Route::get('orders', 'PosOrderController@index')->name('pos.orders.index');
-        Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
-        Route::get('orders/{order}', 'PosOrderController@show')->name('pos.orders.show');
-        Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
-        Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
+	Route::group(['prefix' => 'pos'], function () {
+		/** =============== Pos Order ================= **/
+		Route::get('orders', 'PosOrderController@index')->name('pos.orders.index');
+		Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
+		Route::get('orders/{order}', 'PosOrderController@show')->name('pos.orders.show');
+		Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
+		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
 
-        Route::post('orders/{order}/add/{product}', 'PosOrderController@addItem')->name('pos.orders.add-item');
-        Route::post('orders/{order}/update/{product}', 'PosOrderController@updateItem')->name('pos.orders.update-item');
-        Route::post('orders/{order}/delete/{product}', 'PosOrderController@deleteItem')->name('pos.orders.delete-item');
+		Route::post('orders/{order}/add/{product}', 'PosOrderController@addItem')->name('pos.orders.add-item');
+		Route::post('orders/{order}/update/{product}', 'PosOrderController@updateItem')->name('pos.orders.update-item');
+		Route::post('orders/{order}/delete/{product}', 'PosOrderController@deleteItem')->name('pos.orders.delete-item');
 
-        /** =============== Pos Product ================= **/
-        Route::get('products', 'PosProductController@index')->name('pos.products.index');
-    });
+		/** =============== Pos Product ================= **/
+		Route::get('products', 'PosProductController@index')->name('pos.products.index');
+	});
 });

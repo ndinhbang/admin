@@ -18,6 +18,26 @@ class Supply extends Model {
 		'place_id',
 	];
 
+	// ======================= Attribute Casting ================= //
+	protected $casts = [
+		'uuid' => 'string',
+		'place_id' => 'integer',
+		'unit_id' => 'integer',
+		'name' => 'string',
+		'price_in' => 'double',
+		'min_stock' => 'integer',
+		'max_stock' => 'integer',
+	];
+
+	// ======================= Overrided ================= //
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getRouteKeyName() {
+		return 'uuid';
+	}
+
 	public function products() {
 		return $this->belongsToMany('App\Models\Product', 'product_supply', 'supply_id', 'product_id')
 			->withPivot(['quantity']);
@@ -41,15 +61,5 @@ class Supply extends Model {
 			->withPivot(['quantity', 'remain', 'price_pu', 'total_price'])
 			->where('inventory_orders.status', 1)
 			->withTimestamps();
-	}
-
-	/**
-	 * Tong ton kho cua nguyen lieu
-	 *
-	 * @param Illuminate\Database\Eloquent\Builder $query
-	 * @return Illuminate\Database\Eloquent\Builder
-	 */
-	public function scopeWithTotalRemain($query) {
-		return $query->withSum(['inventory:remain as remain_total']);
 	}
 }
