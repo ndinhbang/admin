@@ -38,6 +38,10 @@ class Supply extends Model {
 		return 'uuid';
 	}
 
+	public function unit() {
+		return $this->belongsTo('App\Models\Category', 'unit_id');
+	}
+
 	public function products() {
 		return $this->belongsToMany('App\Models\Product', 'product_supply', 'supply_id', 'product_id')
 			->withPivot(['quantity']);

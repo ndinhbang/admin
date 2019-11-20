@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SupplyRequest;
 use App\Models\Supply;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupplyController extends Controller {
 	protected $exceptAttributes = [
 		'unit_uuid',
 		'unit_name',
+		'quantity_total',
+		'remain_total',
 		'updated_at',
 		'created_at',
 	];
@@ -71,7 +74,7 @@ class SupplyController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function update(SupplyRequest $request, Supply $supply) {
-		$supply = DB::transaction(function () use ($request) {
+		$supply = DB::transaction(function () use ($request, $supply) {
 			$category = getBindVal('category');
 
 			// create supply

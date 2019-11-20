@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Http\Resources\InventoryResource;
-use App\Http\Resources\SupplyInventoryResource;
+use App\Http\Resources\SupplyResource;
 use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +16,9 @@ class InventoryController extends Controller {
 	public function index(Request $request) {
 		$supplyInventory = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
 			->where(function ($query) use ($request) {
+				if ($request->keyword) {
+					$query->where('supplies.name', 'like', '%' . $request->keyword . '%');
+				}
 				if ($request->type == 'in') {
 					$query->where('inventory.remain', '>', 0);
 				}
@@ -34,10 +37,11 @@ class InventoryController extends Controller {
 			})
 			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
 			->groupBy('supplies.id')
+			->with(['unit'])
 			->paginate($request->per_page);
 
 		// return $supplyInventory->toJson();
-		return SupplyInventoryResource::collection($supplyInventory);
+		return SupplyResource::collection($supplyInventory);
 	}
 
 	public function show($supplyUuid) {

@@ -199,7 +199,7 @@ return [
 		],
 	],
 	'categories' => [
-		'unit' => ['Cái', 'Chiếc', 'Phần', 'Chai', 'Điếu', 'Kg', 'Gram', 'Lít', 'Gói', 'Bao', 'Quả', 'Lon', 'Đồng', 'Túi', 'Thùng', 'Hộp', 'Lốc', 'Mét', 'Milimet'],
+		'unit' => ['Cái', 'Chiếc', 'Con', 'Phần', 'Chai', 'Điếu', 'Kg', 'Gram', 'Lít', 'Gói', 'Bao', 'Quả', 'Lon', 'Đồng', 'Túi', 'Thùng', 'Hộp', 'Lốc', 'Mét', 'Milimet'],
 		'expense' => [
 			'Chi mua hàng',
 			'Tiền trả hàng',
