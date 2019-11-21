@@ -33,6 +33,7 @@ class PosOrderResource extends JsonResource
             'reason'       => $this->reason,
             'total_dish'   => $this->total_dish,
             'total_eater'  => $this->total_eater,
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
             'table'        => $this->table ?? [],
             'items'        => PosProductResource::collection($this->whenLoaded('items')),
         ];

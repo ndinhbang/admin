@@ -81,3 +81,48 @@ if (!function_exists('uploadImage')) {
         return false;
     }
 }
+
+if (!function_exists('currentState')) {
+    /**
+     * @param integer $position
+     * @return array
+     */
+    function currentState($position)
+    {
+        $stateArr = config('default.orders.state');
+        return $stateArr[(int) $position] ?? [];
+    }
+}
+
+if (!function_exists('nextState')) {
+    /**
+     * @param $currentPosition
+     * @return array
+     */
+    function nextState($currentPosition)
+    {
+        $currentState = currentState($currentPosition);
+        $nextPosition = $currentPosition + 1;
+        $nextState = currentState($nextPosition);
+
+        if (!empty($currentState) && !empty($nextState)) {
+            // neu co thiet lap bep
+            $enableKitchen = config('default.pos.enable_kitchen');
+            if (!$enableKitchen && isset($nextState['is_accepted']) && $nextState['is_accepted']) {
+                // chuyen tu trang thai 1 -> 2
+                return currentState(2 );
+            }
+            // neu co ship do
+            $enableShipment = config('default.pos.enable_shipment');
+            if (!$enableShipment && isset($nextState['is_done']) && $nextState['is_done']) {
+                // chuyen tu tran thai 3 -> 6
+                return currentState(6 );
+            }
+        }
+
+        return $nextState;
+
+
+
+    }
+}

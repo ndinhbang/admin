@@ -35,28 +35,51 @@ class PosOrderRequest extends FormRequest
                 $countItems = count($items);
             }
             return [
-                'items' => ['sometimes', 'array', 'max:100'],
+                'items' => ['bail', 'sometimes', 'array', 'max:100'],
                 'items.*.uuid' => [
+                    'bail',
                     Rule::requiredIf($countItems > 0),
                     'string',
                     'size:21',
                 ],
                 'items.*.quantity' => [
+                    'bail',
                     Rule::requiredIf($countItems > 0),
                     'numeric',
                     'min:1',
                 ],
                 'items.*.note' => [
+                    'bail',
                     'sometimes',
                     'string',
                     'max:191',
                 ],
+                'items.*.state' => [
+                    'bail',
+                    Rule::requiredIf($countItems > 0),
+                    'numeric',
+                ],
                 'table' => [
-                    'sometimes', 'array'
+                    'bail','sometimes', 'array'
                 ],
                 'table.uuid' => [
+                    'bail',
                     Rule::requiredIf(!empty($this->input('table', []))),
                     'size:21'
+                ],
+                'total_eater' => [
+                    'bail','sometimes', 'numeric'
+                ],
+                'note' => [
+                    'bail','sometimes', 'nullable', 'string', 'max:191'
+                ],
+                'is_canceled' => [
+                    'sometimes', 'boolean'
+                ],
+                'reason' => [
+                    Rule::requiredIf($this->input('is_canceled', false)),
+                    'nullable',
+                    'string',
                 ]
             ];
         }

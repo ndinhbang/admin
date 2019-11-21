@@ -15,6 +15,7 @@ class PosProductResource extends JsonResource
     public function toArray($request)
     {
         $stateArr = config('default.orders.state');
+        $enableKitchen = config('default.pos.enable_kitchen');
 
         return [
             'uuid'       => $this->uuid,
@@ -34,9 +35,8 @@ class PosProductResource extends JsonResource
                 'is_served'       => $this->pivot->is_served ?? false,
                 'is_done'         => $this->pivot->is_done ?? false,
                 'state'           => $this->pivot->state ?? 0,
-                'state_name'      => $stateArr[$this->pivot->state ?? 0]['name'],
-                'next_state'      => $this->pivot && $this->pivot->state ? $this->pivot->state + 1 : 1,
-                'next_state_name' => $stateArr[$this->pivot && $this->pivot->state ? $this->pivot->state + 1 : 1]['name'],
+                '_currentState'  => currentState($this->pivot->state ?? 0),
+                '_nextState'     => nextState($this->pivot->state ?? 0),
             ]),
         ];
     }

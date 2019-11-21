@@ -84,13 +84,26 @@ class PosOrderController extends Controller
      */
     public function update(PosOrderRequest $request, Order $order)
     {
-        DB::transaction(function () use ($request, $order) {
+        $order->load(['table']);
+        $order = DB::transaction(function () use ($request, $order) {
             $place = currentPlace();
             $items = $request->input('items', []);
             $table = $request->input('table', []);
 
+            if ($request->input('is_canceled', false)) {
+                $order->is_canceled = 1;
+                $order->reason = $request->input('reason');
+            }
 
-            if (!is_null($table = Table::where('uuid', $table['uuid'] ?? '')->first())) {
+            $order->note = (string) $request->input('note');
+            $order->total_eater = $request->input('total_eater', 1);
+
+            if (!is_null($table = Table::where('uuid', $table['uuid'] ?? '')->first()) && !$table->state) {
+                // remove exist order table
+                if ($order->table) {
+                    $order->table()->update(['order_id' => 0, 'state' => 0]);
+                }
+
                 $table->order_id = $order->id;
                 $table->state = 1;
                 $table->save();
@@ -122,11 +135,12 @@ class PosOrderController extends Controller
 
                     $orderAmount += $totalPrice;
                     $totalDish++;
-                    
+
                     $datas[$product->id] = [
                         'quantity'    => $quantity,
                         'total_price' => $totalPrice,
-                        'note' => $item['note'] ?? '',
+                        'note'        => $item['note'] ?? '',
+                        'state'        => $item['state'] ?? 0,
                     ];
                 }
                 // cap nhat items trong order
@@ -134,8 +148,11 @@ class PosOrderController extends Controller
                 // cap nhat tong tien cua order
                 $order->amount = $orderAmount;
                 $order->total_dish = $totalDish;
-                $order->save();
             }
+
+            $order->save();
+
+            return $order;
         }, 5);
 
 

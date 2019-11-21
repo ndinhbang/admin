@@ -30,6 +30,8 @@ class Order extends Model
         'kind'        => 'integer',
         'total_dish'  => 'integer',
         'total_eater' => 'integer',
+        'note'        => 'string',
+        'reason'      => 'string',
     ];
 
     /**
@@ -108,14 +110,9 @@ class Order extends Model
         return $this->hasMany('App\Models\OrderBatch', 'order_id');
     }
 
-    public function products() {
-        return $this->belongsToMany('App\Models\Product', 'order_items')->withTimestamps();
-    }
-
     public function items()
     {
-        return $this->products()
-            ->withPivot([
+        return $this->products()->withPivot([
                 'id',
                 'quantity',
                 'total_price',
@@ -127,6 +124,11 @@ class Order extends Model
                 'is_done',
                 'state',
             ]);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany('App\Models\Product', 'order_items')->withTimestamps();
     }
 
 }
