@@ -105,8 +105,6 @@ if (!function_exists('nextState')) {
         $nextPosition = $currentPosition + 1;
         $nextState = currentState($nextPosition);
 
-        dump($currentPosition, $currentState, $nextPosition, $nextState);
-
         if (!empty($currentState) && !empty($nextState)) {
             // neu co thiet lap bep
             $enableKitchen = config('default.pos.enable_kitchen');
