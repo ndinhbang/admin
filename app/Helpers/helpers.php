@@ -105,17 +105,19 @@ if (!function_exists('nextState')) {
         $nextPosition = $currentPosition + 1;
         $nextState = currentState($nextPosition);
 
+        dump($currentPosition, $currentState, $nextPosition, $nextState);
+
         if (!empty($currentState) && !empty($nextState)) {
             // neu co thiet lap bep
             $enableKitchen = config('default.pos.enable_kitchen');
-            if (!$enableKitchen && isset($nextState['is_accepted']) && $nextState['is_accepted']) {
-                // chuyen tu trang thai 1 -> 2
+            if (!$enableKitchen && isset($currentState['is_pending']) && $currentState['is_pending']) {
+                // chuyen tu trang thai 0 -> 2
                 return currentState(2 );
             }
             // neu co ship do
             $enableShipment = config('default.pos.enable_shipment');
             if (!$enableShipment && isset($nextState['is_done']) && $nextState['is_done']) {
-                // chuyen tu tran thai 3 -> 6
+                // chuyen tu tran thai 3,4,5 -> 6
                 return currentState(6 );
             }
         }
