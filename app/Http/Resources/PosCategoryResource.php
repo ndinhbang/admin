@@ -4,7 +4,11 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class Area extends JsonResource
+/**
+ * @property mixed uuid
+ * @property mixed name
+ */
+class PosCategoryResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -15,9 +19,8 @@ class Area extends JsonResource
     public function toArray($request)
     {
         return [
-            'uuid'          => $this->uuid,
-            'name'          => $this->name,
-            'tables'        => $this->whenLoaded('tables'),
+            'uuid' => $this->uuid,
+            'name'  => $this->name,
         ];
     }
 }

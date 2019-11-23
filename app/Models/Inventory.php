@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+//use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class Inventory extends Model {
-	protected $table = 'inventory';
+class Inventory extends Pivot
+{
+    public $incrementing = true;
+    protected $table = 'inventory';
 
-	protected $guarded = ['id'];
+    protected $guarded = [ 'id' ];
 
-	// ======================= Hidden Attributes ================= //
-	protected $hidden = [
-		'id',
-		'place_id',
-		'created_at',
-	];
+    // ======================= Hidden Attributes ================= //
+    protected $hidden = [
+        'id',
+        'place_id',
+        'created_at',
+    ];
 }

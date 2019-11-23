@@ -8,6 +8,14 @@ use App\Scopes\PlaceScope;
 
 /**
  * @method static find( int $category_id )
+ * @property mixed     description
+ * @property mixed     name
+ * @property string    uuid
+ * @property int|mixed parent_id
+ * @property mixed     type
+ * @property mixed     place_id
+ * @property mixed     position
+ * @property mixed     state
  */
 class Category extends Model
 {

@@ -117,5 +117,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 		/** =============== Pos Product ================= **/
 		Route::get('products', 'PosProductController@index')->name('pos.products.index');
+        Route::get('categories', 'PosCategoryController@index')->name('pos.categories.index');
 	});
 });

@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method static create( array $array_merge )
+ */
 class Area extends Model
 {
     use Filterable;
@@ -26,7 +29,7 @@ class Area extends Model
 
     public function tables()
     {
-        return $this->hasMany('App\Models\Table');
+        return $this->hasMany('App\Models\Table', 'area_id');
     }
 
     /**

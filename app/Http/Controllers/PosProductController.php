@@ -12,13 +12,17 @@ class PosProductController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \App\Http\Requests\PosProductRequest  $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(PosProductRequest $request)
     {
-        $products = Product::filter(new ProductFilter($request))
+        $products = Product::with('category')
+            ->filter(new ProductFilter($request))
+            ->orderBy('products.position', 'asc')
             ->orderBy('products.id', 'desc')
-            ->paginate(20);
+            ->take(100) // max:100 products
+            ->get();
 
         return PosProductResource::collection($products);
     }
