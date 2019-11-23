@@ -108,11 +108,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
 		Route::get('orders/{order}', 'PosOrderController@show')->name('pos.orders.show');
 		Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
-		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
+//		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
 
-		Route::post('orders/{order}/add/{product}', 'PosOrderController@addItem')->name('pos.orders.add-item');
-		Route::post('orders/{order}/update/{product}', 'PosOrderController@updateItem')->name('pos.orders.update-item');
-		Route::post('orders/{order}/delete/{product}', 'PosOrderController@deleteItem')->name('pos.orders.delete-item');
+        Route::put('orders/{order}/items', 'PosOrderController@items')->name('pos.orders.items');
+        Route::put('orders/{order}/table', 'PosOrderController@table')->name('pos.orders.table');
+        Route::put('orders/{order}/payment', 'PosOrderController@payment')->name('pos.orders.payment');
+        Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
 
 		/** =============== Pos Product ================= **/
 		Route::get('products', 'PosProductController@index')->name('pos.products.index');

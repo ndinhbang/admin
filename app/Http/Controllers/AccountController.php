@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\AccountRequest;
 use App\Models\Account;
+use App\Http\Filters\AccountFilter;
 
 class AccountController extends Controller
 {
@@ -13,26 +14,20 @@ class AccountController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index(AccountRequest $request)
     {
-        $accounts = Account::where(function ($query) use ($request) {
-                if($request->type) {
-                    $query->where('type', $request->type);
-                }
-                if($request->keyword) {
-                    $query->orWhere('code', 'like', '%'.$request->keyword.'%');
-                    $query->orWhere('unsigned_name', 'like', '%'.$request->keyword.'%');
-                    $query->orWhere('phone', 'like', '%'.$request->keyword.'%');
-                }
-            })->orderBy('id', 'desc')->paginate($request->per_page);
+        $accounts = Account::filter(new AccountFilter($request))
+            ->orderBy('id', 'desc')
+            ->paginate($request->per_page);
         return $accounts->toJson();
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param AccountRequest $request
      * @return \Illuminate\Http\Response
+     * @throws \Exception
      */
     public function store(AccountRequest $request)
     {

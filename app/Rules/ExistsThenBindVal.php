@@ -19,13 +19,16 @@ class ExistsThenBindVal implements Rule
      */
     protected $column;
 
+    protected $name;
+
     /**
      * {@inheritDoc}
      */
-    public function __construct($modelClass, $column)
+    public function __construct($modelClass, $column, $name = null)
     {
         $this->model = app($modelClass);
         $this->column = $column;
+        $this->name = $name;
     }
 
     /**
@@ -42,8 +45,10 @@ class ExistsThenBindVal implements Rule
         if (is_null($record)) {
             return false;
         }
+
+        $name = $this->name ?? strtolower(getClassShortName($record));
         // bind value to ioc
-        app()->instance(strtolower(getClassShortName($record)), $record);
+        app()->instance($name, $record);
 
         return true;
     }

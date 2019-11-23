@@ -47,6 +47,15 @@ class Supply extends Model {
 			->withPivot(['quantity']);
 	}
 
+	public function stocks() {
+	    return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')->withPivot(['quantity', 'remain', 'price_pu', 'total_price'])
+            ->withTimestamps();
+    }
+
+    public function availableStocks() {
+        return $this->stocks()->wherePivot('remain', '>', 0);
+    }
+
 	public function inventory() {
 		return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')
 			->select('inventory_orders.*', 'accounts.name as supplier_name', 'users.display_name as creator_name')

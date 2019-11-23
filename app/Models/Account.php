@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Scopes\PlaceScope;
+use App\Traits\Filterable;
 
 class Account extends Model
 {
+    use Filterable;
     protected $fillable = [
         'name'
     ];

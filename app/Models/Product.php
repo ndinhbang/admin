@@ -20,7 +20,7 @@ class Product extends Model
         'created_at',
     ];
 
-    protected $guarded = ['id'];
+    protected $guarded = [ 'id' ];
 
     // ======================= Attribute Casting ================= //
     protected $casts = [
@@ -48,16 +48,16 @@ class Product extends Model
     }
 
     // ======================= Accessors ================= //
-
     // ======================= Mutators ================= //
-
     public function setCodeAttribute($value)
     {
         $codeId = 0;
-        if (!is_null($row = static::select('code')->orderBy('id', 'desc')->take(1)->first())) {
-            $codeId = (int)str_replace($this->codePrefix, '', $row->code);
+        if ( !is_null($row = static::select('code')
+            ->orderBy('id', 'desc')
+            ->take(1)
+            ->first()) ) {
+            $codeId = (int) str_replace($this->codePrefix, '', $row->code);
         }
-
         $this->attributes['code'] = is_null($value) ? $this->codePrefix . str_pad($codeId + 1, 6, "0",
                 STR_PAD_LEFT) : $value;
     }

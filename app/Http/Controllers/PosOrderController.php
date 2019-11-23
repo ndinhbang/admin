@@ -17,30 +17,34 @@ class PosOrderController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param PosOrderRequest $request
+     * @param  PosOrderRequest  $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(PosOrderRequest $request)
     {
-        $orders = Order::with(['creator', 'customer', 'items', 'table'])->filter(new OrderFilter($request))
-            ->orderBy('orders.id', 'desc')->paginate(6);
-
+        $orders = Order::with([
+            'creator',
+            'customer',
+            'items',
+            'table',
+        ])
+            ->filter(new OrderFilter($request))
+            ->orderBy('orders.id', 'desc')
+            ->paginate(6);
         return PosOrderResource::collection($orders);
     }
-
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param PosOrderRequest $request
+     * @param  PosOrderRequest  $request
      * @return PosOrderResource
      * @throws \Exception
      */
     public function store(PosOrderRequest $request)
     {
-        $now = Carbon::now();
-
-        $order = Order::create(array_merge($request->only(['kind']), [
+        $now   = Carbon::now();
+        $order = Order::create(array_merge($request->only([ 'kind' ]), [
             'uuid'       => nanoId(),
             'place_id'   => currentPlace()->id,
             'creator_id' => $request->user()->id,
@@ -49,165 +53,283 @@ class PosOrderController extends Controller
             'month'      => $now->month,
             'day'        => $now->day,
         ]));
-
         $order->load('items');
-
         return new PosOrderResource($order);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param Order $order
+     * @param  Order  $order
      * @return PosOrderResource
      */
     public function show(Order $order)
     {
         $order->load([
+            'customer',
             'items' => function ($query) {
                 $query->orderBy('pivot_id', 'asc');
             },
         ]);
-
         return new PosOrderResource($order);
     }
-
 
     /**
      * Update the specified resource in storage.
      *
-     * @param PosOrderRequest $request
-     * @param Order           $order
+     * @param  PosOrderRequest  $request
+     * @param  Order            $order
      * @return PosOrderResource
      * @throws \Exception
      * @throws \Throwable
      */
     public function update(PosOrderRequest $request, Order $order)
     {
-        $order->load(['table']);
-        $order = DB::transaction(function () use ($request, $order) {
-            $place = currentPlace();
-            $items = $request->input('items', []);
-            $table = $request->input('table', []);
-
-            if ($request->input('is_canceled', false)) {
-                $order->is_canceled = 1;
-                $order->reason = $request->input('reason');
-            }
-
-            $order->note = (string) $request->input('note');
-            $order->total_eater = $request->input('total_eater', 1);
-
-            if (!is_null($table = Table::where('uuid', $table['uuid'] ?? '')->first()) && !$table->state) {
-                // remove exist order table
-                if ($order->table) {
-                    $order->table()->update(['order_id' => 0, 'state' => 0]);
+        if ( isOrderClosed($order) ) {
+            return response()->json([
+                'message' => 'Order đã đóng không thể cập nhật',
+            ], 403);
+        }
+        $order = DB::transaction(
+            function () use ($request, $order) {
+                $order = $this->updateTable($request, $order);
+                $order = $this->updateItems($request, $order);
+                // Customer
+                $customer = getBindVal('customer');
+                if ( $customer ) {
+                    $order->customer_id = $customer->id;
+                }
+                $order->note        = $request->note ?? '';
+                $order->card_name   = $request->card_name ?? '';
+                $order->total_eater = $request->total_eater ?? 1;
+                $order              = $this->updatePayment($request, $order);
+                $order->save();
+                // nếu bán thành công
+                if ( $order->is_completed || $order->is_paid) {
+                    // trù kho
+                    $this->subtractInventory($request, $order);
+                    // tao phieu thu
+                    $order->createVoucher();
                 }
 
-                $table->order_id = $order->id;
-                $table->state = 1;
-                $table->save();
-            }
-
-            if (!empty($items)) {
-                $collection = (new Collection($items))->unique('uuid');
-                // query products
-                $products = Product::whereIn('uuid', $collection->pluck('uuid'))->get()->keyBy('uuid');
-                if ($products->isEmpty()) {
-                    throw new \Exception('Items not found');
-                }
-
-                $datas = [];
-                $orderAmount = 0;
-                $totalDish = 0;
-                foreach ($collection as $item) {
-                    if (!$products->has($item['uuid'])) {
-                        continue;
-                    }
-                    $product = $products[$item['uuid']];
-                    $quantity = (int)$item['quantity'];
-                    // calculate total cost and discount amount
-                    if ($product->price_sale > 0) {
-                        $totalPrice = $quantity * $product->price_sale;
-                    } else {
-                        $totalPrice = $quantity * $product->price;
-                    }
-
-                    $orderAmount += $totalPrice;
-                    $totalDish++;
-
-                    $datas[$product->id] = [
-                        'quantity'    => $quantity,
-                        'total_price' => $totalPrice,
-                        'note'        => $item['note'] ?? '',
-                        'state'        => $item['state'] ?? 0,
-                    ];
-                }
-                // cap nhat items trong order
-                $order->products()->sync($datas);
-                // cap nhat tong tien cua order
-                $order->amount = $orderAmount;
-                $order->total_dish = $totalDish;
-            }
-
-            $order->save();
-
-            return $order;
-        }, 5);
-
-
+                return $order;
+            }, 5);
         $order->load([
             'table',
+            'customer',
             'items' => function ($query) {
                 $query->orderBy('pivot_id', 'asc');
             },
         ]);
-
         return new PosOrderResource($order);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order|mixed
+     * @throws \Throwable
      */
-    public function destroy($id)
+    private function updateTable(PosOrderRequest $request, Order $order)
     {
-        //
+        if ( empty($request->table_uuid)
+            || is_null($table = Table::where('uuid', $request->table_uuid)
+                ->first())
+            || !$table->state ) {
+            return $order;
+        }
+        $order->loadMissing([ 'table' ]);
+        // remove exist table of order
+        if ( $order->table ) {
+            $order->table()
+                ->update([
+                    'order_id' => 0,
+                    'state'    => 0,
+                ]);
+        }
+        // assign a new table
+        $table->order_id = $order->id;
+        $table->state    = 1;
+        $table->save();
+        return $order;
     }
 
-    public function addItem(PosOrderRequest $request, Order $order, Product $product)
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order
+     * @throws \Exception
+     */
+    private function updateItems(PosOrderRequest $request, Order $order)
     {
-        if ($product->price_sale > 0) {
-            $totalPrice = 1 * $product->price_sale;
-        } else {
-            $totalPrice = 1 * $product->price;
+        if ( !empty($request->items) ) {
+            $collection    = ( new Collection($request->items) )
+                ->unique('uuid');
+            $productsUuids = $collection->pluck('uuid');
+            $products      = Product::whereIn('uuid', $productsUuids)
+                ->get();
+            if ( $products->isEmpty() ) {
+                // throw error if products not exist
+                throw new \Exception('ERROR: items not found');
+            }
+            $keyedProducts = $products->keyBy('uuid');
+            $items         = [];
+            $orderAmount   = 0;
+            $totalDish     = 0;
+            foreach ( $collection as $item ) {
+                $product  = $keyedProducts[ $item['uuid'] ];
+                $quantity = (int) $item['quantity'];
+                // calculate total cost and discount amount
+                $totalPrice            = $quantity * ( $product->price_sale > 0
+                        ? $product->price_sale
+                        : $product->price
+                    );
+                $items[ $product->id ] = [
+                    'quantity'    => $quantity,
+                    'total_price' => $totalPrice,
+                    'note'        => $item['note'] ?? '',
+                    'state'       => $item['state'] ?? 0,
+                ];
+                $orderAmount           += $totalPrice;
+                $totalDish++;
+            }
+            // cap nhat items trong order
+            $order->products()
+                ->sync($items);
+            // cap nhat tong tien cua order
+            $order->amount     = $orderAmount;
+            $order->total_dish = $totalDish;
+            return $order;
         }
-        $order->items()->attach($product->id, [
-            'total_price' => $totalPrice,
-        ]);
-
-        return response()->json([
-            'message' => 'OK',
-        ]);
+        return $order;
     }
 
-    public function updateItem(PosOrderRequest $request, Order $order, Product $product)
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order
+     * @throws \Exception
+     */
+    protected function updatePayment(PosOrderRequest $request, Order $order)
     {
-        $quantity = (int)$request->input('quantity');
-        if ($product->price_sale > 0) {
-            $totalPrice = $quantity * $product->price_sale;
+        $paid           = 0;
+        $debt           = 0;
+        $isPaid         = false;
+        $amount         = $order->amount;
+        $receivedAmount = $request->received_amount ?? 0;
+        $isCompleted    = false; // hoan thanh order
+        if ( $receivedAmount >= $amount ) {
+            $paid        = $amount;
+            $isPaid      = true;
+            $isCompleted = true;
         } else {
-            $totalPrice = $quantity * $product->price;
+            $paid = $receivedAmount;
+            $debt = $amount - $receivedAmount;
         }
-        $order->items()->updateExistingPivot($product->id, [
-            'quantity'    => $quantity,
-            'total_price' => $totalPrice,
-        ]);
+        $order->paid            = $paid;
+        $order->debt            = $debt;
+        $order->is_paid         = $isPaid;
+        $order->received_amount = $receivedAmount;
+        $order->is_completed    = $isCompleted;
+        return $order;
+    }
 
-        return response()->json([
-            'message' => 'OK',
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @throws \Exception
+     */
+    private function subtractInventory(PosOrderRequest $request, Order $order)
+    {
+        $order->loadMissing([
+            'items'                          => function ($query) {
+                $query->where('products.can_stock', 1) // skip item khong quan ly ton kho
+                ->orderBy('pivot_id', 'asc');
+            },
+            'items.supplies.availableStocks' => function ($query) {
+                $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
+                ->orderBy('inventory_orders.id', 'asc');
+            },
         ]);
+        $items = $order->items ?? collect([]);
+        if ( $items->isEmpty() ) {
+            return;
+        }
+        foreach ( $items as $item ) {
+            $supplies = $item->supplies ?? collect([]);
+            if ( $supplies->isEmpty() ) {
+                throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$item->name}.");
+            };
+            $now = Carbon::now()
+                ->format('Y-m-d H:i:s');
+            // số lượng sản phẩm trong order
+            $productQuantity = $item->pivot->quantity;
+            foreach ( $supplies as $supply ) {
+                $stocks = $supply->available_stocks ?? collect([]);
+                // throw error if empty
+                if ( $stocks->isEmpty() ) {
+                    throw new \Exception("Không đủ nguyên liệu: {$supply->name} trong kho.");
+                };
+                // số lượng nguyên liệu / 1 sản phẩm
+                $supplyQuantity = $supply->pivot->quantity;
+                //tổng số lương trừ kho
+                $outQuantity = $supplyQuantity * $productQuantity;
+                // lặp các lần nhập kho
+                foreach ( $stocks as $stock ) {
+                    if ( $outQuantity <= 0 ) {
+                        break;
+                    }
+                    // nếu tồn kho nhiều hơn tổng trừ kho
+                    if ( $stock->pivot->remain >= $outQuantity ) {
+                        // ... thực hiện trừ kho
+                        $supply->stocks()
+                            ->updateExistingPivot($stock->id, [
+                                'remain'     => $stock->pivot->remain - $outQuantity,
+                                'updated_at' => $now,
+                            ]);
+                        $outQuantity = 0;
+                        break;
+                    }
+                    // nếu tổng trừ kho nhiều hơn tồn kho trong lần nhập kho hiện tại
+                    // số lượng trừ kho còn lại
+                    $outQuantity = $outQuantity - $stock->pivot->remain;
+                    // ... trừ hết số lượng tồn
+                    $supply->stocks()
+                        ->updateExistingPivot($stock->id, [
+                            'remain'     => 0,
+                            'updated_at' => $now,
+                        ]);
+                } // end of stocks
+                // nếu tống trừ kho lớn hơn tổng tồn kho
+                if ( $outQuantity > 0 ) {
+                    throw new \Exception("{$supply->name} tồn kho không đủ số lượng");
+                }
+            } // end of supplies
+        }
+        // unload redundant relations
+        $items->unsetRelation('supplies');
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order
+     * @throws \Exception
+     */
+    private function canceledOrder(PosOrderRequest $request, Order $order)
+    {
+        $isCanceled = $request->is_canceled ?? false;
+        $reason     = $request->reason ?? '';
+        if ( $isCanceled ) {
+            if ( !$reason ) {
+                throw new \Exception('ERROR: Chưa nhập lý do hủy');
+            }
+            if ( isOrderClosed($order) ) {
+                throw new \Exception('ERROR: Order đã đóng không thể hủy');
+            }
+            $order->is_canceled = 1;
+            $order->reason      = $reason;
+        }
+        return $order;
     }
 }

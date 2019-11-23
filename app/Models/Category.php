@@ -6,6 +6,9 @@ use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use App\Scopes\PlaceScope;
 
+/**
+ * @method static find( int $category_id )
+ */
 class Category extends Model
 {
     use Filterable;

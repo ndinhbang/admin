@@ -1,34 +1,31 @@
 <?php
-
-if (!function_exists('nanoId')) {
+if ( !function_exists('nanoId') ) {
     function nanoId()
     {
         $client = new \Hidehalo\Nanoid\Client();
         return $client->generateId($size = 21, $mode = \Hidehalo\Nanoid\Client::MODE_DYNAMIC);
     }
 }
-
-if (!function_exists('currentPlace')) {
+if ( !function_exists('currentPlace') ) {
     /**
      * @return \App\Models\Place|null
      * @throws Exception
      */
     function currentPlace()
     {
-        if (app()->offsetExists('_currentPlace')) {
+        if ( app()->offsetExists('_currentPlace') ) {
             return app('_currentPlace');
         }
-        if (getBindVal('_requirePlace')) {
+        if ( getBindVal('_requirePlace') ) {
             throw new \Exception('Place is required');
         }
         return null;
     }
 }
-
-if (!function_exists('getBindVal')) {
+if ( !function_exists('getBindVal') ) {
     /**
-     * @param      $key
-     * @param null $default
+     * @param        $key
+     * @param  null  $default
      * @return mixed|null
      */
     function getBindVal($key, $default = null)
@@ -36,8 +33,7 @@ if (!function_exists('getBindVal')) {
         return app()->offsetExists($key) ? app($key) : $default;
     }
 }
-
-if (!function_exists('getClassShortName')) {
+if ( !function_exists('getClassShortName') ) {
     /**
      * @param $object
      * @return string
@@ -45,23 +41,18 @@ if (!function_exists('getClassShortName')) {
      */
     function getClassShortName($object)
     {
-        return (new \ReflectionClass($object))->getShortName();
+        return ( new \ReflectionClass($object) )->getShortName();
     }
 }
-
-if (!function_exists('uploadImage')) {
-
+if ( !function_exists('uploadImage') ) {
     function uploadImage(\Illuminate\Http\UploadedFile $file = null, $targetPath = 'medias/')
     {
-        if (!is_null($file)) {
+        if ( !is_null($file) ) {
             $extension = $file->getClientOriginalExtension();
-            $filename = uniqid();
-
+            $filename  = uniqid();
             $baseName = $filename . "." . $extension;
-
             $filePath = $targetPath . $baseName;
-            $img = \Image::make($file);
-
+            $img      = \Image::make($file);
             // if ($img->width() > 1024) {
             //     $img->resize(1024, null, function ($constraint) {
             //         $constraint->aspectRatio();
@@ -71,30 +62,25 @@ if (!function_exists('uploadImage')) {
             //         $constraint->aspectRatio();
             //     });
             // }
-
             $img->fit(500, 320);
             $img->save($filePath);
-
             return $baseName;
         }
-
         return false;
     }
 }
-
-if (!function_exists('currentState')) {
+if ( !function_exists('currentState') ) {
     /**
-     * @param integer $position
+     * @param  integer  $position
      * @return array
      */
     function currentState($position)
     {
         $stateArr = config('default.orders.state');
-        return $stateArr[(int) $position] ?? [];
+        return $stateArr[ (int) $position ] ?? [];
     }
 }
-
-if (!function_exists('nextState')) {
+if ( !function_exists('nextState') ) {
     /**
      * @param $currentPosition
      * @return array
@@ -103,26 +89,31 @@ if (!function_exists('nextState')) {
     {
         $currentState = currentState($currentPosition);
         $nextPosition = $currentPosition + 1;
-        $nextState = currentState($nextPosition);
-
-        if (!empty($currentState) && !empty($nextState)) {
+        $nextState    = currentState($nextPosition);
+        if ( !empty($currentState) && !empty($nextState) ) {
             // neu co thiet lap bep
             $enableKitchen = config('default.pos.enable_kitchen');
-            if (!$enableKitchen && isset($currentState['is_pending']) && $currentState['is_pending']) {
+            if ( !$enableKitchen && isset($currentState['is_pending']) && $currentState['is_pending'] ) {
                 // chuyen tu trang thai 0 -> 2
-                return currentState(2 );
+                return currentState(2);
             }
             // neu co ship do
             $enableShipment = config('default.pos.enable_shipment');
-            if (!$enableShipment && isset($nextState['is_done']) && $nextState['is_done']) {
+            if ( !$enableShipment && isset($nextState['is_done']) && $nextState['is_done'] ) {
                 // chuyen tu tran thai 3,4,5 -> 6
-                return currentState(6 );
+                return currentState(6);
             }
         }
-
         return $nextState;
-
-
-
+    }
+}
+if ( !function_exists('isOrderClosed') ) {
+    /**
+     * @param  \App\Models\Order  $order
+     * @return bool
+     */
+    function isOrderClosed(\App\Models\Order $order)
+    {
+        return $order->is_canceled || $order->is_returned || $order->is_completed;
     }
 }
