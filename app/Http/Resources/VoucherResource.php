@@ -23,12 +23,12 @@ class VoucherResource extends JsonResource {
 				'payer_payee_type' => $this->payer_payee->type,
 			]),
 			$this->mergeWhen($this->resource->relationLoaded('category'), [
-				'category_uuid' => $this->category->uuid,
-				'category_name' => $this->category->name,
+				'category_uuid' => isset($this->category->uuid) ? $this->category->uuid : null,
+				'category_name' => isset($this->category->name) ? $this->category->name : null,
 			]),
 			$this->mergeWhen($this->resource->relationLoaded('creator'), [
-				'creator_uuid' => $this->creator->uuid,
-				'creator_name' => $this->creator->display_name,
+				'creator_uuid' => isset($this->creator->uuid) ? $this->creator->uuid : null,
+				'creator_name' => isset($this->creator->display_name) ? $this->creator->display_name : null,
 			]),
 
 			'imported_at' => $this->imported_at,

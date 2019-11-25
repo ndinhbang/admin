@@ -124,7 +124,8 @@ class VoucherController extends Controller {
 	 * @param  int  $id
 	 * @return \Illuminate\Http\Response
 	 */
-	public function destroy($id) {
-		//
+	public function destroy(Voucher $voucher) {
+		$voucher->delete();
+		return response()->json(['message' => 'Xóa phiếu thành công']);
 	}
 }
