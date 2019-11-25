@@ -30,7 +30,7 @@ class PosOrderController extends Controller
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
-            ->paginate(6);
+            ->paginate(9);
         return PosOrderResource::collection($orders);
     }
 
@@ -192,14 +192,30 @@ class PosOrderController extends Controller
                 $orderAmount           += $totalPrice;
                 $totalDish++;
             }
+
             // cap nhat items trong order
             $order->products()
                 ->sync($items);
+
+//            if (!empty($request->newItems)) {
+//                $newCollection = ( new Collection($request->newItems) )->unique('uuid');
+//                foreach ( $newCollection as $batchItem ) {
+//                    $product  = $keyedProducts[ $batchItem['uuid'] ];
+//                    $quantity = (int) $batchItem['quantity'];
+//
+//                    $items[ $product->id ] = [
+//                        'quantity'    => $quantity,
+//                        'note'        => $item['note'] ?? '',
+//                        'state'       => $item['state'] ?? 0,
+//                    ];
+//                }
+//            }
             // cap nhat tong tien cua order
             $order->amount     = $orderAmount;
             $order->total_dish = $totalDish;
             return $order;
         }
+        $order->load('items');
         return $order;
     }
 
@@ -211,10 +227,14 @@ class PosOrderController extends Controller
      */
     protected function updatePayment(PosOrderRequest $request, Order $order)
     {
+        $amount         = $order->amount ?? 0;
+        // Neu order chua co item
+        if (!$amount){
+            return $order;
+        }
         $paid           = 0;
         $debt           = 0;
         $isPaid         = false;
-        $amount         = $order->amount;
         $receivedAmount = $request->received_amount ?? 0;
         $isCompleted    = false; // hoan thanh order
         if ( $receivedAmount >= $amount ) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\PlaceScope;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -23,6 +24,18 @@ class Table extends Model
         'uuid'        => 'string',
         'area_id'    => 'integer',
     ];
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new PlaceScope);
+    }
 
     /**
      * {@inheritDoc}

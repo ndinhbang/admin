@@ -11,17 +11,13 @@ class PlaceScope implements Scope
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $builder
-     * @param \Illuminate\Database\Eloquent\Model   $model
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Model    $model
      * @return void
+     * @throws \Exception
      */
     public function apply(Builder $builder, Model $model)
     {
-        $placeIds = [0];
-        if (!is_null($currentPlace = currentPlace())) {
-            $placeIds[] = $currentPlace->id;
-        }
-
-        $builder->whereIn($model->getTable() . '.place_id', $placeIds);
+        $builder->where($model->getTable() . '.place_id', currentPlace()->id);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -45,6 +46,18 @@ class Product extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new PlaceScope);
     }
 
     // ======================= Accessors ================= //

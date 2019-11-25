@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,6 +27,18 @@ class Area extends Model
         'uuid'        => 'string',
         'place_id'    => 'integer',
     ];
+
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new PlaceScope);
+    }
 
     public function tables()
     {

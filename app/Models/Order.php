@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasVoucher;
@@ -100,6 +101,18 @@ class Order extends Model
         return 'uuid';
     }
 
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope(new PlaceScope);
+    }
+
     // ======================= Mutators ================= //
     public function setCodeAttribute($value)
     {
@@ -158,7 +171,6 @@ class Order extends Model
                 'total_price',
                 'reason',
                 'note',
-                'batch',
                 'is_canceled',
                 'is_served',
                 'is_done',
