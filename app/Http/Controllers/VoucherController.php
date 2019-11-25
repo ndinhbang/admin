@@ -26,29 +26,15 @@ class VoucherController extends Controller {
 
 	public function overview(Request $request) {
 
-		$vouchers = Voucher::select(DB::raw("
+		$overview = Voucher::select(DB::raw("
                 SUM(if(vouchers.type='0',amount,0)) as chi_amount,
                 SUM(if(vouchers.type='1',amount,0)) as thu_amount,
+                SUM(if(vouchers.payment_method='cash',amount,0)) as tienmat_amount,
+                SUM(if((vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as taikhoan_amount,
                 SUM(if(vouchers.type='0' AND vouchers.payment_method='cash',amount,0)) as chi_tienmat,
                 SUM(if(vouchers.type='0' AND (vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as chi_taikhoan,
                 SUM(if(vouchers.type='1' AND vouchers.payment_method='cash',amount,0)) as thu_tienmat,
-                SUM(if(vouchers.type='1' AND (vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as thu_taikhoan,
-                SUM(if(vouchers.category_id='21',amount,0)) as chimuahang_amount,
-                SUM(if(vouchers.category_id='22',amount,0)) as tientrahang_amount,
-                SUM(if(vouchers.category_id='23',amount,0)) as chidauky_amount,
-                SUM(if(vouchers.category_id='24',amount,0)) as chitamung_amount,
-                SUM(if(vouchers.category_id='25',amount,0)) as chihoanung_amount,
-                SUM(if(vouchers.category_id='26',amount,0)) as chirutvon_amount,
-                SUM(if(vouchers.category_id='27',amount,0)) as cuocphi_amount,
-                SUM(if(vouchers.category_id='28',amount,0)) as chikhac_amount,
-
-                SUM(if(vouchers.category_id='29',amount,0)) as thubanhang_amount,
-                SUM(if(vouchers.category_id='30',amount,0)) as thuxuattra_amount,
-                SUM(if(vouchers.category_id='31',amount,0)) as thugopvon_amount,
-                SUM(if(vouchers.category_id='32',amount,0)) as thutamung_amount,
-                SUM(if(vouchers.category_id='33',amount,0)) as thuhoaung_amount,
-                SUM(if(vouchers.category_id='34',amount,0)) as thunocod_amount,
-                SUM(if(vouchers.category_id='35',amount,0)) as thukhac_amount
+                SUM(if(vouchers.type='1' AND (vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as thu_taikhoan
             "))
 			->where(function ($query) use ($request) {
 				// date time range
@@ -59,7 +45,22 @@ class VoucherController extends Controller {
 			})
 			->orderBy('vouchers.id', 'desc')
 			->first();
-		return response()->json(compact('vouchers'));
+
+		// Tổng chi thu theo từng danh mục
+		$byCategories = Voucher::select(DB::raw("SUM(amount) as amount_total, vouchers.*, categories.uuid, categories.name"))
+			->where(function ($query) use ($request) {
+				// date time range
+				$startDate = Carbon::parse($request->get('start', Carbon::now()))->format('Y-m-d 00:00:00');
+				$endDate = Carbon::parse($request->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
+
+				$query->whereBetween('vouchers.created_at', [$startDate, $endDate]);
+			})
+			->join('categories', 'categories.id', '=', 'vouchers.category_id')
+			->groupBy('vouchers.category_id')
+			->orderBy('categories.id', 'asc')
+			->get();
+
+		return response()->json(compact(['overview', 'byCategories']));
 	}
 
 	/**
