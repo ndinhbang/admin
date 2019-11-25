@@ -16,14 +16,14 @@ class InventoryOrderResource extends JsonResource {
 			'uuid' => isset($this->uuid) ? $this->uuid : null,
 			'code' => $this->code,
 			$this->mergeWhen($this->resource->relationLoaded('supplier'), [
-				'supplier_uuid' => $this->supplier->uuid,
-				'supplier_name' => $this->supplier->name,
-				'supplier_code' => $this->supplier->code,
-				'supplier_type' => $this->supplier->type,
+				'supplier_uuid' => isset($this->supplier->uuid) ? $this->supplier->uuid : null,
+				'supplier_name' => isset($this->supplier->name) ? $this->supplier->name : null,
+				'supplier_code' => isset($this->supplier->code) ? $this->supplier->code : null,
+				'supplier_type' => isset($this->supplier->type) ? $this->supplier->type : null,
 			]),
 			$this->mergeWhen($this->resource->relationLoaded('creator'), [
-				'creator_uuid' => $this->creator->uuid,
-				'creator_name' => $this->creator->display_name,
+				'creator_uuid' => isset($this->creator->uuid) ? $this->creator->uuid : null,
+				'creator_name' => isset($this->creator->display_name) ? $this->creator->display_name : null,
 			]),
 			'supplies' => InventorySupplyResource::collection($this->whenLoaded('supplies')),
 

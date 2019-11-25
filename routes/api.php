@@ -74,6 +74,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::resource('users', 'EmployeeController');
 
 	/** =============== Voucher ================= **/
+	Route::get('voucher/overview', 'VoucherController@overview');
 	Route::resource('voucher', 'VoucherController');
 
 	/** =============== Category ================= **/
