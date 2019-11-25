@@ -49,6 +49,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::put('/user/{user}', 'Admin\UserController@update')->name('admin.user.update');
 	});
 
+	/** =============== Manage =========== **/
+	Route::get('manage/overview', 'ManageController@overview');
+
 	/** =============== Profile ================= **/
 	Route::group(['prefix' => 'profile'], function () {
 		Route::post('/change-password', 'ProfileController@changePassword')->name('profile.change-password');
@@ -75,6 +78,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Category ================= **/
 	Route::post('/category/position', 'CategoryController@updatePosition')->name('category.update-position');
+	Route::get('/category/all_active', 'CategoryController@all_active')->name('category.all-active');
 	Route::resource('category', 'CategoryController');
 
 	/** =============== Account: customer, supplier, shipper, employee ==== **/
@@ -90,6 +94,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('product', 'ProductController');
 
 	/** =============== Inventory ================= **/
+	Route::get('inventory/statistic', 'InventoryController@statistic');
 	Route::apiResource('inventory', 'InventoryController');
 
 	/** =============== Inventory Orders ================= **/
@@ -110,13 +115,13 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
 //		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
 
-        Route::put('orders/{order}/items', 'PosOrderController@items')->name('pos.orders.items');
-        Route::put('orders/{order}/table', 'PosOrderController@table')->name('pos.orders.table');
-        Route::put('orders/{order}/payment', 'PosOrderController@payment')->name('pos.orders.payment');
-        Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
+		Route::put('orders/{order}/items', 'PosOrderController@items')->name('pos.orders.items');
+		Route::put('orders/{order}/table', 'PosOrderController@table')->name('pos.orders.table');
+		Route::put('orders/{order}/payment', 'PosOrderController@payment')->name('pos.orders.payment');
+		Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
 
 		/** =============== Pos Product ================= **/
 		Route::get('products', 'PosProductController@index')->name('pos.products.index');
-        Route::get('categories', 'PosCategoryController@index')->name('pos.categories.index');
+		Route::get('categories', 'PosCategoryController@index')->name('pos.categories.index');
 	});
 });

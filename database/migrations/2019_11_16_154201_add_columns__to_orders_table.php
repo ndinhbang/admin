@@ -19,7 +19,7 @@ class AddColumnsToOrdersTable extends Migration {
 			$table->unsignedTinyInteger('month')->after('state');
 			$table->unsignedTinyInteger('day')->after('state');
 			$table->boolean('is_completed')->default(0)->after('is_paid');
-			$table->unsignedInteger('total_eater')->default(0)->after('total_dish'); // so luong nguoi an
+			$table->unsignedInteger('total_eater')->default(0); // so luong nguoi an
 		});
 	}
 

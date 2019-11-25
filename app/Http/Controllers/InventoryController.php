@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Resources\InventoryResource;
 use App\Http\Resources\SupplyResource;
+use App\Models\Inventory;
 use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,34 +15,45 @@ class InventoryController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function index(Request $request) {
+
+		$stock_range = [-999, 9999999];
+		switch ($request->type) {
+		case 'all': // Tất cả
+			$stock_range = [-999, 9999999];
+			break;
+		case 'in': // Đang tồn
+			$stock_range = [0, 9999999];
+			break;
+		case 'out': // Đã hết
+			$stock_range = [-1, 1];
+			break;
+		case 'error': // Lỗi kho
+			$stock_range = [-999, 0];
+			break;
+		}
+
 		$supplyInventory = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
 			->where(function ($query) use ($request) {
 				if ($request->keyword) {
 					$query->where('supplies.name', 'like', '%' . $request->keyword . '%');
 				}
-				if ($request->type == 'in') {
-					$query->where('inventory.remain', '>', 0);
-				}
-				if ($request->type == 'long') {
-					$query->where('inventory.remain', '=', 0);
-				}
-				if ($request->type == 'out') {
-					$query->where('inventory.remain', '=', 0);
-				}
-				if ($request->type == 'nearly') {
-					$query->whereBetween('inventory.remain', [1, 9]);
-				}
-				if ($request->type == 'error') {
-					$query->where('inventory.remain', '<', 0);
-				}
 			})
 			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
 			->groupBy('supplies.id')
 			->with(['unit'])
+			->havingRaw('SUM(inventory.remain) > ? AND SUM(inventory.remain) < ?', $stock_range)
 			->paginate($request->per_page);
 
 		// return $supplyInventory->toJson();
 		return SupplyResource::collection($supplyInventory);
+	}
+
+	public function statistic(Request $request) {
+		$statistic = Inventory::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
+			->groupBy('inventory.supply_id')
+			->get();
+
+		return response()->json($statistic);
 	}
 
 	public function show($supplyUuid) {
