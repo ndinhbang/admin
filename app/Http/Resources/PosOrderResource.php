@@ -25,6 +25,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property mixed reason
  * @property mixed total_eater
  * @property mixed card_name
+ * @property mixed kind
  */
 class PosOrderResource extends JsonResource
 {
@@ -41,6 +42,7 @@ class PosOrderResource extends JsonResource
             'uuid'            => $this->uuid,
             'code'            => $this->code,
             'card_name'       => $this->card_name,
+            'kind'            => $this->kind,
             'state'           => $this->state,
             'state_name'      => $stateArr[ $this->state ?? 0 ]['name'],
             'amount'          => $this->amount,
@@ -57,7 +59,10 @@ class PosOrderResource extends JsonResource
             'total_dish'      => $this->total_dish,
             'total_eater'     => $this->total_eater,
             'created_at'      => $this->created_at,
-            'items'           => PosProductResource::collection($this->whenLoaded('items')),
+            'newItems'        => [],
+            'items'           => $this->resource->relationLoaded('items')
+                ? PosProductResource::collection($this->items)
+                : [],
             $this->mergeWhen($this->resource->relationLoaded('table'), [
                 'table_uuid' => $this->table->uuid ?? '',
                 'table'      => $this->table,
