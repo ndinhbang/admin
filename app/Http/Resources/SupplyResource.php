@@ -20,6 +20,12 @@ class SupplyResource extends JsonResource {
 				'unit_uuid' => isset($this->unit->uuid) ? $this->unit->uuid : '',
 				'unit_name' => isset($this->unit->name) ? $this->unit->name : '',
 			]),
+			$this->mergeWhen($this->resource->relationLoaded('stocks'), function () {
+				return [
+					'stocks' => $this->stocks,
+					'remain_stock' => $this->stocks->sum('pivot.remain'),
+				];
+			}),
 			'quantity_total' => isset($this->quantity_total) ? $this->quantity_total : 0,
 			'remain_total' => isset($this->remain_total) ? $this->remain_total : 0,
 			'min_stock' => $this->min_stock,
