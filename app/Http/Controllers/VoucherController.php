@@ -75,8 +75,11 @@ class VoucherController extends Controller {
 				$query->orWhere('code', 'like', '%' . $request->keyword . '%');
 			}
 			// by type; 0:chi | 1: thu
-			if ($request->type) {
+			if (in_array($request->type, [0,1])) {
 				$query->where('type', $request->type);
+			}
+			if ($request->type == -1) {
+				$query->onlyTrashed();
 			}
 			// date time range
 			if (!is_null($request->get('start', null)) && !is_null($request->get('end', null))) {

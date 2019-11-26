@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Scopes\PlaceScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @method static create( array $voucherData )
  */
 class Voucher extends Model
 {
+    use SoftDeletes;
+    
     protected $primaryKey = 'id';
     protected $table = 'vouchers';
 

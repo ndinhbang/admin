@@ -9,6 +9,7 @@ use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class InventoryOrderController extends Controller {
 	protected $exceptAttributes = [
@@ -39,6 +40,12 @@ class InventoryOrderController extends Controller {
 				$query->orWhere('code', 'like', '%' . $request->keyword . '%');
 				// cần tìm theo tên sản phẩm
 			}
+
+			// date time range
+			$startDate = Carbon::parse($request->get('start', Carbon::now()))->format('Y-m-d 00:00:00');
+			$endDate = Carbon::parse($request->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
+
+			$query->whereBetween('inventory_orders.created_at', [$startDate, $endDate]);
 		})
 			->orderBy('inventory_orders.id', 'desc')
 			->paginate($request->per_page);
