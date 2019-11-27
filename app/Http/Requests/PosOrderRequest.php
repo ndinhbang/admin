@@ -114,7 +114,7 @@ class PosOrderRequest extends FormRequest
 
         if ( $this->routeIs([ 'pos.orders.index' ]) ) {
             return [
-                'start'          => [ 'bail', 'required'],
+                'day'          => [ 'bail', 'required'],
             ];
         }
 
