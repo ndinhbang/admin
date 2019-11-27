@@ -16,8 +16,8 @@ class Table extends Model
 
     protected $hidden = [
         'id',
+        'place_id',
         'area_id',
-        'order_id',
     ];
 
     protected $casts = [
@@ -50,8 +50,8 @@ class Table extends Model
         return $this->belongsTo('App\Models\Area', 'area_id');
     }
 
-    public function order()
+    public function orders()
     {
-        return $this->belongsTo('App\Models\Order', 'order_id');
+        return $this->hasMany('App\Models\Order', 'table_id');
     }
 }

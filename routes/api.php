@@ -116,8 +116,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
 //		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
 
-		Route::put('orders/{order}/items', 'PosOrderController@items')->name('pos.orders.items');
-		Route::put('orders/{order}/table', 'PosOrderController@table')->name('pos.orders.table');
 		Route::put('orders/{order}/payment', 'PosOrderController@payment')->name('pos.orders.payment');
 		Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
 

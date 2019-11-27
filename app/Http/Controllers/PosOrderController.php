@@ -25,12 +25,15 @@ class PosOrderController extends Controller
         $orders = Order::with([
             'creator',
             'customer',
-            'items',
             'table',
+            'items' => function ($query) {
+                $query->orderBy('order_items.id', 'asc');
+            },
+            'items.category',
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
-            ->paginate(9);
+            ->get();
         return PosOrderResource::collection($orders);
     }
 
@@ -67,9 +70,11 @@ class PosOrderController extends Controller
     {
         $order->load([
             'customer',
+            'table',
             'items' => function ($query) {
                 $query->orderBy('pivot_id', 'asc');
             },
+            'items.category',
         ]);
         return new PosOrderResource($order);
     }
@@ -93,17 +98,22 @@ class PosOrderController extends Controller
         $order = DB::transaction(
             function () use ($request, $order) {
                 $order = $this->updateTable($request, $order);
-                $order = $this->updateItems($request, $order);
+                list($order, $products) = $this->updateItems($request, $order);
                 // Customer
-                $customer = getBindVal('customer');
+                $customer = getBindVal('orderCustomer');
                 if ( $customer ) {
                     $order->customer_id = $customer->id;
                 }
                 $order->note        = $request->note ?? '';
                 $order->card_name   = $request->card_name ?? '';
                 $order->total_eater = $request->total_eater ?? 1;
-                $order              = $this->updatePayment($request, $order);
+//                $order              = $this->updatePayment($request, $order);
                 $order->save();
+                // neu kich hoat bep
+                if ( $enableKitchen = config('default.pos.enable_kitchen', false) ) {
+                    // update batch
+                    $this->createBatchItems($request, $order, $products);
+                }
                 // nếu bán thành công
                 if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
@@ -131,32 +141,23 @@ class PosOrderController extends Controller
      */
     private function updateTable(PosOrderRequest $request, Order $order)
     {
-        if ( empty($request->table_uuid)
-            || is_null($table = Table::where('uuid', $request->table_uuid)
-                ->first())
-            || !$table->state ) {
+        // todo: 1 ban co the co nhieu order
+        if ( empty($request->table_uuid) ) {
             return $order;
         }
-        $order->loadMissing([ 'table' ]);
-        // remove exist table of order
-        if ( $order->table ) {
-            $order->table()
-                ->update([
-                    'order_id' => 0,
-                    'state'    => 0,
-                ]);
+        if ( is_null($table = Table::where('uuid', $request->table_uuid)
+            ->withCount([ 'orders' ])
+            ->first()) ) {
+            throw new \Exception('Table not found');
         }
-        // assign a new table
-        $table->order_id = $order->id;
-        $table->state    = 1;
-        $table->save();
+        $order->table_id = $table->id;
         return $order;
     }
 
     /**
      * @param  \App\Http\Requests\PosOrderRequest  $request
      * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order
+     * @return \App\Models\Order|array
      * @throws \Exception
      */
     private function updateItems(PosOrderRequest $request, Order $order)
@@ -178,7 +179,7 @@ class PosOrderController extends Controller
             foreach ( $collection as $item ) {
                 $product  = $keyedProducts[ $item['uuid'] ];
                 $quantity = (int) $item['quantity'];
-                // calculate total cost and discount amount
+                // tinh tong tien / item
                 $totalPrice            = $quantity * ( $product->price_sale > 0
                         ? $product->price_sale
                         : $product->price
@@ -187,70 +188,46 @@ class PosOrderController extends Controller
                     'quantity'    => $quantity,
                     'total_price' => $totalPrice,
                     'note'        => $item['note'] ?? '',
-                    'state'       => $item['state'] ?? 0,
+                    // last note on item
+//                    'state'       => $item['state'] ?? 0,
                 ];
                 $orderAmount           += $totalPrice;
                 $totalDish++;
             }
-
             // cap nhat items trong order
-            $order->products()
+            $changes = $order->products()
                 ->sync($items);
-
-//            if (!empty($request->newItems)) {
-//                $newCollection = ( new Collection($request->newItems) )->unique('uuid');
-//                foreach ( $newCollection as $batchItem ) {
-//                    $product  = $keyedProducts[ $batchItem['uuid'] ];
-//                    $quantity = (int) $batchItem['quantity'];
-//
-//                    $items[ $product->id ] = [
-//                        'quantity'    => $quantity,
-//                        'note'        => $item['note'] ?? '',
-//                        'state'       => $item['state'] ?? 0,
-//                    ];
-//                }
-//            }
             // cap nhat tong tien cua order
             $order->amount     = $orderAmount;
             $order->total_dish = $totalDish;
-            return $order;
         }
-        $order->load('items');
-        return $order;
+        $order->load([ 'items' ]);
+        return [
+            $order,
+            $keyedProducts ?? new Collection([]),
+        ];
     }
 
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order
-     * @throws \Exception
-     */
-    protected function updatePayment(PosOrderRequest $request, Order $order)
+    protected function createBatchItems(PosOrderRequest $request, Order $order, Collection $keyedProducts)
     {
-        $amount         = $order->amount ?? 0;
-        // Neu order chua co item
-        if (!$amount){
-            return $order;
+        if ( !empty($request->items) ) {
+            $newCollection = ( new Collection($request->batchItems) )
+                ->unique('uuid');
+            $batchs        = [];
+            foreach ( $newCollection as $batchItem ) {
+                $product  = $keyedProducts[ $batchItem['uuid'] ];
+                $quantity = (int) $batchItem['quantity'];
+                $batchs[] = [
+                    'place_id'   => $order->place_id,
+                    'product_id' => $product->id,
+                    'quantity'   => $quantity,
+                    'note'       => $batchItem['note'] ?? '',
+                    'state'      => 0,
+                ];
+            }
+            $order->batchs()
+                ->createMany($batchs);
         }
-        $paid           = 0;
-        $debt           = 0;
-        $isPaid         = false;
-        $receivedAmount = $request->received_amount ?? 0;
-        $isCompleted    = false; // hoan thanh order
-        if ( $receivedAmount >= $amount ) {
-            $paid        = $amount;
-            $isPaid      = true;
-            $isCompleted = true;
-        } else {
-            $paid = $receivedAmount;
-            $debt = $amount - $receivedAmount;
-        }
-        $order->paid            = $paid;
-        $order->debt            = $debt;
-        $order->is_paid         = $isPaid;
-        $order->received_amount = $receivedAmount;
-        $order->is_completed    = $isCompleted;
-        return $order;
     }
 
     /**
@@ -332,10 +309,52 @@ class PosOrderController extends Controller
     /**
      * @param  \App\Http\Requests\PosOrderRequest  $request
      * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order
+     * @return \App\Http\Resources\PosOrderResource
      * @throws \Exception
      */
-    private function canceledOrder(PosOrderRequest $request, Order $order)
+    public function payment(PosOrderRequest $request, Order $order)
+    {
+        $amount = $order->amount ?? 0;
+        // Neu order chua co item
+        if ( !$amount ) {
+            return $order;
+        }
+        $paid           = 0;
+        $debt           = 0;
+        $isPaid         = false;
+        $receivedAmount = $request->received_amount ?? 0;
+        $isCompleted    = false; // hoan thanh order
+        if ( $receivedAmount >= $amount ) {
+            $paid        = $amount;
+            $isPaid      = true;
+            $isCompleted = true;
+        } else {
+            $paid = $receivedAmount;
+            $debt = $amount - $receivedAmount;
+        }
+        $order->paid            = $paid;
+        $order->debt            = $debt;
+        $order->is_paid         = $isPaid;
+        $order->received_amount = $receivedAmount;
+        $order->is_completed    = $isCompleted;
+        $order->save();
+        $order->load([
+            'table',
+            'customer',
+            'items' => function ($query) {
+                $query->orderBy('pivot_id', 'asc');
+            },
+        ]);
+        return new PosOrderResource($order);
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Http\Resources\PosOrderResource
+     * @throws \Exception
+     */
+    public function canceled(PosOrderRequest $request, Order $order)
     {
         $isCanceled = $request->is_canceled ?? false;
         $reason     = $request->reason ?? '';
@@ -348,7 +367,15 @@ class PosOrderController extends Controller
             }
             $order->is_canceled = 1;
             $order->reason      = $reason;
+            $order->save();
         }
-        return $order;
+        $order->load([
+            'table',
+            'customer',
+            'items' => function ($query) {
+                $query->orderBy('pivot_id', 'asc');
+            },
+        ]);
+        return new PosOrderResource($order);
     }
 }

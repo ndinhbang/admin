@@ -38,6 +38,9 @@ class PosOrderResource extends JsonResource
     public function toArray($request)
     {
         $stateArr = config('default.orders.state');
+        $items    = $this->resource->relationLoaded('items')
+            ? PosProductResource::collection($this->items)
+            : [];
         return [
             'uuid'            => $this->uuid,
             'code'            => $this->code,
@@ -59,13 +62,12 @@ class PosOrderResource extends JsonResource
             'total_dish'      => $this->total_dish,
             'total_eater'     => $this->total_eater,
             'created_at'      => $this->created_at,
-            'newItems'        => [],
-            'items'           => $this->resource->relationLoaded('items')
-                ? PosProductResource::collection($this->items)
-                : [],
+            'batchItems'      => [],
+//            'originItems'     => $items,
+            'items'           => $items,
             $this->mergeWhen($this->resource->relationLoaded('table'), [
                 'table_uuid' => $this->table->uuid ?? '',
-                'table'      => $this->table,
+                'table'      => new TableResource($this->table),
             ]),
             $this->mergeWhen($this->resource->relationLoaded('customer'), [
                 'customer_uuid' => $this->customer->uuid ?? '',

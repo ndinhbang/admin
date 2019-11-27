@@ -23,6 +23,8 @@ use App\Traits\HasVoucher;
  * @property mixed        is_returned
  * @property mixed        is_completed
  * @property mixed|string card_name
+ * @property mixed        place_id
+ * @property  integer|null table_id
  * @method static select( string $string )
  * @method static create( array $array_merge )
  */
@@ -39,6 +41,7 @@ class Order extends Model
         'place_id',
         'creator_id',
         'customer_id',
+        'table_id',
     ];
 
     // ======================= Attribute Casting ================= //
@@ -47,6 +50,7 @@ class Order extends Model
         'place_id'        => 'integer',
         'creator_id'      => 'integer',
         'customer_id'     => 'integer',
+        'table_id'        => 'integer',
         'state'           => 'integer',
         'kind'            => 'integer',
         'total_dish'      => 'integer',
@@ -154,12 +158,17 @@ class Order extends Model
 
     public function table()
     {
-        return $this->hasOne('App\Models\Table', 'order_id');
+        return $this->belongsTo('App\Models\Table', 'table_id');
     }
 
     public function batchs()
     {
         return $this->hasMany('App\Models\OrderBatch', 'order_id');
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany('App\Models\OrderItem', 'order_id');
     }
 
     public function items()
@@ -169,18 +178,14 @@ class Order extends Model
                 'id',
                 'quantity',
                 'total_price',
-                'reason',
                 'note',
-                'is_canceled',
-                'is_served',
-                'is_done',
-                'state',
             ]);
     }
 
     public function products()
     {
         return $this->belongsToMany('App\Models\Product', 'order_items')
+//            ->using('App\Models\OrderItem')
             ->withTimestamps();
     }
 

@@ -81,4 +81,18 @@ class OrderFilter extends QueryFilter {
 		return $this->builder->where('is_paid', 1);
 	}
 
+    public function day($start)
+    {
+        if ( !$start || $start == 'today' ) {
+            $today = Carbon::today();
+            return $this->builder->where('day', $today->day)
+                ->where('month', $today->month)
+                ->where('year', $today->year);
+        }
+        $time = Carbon::parse($start);
+        return $this->builder->where('day', $time->day)
+            ->where('month', $time->month)
+            ->where('year', $time->year);
+    }
+
 }

@@ -20,10 +20,14 @@ class AreaController extends Controller
      */
     public function index(AreaRequest $request)
     {
-        $areas = Area::with('tables')
+        $areas = Area::with([
+            'tables' => function ($query) {
+                $query->withCount(['orders']);
+            },
+        ])
             ->filter(new AreaFilter($request))
             ->orderBy('areas.id', 'desc')
-            ->paginate(50);
+            ->simplePaginate(50);
         return AreaResource::collection($areas);
     }
 
