@@ -36,7 +36,7 @@ class ProfileController extends Controller
         $user->email = request('email');
         $user->save();
 
-        return response()->json(['message' => 'Cập nhật thông tin tài khoản thành công!', 'user' => $user]);
+        return response()->json(['message' => 'Cập nhật thông tin tài khoản thành công!', 'user' => $user->load('roles')]);
     }
 
     public function updateAvatar(ProfileRequest $request)
@@ -59,6 +59,6 @@ class ProfileController extends Controller
         $user->avatar = $filename . $extension;
         $user->save();
 
-        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'user' => $user]);
+        return response()->json(['message' => 'Cập nhật ảnh đại diện thành công!', 'user' => $user->load('roles')]);
     }
 }

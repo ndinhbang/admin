@@ -30,7 +30,7 @@ class CategoryController extends Controller {
 	 * @param CategoryFilter  $filter
 	 * @return \Illuminate\Http\Response
 	 */
-	public function all_active(CategoryRequest $request) {
+	public function all_active(Request $request) {
 		$categories = Category::with('place')
 			->orderBy('position', 'asc')
 			->where('state', 1)

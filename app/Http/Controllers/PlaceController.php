@@ -9,206 +9,206 @@ use Illuminate\Http\Request;
 
 //use Bouncer;
 
-class PlaceController extends Controller
-{
+class PlaceController extends Controller {
 
-    protected $place_path = 'medias/places/';
+	protected $place_path = 'medias/places/';
 
-    public function getMy(Request $request)
-    {
-        $user = $request->user();
+	public function getMy(Request $request) {
+		$user = $request->user();
 
-        // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
-        $places = Place::select('places.*')
-            ->with('user')
-            ->join('place_user', 'place_user.place_id', '=', 'places.id')
-            ->where('place_user.user_id', $user->id)
-            ->get();
+		// Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
+		$places = Place::select('places.*')
+			->with('user')
+            ->with('users')
+			->join('place_user', 'place_user.place_id', '=', 'places.id')
+			->where('place_user.user_id', $user->id)
+			->get();
 
-        $currentPlace = null;
-        $permissions = [];
+		$currentPlace = null;
+		$permissions = [];
 
-        // lấy điểm đầu tiên nếu ko chỉ định
-        if($places->count() == 1) {
-            $currentPlace = $places->first();
-        } else {
+		// lấy điểm đầu tiên nếu ko chỉ định
+		if ($places->count() == 1) {
+			$currentPlace = $places->first();
+		} else {
 
-            $placeUuid = request()->header('X-Place-Id');
-            if (!is_null($placeUuid) || $placeUuid != 'undefined') {
-                $currentPlace = Place::findUuid($placeUuid);
-            }
+			$placeUuid = request()->header('X-Place-Id');
+			if (!is_null($placeUuid) || $placeUuid != 'undefined') {
+				$currentPlace = Place::findUuid($placeUuid);
+			}
 
-            if(is_null($currentPlace)) {
-                $currentPlace = $places->first();
-            }
-        }
+			if (is_null($currentPlace)) {
+				$currentPlace = $places->first();
+			}
+		}
 
-        if(!is_null($currentPlace)) {
-            $currentPlace->load(['user']);
-        }
-        
-        // $roles = $user->roles($currentPlace->id)->get();
-        if($user->hasAnyRole(['superadmin', 'admin'])) {
-            $permissions = $user->getAllPermissions()->pluck('name')->toArray();
-        } else {
-            if(isset($currentPlace->id))
-                $permissions = $user->getPermissionsOnPlace($currentPlace->id)->pluck('name')->toArray();
-        }
+		if (!is_null($currentPlace)) {
+			$currentPlace->load(['user']);
+		}
 
-        // dd($user);
-        return response()->json(compact('user', 'permissions', 'places', 'currentPlace'));
-    }
+		// $roles = $user->roles($currentPlace->id)->get();
+		if ($user->hasAnyRole(['superadmin', 'admin'])) {
+			$permissions = $user->getAllPermissions()->pluck('name')->toArray();
+		} else {
+			if (isset($currentPlace->id)) {
+				$permissions = $user->getPermissionsOnPlace($currentPlace->id)->pluck('name')->toArray();
+			}
 
-    public function index()
-    {
+		}
 
-    }
+		// lay vi tri co level cao nhat cua user
+		$maxRoleLevel = $user->roles($currentPlace->id)->max('level');
+		// chi cho phep nguoi dung phan cac vi tri co level thap hon
+		$roles = Role::where('level', '<', $maxRoleLevel)
+			->get();
 
-    public function store(PlaceRequest $request)
-    {
-        $place = \DB::transaction(function () use ($request) {
-            $user = $request->user();
-            $arr = array_merge($request->all(), [
-                'uuid'          => nanoId(),
-                'contact_name'  => $user->display_name,
-                'contact_phone' => $user->phone,
-                'contact_email' => $user->email,
-                'status'        => 'trial',
-                'user_id'       => $user->id,
-            ]);
+		return response()->json(compact('user', 'permissions', 'roles', 'places', 'currentPlace'));
+	}
 
-            $place = Place::create($arr);
-            $user->places()->attach($place->id);
+	public function index() {
 
-            $roles = config('default.roles.place');
-            $permissions = config('default.permissions');
+	}
 
-            // create place roles
-            foreach ($roles as $r) {
-                $role = Role::create([
-                    'uuid'     => nanoId(),
-                    'name'     => vsprintf($r['name'], $place->uuid),
-                    'title'    => $r['title'],
-                    'level'    => $r['level'],
-                    'place_id' => $place->id,
-                ]);
+	public function store(PlaceRequest $request) {
+		$place = \DB::transaction(function () use ($request) {
+			$user = $request->user();
+			$arr = array_merge($request->all(), [
+				'uuid' => nanoId(),
+				'contact_name' => $user->display_name,
+				'contact_phone' => $user->phone,
+				'contact_email' => $user->email,
+				'status' => 'trial',
+				'user_id' => $user->id,
+			]);
 
-                // Gán role chủ cửa hàng cho người tạo
-                if ($role->level == 50) {
-                    $user->assignRole($role);
-                }
+			$place = Place::create($arr);
+			$user->places()->attach($place->id);
 
-                // Gán permission cho role tương ứng
-                foreach ($permissions as $perm) {
-                    foreach ($perm['roles'] as $roleName) {
-                        if ($role->name == vsprintf($roleName, $place->uuid)) {
-                            $role->givePermissionTo([$perm['name']]);
-                        }
-                    }
-                }
-            }
-            // return data from within transaction
-            return $place;
-        }, 5);
+			$roles = config('default.roles.place');
+			$permissions = config('default.permissions');
 
-        return response()->json([
-            'message' => 'Thêm thông tin cửa hàng thành công!',
-            'place'   => $place->load(['user']),
-            'places'  => $request->user()->places,
-        ]);
-    }
+			// create place roles
+			foreach ($roles as $r) {
+				$role = Role::create([
+					'uuid' => nanoId(),
+					'name' => vsprintf($r['name'], $place->uuid),
+					'title' => $r['title'],
+					'level' => $r['level'],
+					'place_id' => $place->id,
+				]);
 
-    public function destroy(Request $request, $id)
-    {
-        // $netroom = \App\Netroom::find($id);
+				// Gán role chủ cửa hàng cho người tạo
+				if ($role->level == 50) {
+					$user->assignRole($role);
+				}
 
-        // if (!$netroom) {
-        //     return response()->json(['message' => 'Couldnot find netroom!'], 422);
-        // }
+				// Gán permission cho role tương ứng
+				foreach ($permissions as $perm) {
+					foreach ($perm['roles'] as $roleName) {
+						if ($role->name == vsprintf($roleName, $place->uuid)) {
+							$role->givePermissionTo([$perm['name']]);
+						}
+					}
+				}
+			}
+			// return data from within transaction
+			return $place;
+		}, 5);
 
-        // DB::transaction(function () use ($netroom){
-        //     $supplies = \App\Supply::with('products')->where('netroom_id', $netroom->id)->delete();
-        //     $products = \App\Product::with('supplies')->where('netroom_id', $netroom->id)->delete();
+		return response()->json([
+			'message' => 'Thêm thông tin cửa hàng thành công!',
+			'place' => $place->load(['user']),
+			'places' => $request->user()->places,
+		]);
+	}
 
-        //     $orders = \App\Order::where('netroom_id', $netroom->id)->delete();
-        //     $spends = \App\Spend::where('netroom_id', $netroom->id)->delete();
-        //     $roles = Role::where('netroom_id', $netroom->id)->delete();
-        //     $orderStates = \App\OrderState::where('netroom_id', $netroom->id)->delete();
-        //     $discount = \App\Discount::where('netroom_id', $netroom->id)->delete();
-        //     $categories = \App\Category::where('netroom_id', $netroom->id)->delete();
+	public function destroy(Request $request, $id) {
+		// $netroom = \App\Netroom::find($id);
 
-        //     $netroom->users()->detach();
-        //     $netroom->delete();
-        // });
+		// if (!$netroom) {
+		//     return response()->json(['message' => 'Couldnot find netroom!'], 422);
+		// }
 
-        // return response()->json(['message' => 'Netroom deleted!']);
-    }
+		// DB::transaction(function () use ($netroom){
+		//     $supplies = \App\Supply::with('products')->where('netroom_id', $netroom->id)->delete();
+		//     $products = \App\Product::with('supplies')->where('netroom_id', $netroom->id)->delete();
 
-    public function show($id)
-    {
-        // $netroom = \App\Netroom::where('netrooms.id', $id)->with('roles')
-        //     ->first();
+		//     $orders = \App\Order::where('netroom_id', $netroom->id)->delete();
+		//     $spends = \App\Spend::where('netroom_id', $netroom->id)->delete();
+		//     $roles = Role::where('netroom_id', $netroom->id)->delete();
+		//     $orderStates = \App\OrderState::where('netroom_id', $netroom->id)->delete();
+		//     $discount = \App\Discount::where('netroom_id', $netroom->id)->delete();
+		//     $categories = \App\Category::where('netroom_id', $netroom->id)->delete();
 
-        // if (!$netroom) {
-        //     return response()->json(['message' => 'Couldnot find netroom!'], 422);
-        // }
+		//     $netroom->users()->detach();
+		//     $netroom->delete();
+		// });
 
-        // return response()->json(compact('netroom'));
-    }
+		// return response()->json(['message' => 'Netroom deleted!']);
+	}
 
-    public function update(PlaceRequest $request, Place $place)
-    {
+	public function show($id) {
+		// $netroom = \App\Netroom::where('netrooms.id', $id)->with('roles')
+		//     ->first();
 
-        $user = $request->user();
-        // $place = Place::curr();
+		// if (!$netroom) {
+		//     return response()->json(['message' => 'Couldnot find netroom!'], 422);
+		// }
 
-        $place->title = $request->title;
+		// return response()->json(compact('netroom'));
+	}
 
-        $place->code = $request->code;
-        $place->address = $request->address;
+	public function update(PlaceRequest $request, Place $place) {
 
-        $place->contact_name = $request->contact_name;
-        $place->contact_phone = $request->contact_phone;
-        $place->contact_email = $request->contact_email;
+		$user = $request->user();
+		// $place = Place::curr();
 
-        $place->save();
+		$place->title = $request->title;
 
-        return response()->json([
-            'message' => 'Cập nhật thông tin cửa hàng thành công!',
-            'place'   => $place->load(['user']),
-            'places'  => $user->places,
-        ]);
+		$place->code = $request->code;
+		$place->address = $request->address;
 
-    }
+		$place->contact_name = $request->contact_name;
+		$place->contact_phone = $request->contact_phone;
+		$place->contact_email = $request->contact_email;
 
-    public function updateLogo(PlaceRequest $request)
-    {
-        $user = $request->user();
-        $place = Place::curr();
+		$place->save();
 
-        if (!$place) {
-            return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
-        }
+		return response()->json([
+			'message' => 'Cập nhật thông tin cửa hàng thành công!',
+			'place' => $place->load(['user']),
+			'places' => $user->places,
+		]);
 
-        if ($place->logo && \File::exists($this->place_path . $place->logo)) {
-            \File::delete($this->place_path . $place->logo);
-        }
+	}
 
-        $extension = $request->file('logo')->getClientOriginalExtension();
-        $filename = $place->id . '-' . $place->code . "-goido.net.";
+	public function updateLogo(PlaceRequest $request) {
+		$user = $request->user();
+		$place = Place::curr();
 
-        $img = \Image::make($request->file('logo'));
+		if (!$place) {
+			return response()->json(['errors' => ['' => ['Không tìm thấy thông tin cửa hàng!']]], 422);
+		}
 
-        $filePath = $this->place_path . $filename . $extension;
-        $img->fit(200, 200);
-        $img->save($filePath);
+		if ($place->logo && \File::exists($this->place_path . $place->logo)) {
+			\File::delete($this->place_path . $place->logo);
+		}
 
-        $place->logo = $filename . $extension;
-        $place->save();
+		$extension = $request->file('logo')->getClientOriginalExtension();
+		$filename = $place->id . '-' . $place->code . "-goido.net.";
 
-        return response()->json([
-            'message' => 'Cập nhật ảnh đại diện thành công!',
-            'place'   => $place->with('user')->first(),
-        ]);
-    }
+		$img = \Image::make($request->file('logo'));
+
+		$filePath = $this->place_path . $filename . $extension;
+		$img->fit(200, 200);
+		$img->save($filePath);
+
+		$place->logo = $filename . $extension;
+		$place->save();
+
+		return response()->json([
+			'message' => 'Cập nhật ảnh đại diện thành công!',
+			'place' => $place->with('user')->first(),
+		]);
+	}
 }
