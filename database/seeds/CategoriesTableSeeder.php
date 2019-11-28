@@ -13,7 +13,7 @@ class CategoriesTableSeeder extends Seeder
     public function run()
     {
         $categories = config('default.categories');
-        if (Category::all()->isEmpty()) {
+        if (Category::withoutGlobalScopes()->get()->isEmpty()) {
             \DB::transaction(function () use ($categories) {
                 $roleArr = [];
                 foreach ($categories as $type => $cats) {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\PlaceScope;
 use App\Traits\CustomizeEloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,6 +29,17 @@ class Supply extends Model {
 		'min_stock' => 'integer',
 		'max_stock' => 'integer',
 	];
+
+	/**
+	 * The "booting" method of the model.
+	 *
+	 * @return void
+	 */
+	protected static function boot() {
+		parent::boot();
+
+		static::addGlobalScope(new PlaceScope);
+	}
 
 	// ======================= Overrided ================= //
 

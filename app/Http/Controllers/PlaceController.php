@@ -57,9 +57,9 @@ class PlaceController extends Controller {
 		}
 
 		// lay vi tri co level cao nhat cua user
-		$maxRoleLevel = $user->roles($currentPlace->id)->max('level');
+		$maxRoleLevel = $user->roles($currentPlace->id ?? 0)->max('level');
 		// chi cho phep nguoi dung phan cac vi tri co level thap hon
-		$roles = Role::where('level', '<', $maxRoleLevel)
+		$roles = Role::where('level', '<', $maxRoleLevel ?? 0)
 			->get();
 
 		return response()->json(compact('user', 'permissions', 'roles', 'places', 'currentPlace'));
