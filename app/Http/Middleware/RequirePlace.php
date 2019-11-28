@@ -12,6 +12,7 @@ class RequirePlace
         'api/place*',
         'api/roles*',
         'api/admin*',
+        'print/*',
     ];
 
     /**

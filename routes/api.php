@@ -43,6 +43,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::get('/place/{place}', 'Admin\PlaceController@show')->name('admin.place.show');
 		Route::put('/place/{place}', 'Admin\PlaceController@update')->name('admin.place.update');
 
+
 		// Admin Users
 		Route::get('/users', 'Admin\UserController@index')->name('admin.users');
 		Route::post('/user', 'Admin\UserController@store')->name('admin.user.store');
@@ -64,6 +65,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::get('/my', 'PlaceController@getMy')->name('place.my');
 		Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
 	});
+	Route::put('/place/{place}/printers', 'PlaceController@printers')->name('place.printers');
 	Route::resource('place', 'PlaceController');
 
 	/** =============== Employee ================= **/

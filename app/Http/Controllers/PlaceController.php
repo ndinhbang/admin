@@ -147,15 +147,15 @@ class PlaceController extends Controller {
 		// return response()->json(['message' => 'Netroom deleted!']);
 	}
 
-	public function show($id) {
-		// $netroom = \App\Netroom::where('netrooms.id', $id)->with('roles')
-		//     ->first();
+	public function printers(PlaceRequest $request, Place $place) 
+	{
+		$place->printers = $request->printers;
+		$place->save();
 
-		// if (!$netroom) {
-		//     return response()->json(['message' => 'Couldnot find netroom!'], 422);
-		// }
-
-		// return response()->json(compact('netroom'));
+		return response()->json([
+			'message' => 'Lưu cấu hình máy in thành công!',
+			'printers' => $place->printers,
+		]); 
 	}
 
 	public function update(PlaceRequest $request, Place $place) {

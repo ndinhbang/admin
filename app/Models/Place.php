@@ -21,6 +21,11 @@ class Place extends Model
     protected $primaryKey = 'id';
     protected $table = 'places';
 
+    protected $casts = [
+        'user_id' => 'integer',
+        'printers' => 'array',
+    ];
+
     /**
      * The attributes that should be hidden for arrays.
      *

@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::get('/{vue?}', 'HomeController@index')->where('vue', '[\/\w\.-]*')->name('home');
+Route::get('/print/order/{order}', 'PrintController@printOrder')->name('print.order');
 
-//Route::get('/', function () {
-//    return view('welcome');
-//});
-
-// Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
+// Route::get('/home', 'HomeController@index')->name('home');

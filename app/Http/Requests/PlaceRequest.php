@@ -40,6 +40,14 @@ class PlaceRequest extends FormRequest
             ];
         }
 
+        if ($this->routeIs('place.printers')) {
+            return [
+                'printers'   => 'required|array|min:1',
+                'printers.*.name'   => 'required|string|min:1',
+                'printers.*.enable'   => 'required|boolean',
+            ];
+        }
+
         if ($this->routeIs('place.update-logo')) {
             return [
                 'logo' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',

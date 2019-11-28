@@ -16,10 +16,13 @@ class PlaceScope implements Scope {
 	 * @throws \Exception
 	 */
 	public function apply(Builder $builder, Model $model) {
-		if ($model->getTable() == 'categories') {
-			$builder->where($model->getTable() . '.place_id', currentPlace()->id)->orWhere($model->getTable() . '.place_id', 0);
-		} else {
-			$builder->where($model->getTable() . '.place_id', currentPlace()->id);
+		if(!request()->is('print/*')) {
+			if ($model->getTable() == 'categories') {
+				$builder->where($model->getTable() . '.place_id', currentPlace()->id)->orWhere($model->getTable() . '.place_id', 0);
+			} else {
+				$builder->where($model->getTable() . '.place_id', currentPlace()->id);
+			}
 		}
+		
 	}
 }
