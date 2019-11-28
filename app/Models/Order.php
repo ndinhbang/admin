@@ -168,7 +168,8 @@ class Order extends Model
 
     public function orderItems()
     {
-        return $this->hasMany('App\Models\OrderItem', 'order_id');
+        return $this->hasMany('App\Models\OrderItem', 'order_id')
+            ->withTimestamps();
     }
 
     public function items()

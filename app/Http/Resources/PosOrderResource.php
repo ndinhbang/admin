@@ -67,6 +67,7 @@ class PosOrderResource extends JsonResource
             'items'           => $items,
             $this->mergeWhen($this->resource->relationLoaded('table'), [
                 'table_uuid' => $this->table->uuid ?? '',
+                'table_name' => $this->table->name ?? '',
                 'table'      => new TableResource($this->table),
             ]),
             $this->mergeWhen($this->resource->relationLoaded('customer'), [

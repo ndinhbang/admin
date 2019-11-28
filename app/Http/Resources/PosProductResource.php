@@ -52,6 +52,7 @@ class PosProductResource extends JsonResource
 //                    '_nextState'    => nextState($this->pivot->state ?? 0),
                 ]
             ),
+            'created_at'       => $this->created_at,
         ];
     }
 }
