@@ -84,7 +84,7 @@ class Voucher extends Model
     public function setCodeAttribute($value)
     {
         $this->attributes['code'] = is_null($value)
-            ? $this->codePrefix[ $this->type ] . str_pad(static::where('type', $this->type)
+            ? $this->codePrefix[ $this->type ] . str_pad(static::where('type', $this->type)->withTrashed()
                     ->count() + 1, 6, "0", STR_PAD_LEFT)
             : $value;
     }
