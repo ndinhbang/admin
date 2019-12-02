@@ -34,7 +34,7 @@ class ProductController extends Controller {
 		$products = Product::with(['supplies', 'category', 'place'])
 			->filter(new ProductFilter($request))
 			->orderBy('products.id', 'desc')
-			->paginate(20);
+			->paginate($request->per_page);
 
 		// return response()->json($products);
 		return ProductResource::collection($products);
