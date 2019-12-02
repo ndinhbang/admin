@@ -91,6 +91,7 @@ class Order extends Model
         'is_served'       => false,
         'is_paid'         => false,
         'is_completed'    => false,
+        'type'            => 1,
     ];
 
     protected $guarded = [ 'id' ];

@@ -36,12 +36,13 @@ trait HasVoucher
             // Chi mua hàng : Thu xuất trả
         } elseif ( static::getTable() == 'orders' ) {
             $voucherData['order_id']       = $this->id;
-            $voucherData['payer_payee_id'] = $this->customer_id;
+            $voucherData['payer_payee_id'] = $this->customer_id ?? 0;
             $voucherData['category_id']    = $this->type ? 29 : 22;
             // Thu bán hàng : Tiền trả hàng
         }
         $category             = Category::find($voucherData['category_id']);
         $voucherData['title'] = $this->code . ': ' . $category->name;
+        // dump($voucherData);
         // create voucher
         return Voucher::create($voucherData);
     }

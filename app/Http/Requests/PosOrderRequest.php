@@ -34,7 +34,7 @@ class PosOrderRequest extends FormRequest
      */
     public function rules()
     {
-        if ( $this->routeIs('pos.orders.update') ) {
+        if ( $this->routeIs(['pos.orders.store', 'pos.orders.update']) ) {
             $countItems = empty($items = $this->items ?? []) ? 0 : count($items);
             $countBatchItems = empty($batchItems = $this->batchItems ?? []) ? 0 : count($batchItems);
             return [
@@ -96,12 +96,6 @@ class PosOrderRequest extends FormRequest
                     'bail', 'string', 'max:191',
                     Rule::requiredIf($this->is_canceled ?? false),
                 ],
-            ];
-        }
-        if ( $this->routeIs([ 'pos.orders.payment' ]) ) {
-            return [
-                'amount'          => [ 'bail', 'required', 'numeric'],
-                'received_amount' => [ 'bail', 'required', 'numeric'],
             ];
         }
 

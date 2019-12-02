@@ -32,6 +32,7 @@ class PosProductResource extends JsonResource
                 $this->resource->pivot
                 && $this->resource->pivot->getTable() === 'order_items',
                 [
+                    'itemId'      => $this->pivot->id,
                     'quantity'    => $this->pivot->quantity ?? 0,
                     'pending'     => $this->pivot->pending ?? 0,
                     'accepted'    => $this->pivot->accepted ?? 0,
