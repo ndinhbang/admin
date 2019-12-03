@@ -32,6 +32,7 @@ class Product extends Model {
 		'is_hot' => 'boolean',
 		'price' => 'double',
 		'price_sale' => 'double',
+		'discount_amount' => 'double',
 		'opened' => 'boolean',
 		'can_stock' => 'boolean',
 		'thumbnail' => 'string',

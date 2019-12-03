@@ -29,6 +29,10 @@ trait HasVoucher
             'payment_method' => $payment_method,
             'creator_id'     => $this->creator_id,
         ];
+
+        if(!$voucherData['amount'] || $voucherData['amount'] <= 0)
+            return null;
+        
         if ( static::getTable() == 'inventory_orders' ) {
             $voucherData['inventory_order_id'] = $this->id;
             $voucherData['payer_payee_id']     = $this->supplier_id;

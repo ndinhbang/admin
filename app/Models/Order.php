@@ -82,6 +82,7 @@ class Order extends Model
         'received_amount' => 0,
         'state'           => 0,
         'amount'          => 0,
+        'discount_amount' => 0,
         'debt'            => 0,
         'paid'            => 0,
         'total_dish'      => 0,
@@ -180,6 +181,14 @@ class Order extends Model
                 'id',
                 'quantity',
                 'total_price',
+                'discount_amount',
+                'pending',
+                'accepted',
+                'doing',
+                'done',
+                'delivering',
+                'completed',
+                'canceled',
                 'note',
             ]);
     }

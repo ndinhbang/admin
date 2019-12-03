@@ -24,6 +24,8 @@ class OrderResource extends JsonResource {
 			'amount' => $this->amount,
 			'debt' => $this->debt,
 			'paid' => $this->paid,
+			'discount_amount' => $this->discount_amount,
+			'discount_items_amount' => $this->discount_items_amount,
 			'received_amount' => $this->received_amount,
 			'is_returned' => $this->is_returned,
 			'is_canceled' => $this->is_canceled,

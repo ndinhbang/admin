@@ -80,6 +80,8 @@ class PosOrderController extends Controller
                 if ($order->is_completed || $order->is_paid) {
                     // trù kho
                     $this->subtractInventory($request, $order);
+                }
+                if ($order->paid) {
                     // tao phieu thu
                     $order->createVoucher();
                 }
@@ -214,29 +216,33 @@ class PosOrderController extends Controller
             $keyedProducts = $products->keyBy('uuid');
             $items         = [];
             $orderAmount   = 0;
+            $discountItemsAmount   = 0;
             $totalDish     = 0;
             foreach ($collection as $item) {
                 $product  = $keyedProducts[$item['uuid']];
                 $quantity = (int) $item['quantity'];
                 // tinh tong tien / item
-                $totalPrice            = $quantity * ($product->price_sale > 0
-                    ? $product->price_sale
-                    : $product->price);
+                $totalPrice            = ($quantity * $product->price) - $item['discount_amount'];
                 $items[$product->id] = [
                     'quantity'    => $quantity,
+                    'discount_amount' => $item['discount_amount'],
                     'total_price' => $totalPrice,
                     'note'        => $item['note'] ?? '',
                     // last note on item
                     //                    'state'       => $item['state'] ?? 0,
                 ];
+                $discountItemsAmount   += $item['discount_amount'];
                 $orderAmount           += $totalPrice;
                 $totalDish++;
             }
             // cap nhat items trong order
             $changes = $order->products()
                 ->sync($items);
+
             // cap nhat tong tien cua order
-            $order->amount     = $orderAmount;
+            $order->discount_items_amount   = $discountItemsAmount;
+            $order->discount_amount         = $request->discount_amount ?? 0;
+            $order->amount     = $orderAmount - $order->discount_amount;
             $order->total_dish = $totalDish;
         }
         $order->load(['items']);
