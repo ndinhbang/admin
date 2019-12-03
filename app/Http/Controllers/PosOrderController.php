@@ -221,17 +221,18 @@ class PosOrderController extends Controller
             foreach ($collection as $item) {
                 $product  = $keyedProducts[$item['uuid']];
                 $quantity = (int) $item['quantity'];
+                $discount_amount = $item['discount_amount'] ?? 0;
                 // tinh tong tien / item
-                $totalPrice            = ($quantity * $product->price) - $item['discount_amount'];
+                $totalPrice            = ($quantity * $product->price) - $discount_amount;
                 $items[$product->id] = [
                     'quantity'    => $quantity,
-                    'discount_amount' => $item['discount_amount'],
+                    'discount_amount' => $discount_amount,
                     'total_price' => $totalPrice,
                     'note'        => $item['note'] ?? '',
                     // last note on item
                     //                    'state'       => $item['state'] ?? 0,
                 ];
-                $discountItemsAmount   += $item['discount_amount'];
+                $discountItemsAmount   += $discount_amount;
                 $orderAmount           += $totalPrice;
                 $totalDish++;
             }
@@ -281,7 +282,7 @@ class PosOrderController extends Controller
      */
     private function subtractInventory(PosOrderRequest $request, Order $order)
     {
-        $order->loadMissing([
+        $order->load([
             'items'                          => function ($query) {
                 $query->where('products.can_stock', 1) // skip item khong quan ly ton kho
                     ->orderBy('pivot_id', 'asc');
@@ -370,6 +371,11 @@ class PosOrderController extends Controller
         } else {
             $paid = $receivedAmount;
             $debt = $amount - $receivedAmount;
+
+            // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
+            if($paid) {
+                $isPaid      = true;
+            }
         }
         $order->paid            = $paid;
         $order->debt            = $debt;
