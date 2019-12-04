@@ -44,6 +44,7 @@ class PosProductResource extends JsonResource
                     'total_price' => $this->pivot->total_price ?? 0,
                     'discount_amount' => $this->pivot->discount_amount ?? 0,
                     'note'        => $this->pivot->note ?? '',
+                    'created_at'  => $this->pivot->created_at ?? '',
 //                    'batch'         => $this->pivot->batch ?? 0,
 //                    'is_canceled'   => $this->pivot->is_canceled ?? false,
 //                    'is_served'     => $this->pivot->is_served ?? false,

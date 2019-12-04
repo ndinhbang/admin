@@ -190,6 +190,8 @@ class Order extends Model
                 'completed',
                 'canceled',
                 'note',
+                'created_at',
+                'updated_at',
             ]);
     }
 
