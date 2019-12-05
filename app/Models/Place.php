@@ -24,6 +24,8 @@ class Place extends Model
     protected $casts = [
         'user_id' => 'integer',
         'printers' => 'array',
+        'print_templates' => 'array',
+        'print_config' => 'array',
     ];
 
     /**
@@ -47,7 +49,7 @@ class Place extends Model
         return null;
     }
 
-    
+
     public static function findUuid($uuid)
     {
         if($uuid)
@@ -55,7 +57,7 @@ class Place extends Model
 
         return null;
     }
-    
+
     public function user()
     {
         return $this->belongsTo('App\User')->with('roles');

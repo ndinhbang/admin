@@ -53,7 +53,6 @@ class PlaceController extends Controller {
 			if (isset($currentPlace->id)) {
 				$permissions = $user->getPermissionsOnPlace($currentPlace->id)->pluck('name')->toArray();
 			}
-
 		}
 
 		// lay vi tri co level cao nhat cua user
@@ -123,45 +122,23 @@ class PlaceController extends Controller {
 	}
 
 	public function destroy(Request $request, $id) {
-		// $netroom = \App\Netroom::find($id);
-
-		// if (!$netroom) {
-		//     return response()->json(['message' => 'Couldnot find netroom!'], 422);
-		// }
-
-		// DB::transaction(function () use ($netroom){
-		//     $supplies = \App\Supply::with('products')->where('netroom_id', $netroom->id)->delete();
-		//     $products = \App\Product::with('supplies')->where('netroom_id', $netroom->id)->delete();
-
-		//     $orders = \App\Order::where('netroom_id', $netroom->id)->delete();
-		//     $spends = \App\Spend::where('netroom_id', $netroom->id)->delete();
-		//     $roles = Role::where('netroom_id', $netroom->id)->delete();
-		//     $orderStates = \App\OrderState::where('netroom_id', $netroom->id)->delete();
-		//     $discount = \App\Discount::where('netroom_id', $netroom->id)->delete();
-		//     $categories = \App\Category::where('netroom_id', $netroom->id)->delete();
-
-		//     $netroom->users()->detach();
-		//     $netroom->delete();
-		// });
-
-		// return response()->json(['message' => 'Netroom deleted!']);
+        //
 	}
 
-	public function printers(PlaceRequest $request, Place $place) 
-	{
-		$place->printers = $request->printers;
-		$place->save();
+	// public function printers(PlaceRequest $request, Place $place)
+	// {
+	// 	$place->printers = $request->printers;
+	// 	$place->save();
 
-		return response()->json([
-			'message' => 'Lưu cấu hình máy in thành công!',
-			'printers' => $place->printers,
-		]); 
-	}
+	// 	return response()->json([
+	// 		'message' => 'Lưu cấu hình máy in thành công!',
+	// 		'printers' => $place->printers,
+	// 	]);
+	// }
 
 	public function update(PlaceRequest $request, Place $place) {
 
 		$user = $request->user();
-		// $place = Place::curr();
 
 		$place->title = $request->title;
 
@@ -170,7 +147,15 @@ class PlaceController extends Controller {
 
 		$place->contact_name = $request->contact_name;
 		$place->contact_phone = $request->contact_phone;
-		$place->contact_email = $request->contact_email;
+        $place->contact_email = $request->contact_email;
+
+        // print templates
+        $templates = [
+            'pos80' => minifyHtml(view('print.templates.pos80')->render()),
+            'pos58' => minifyHtml(view('print.templates.pos58')->render()),
+        ];
+
+        $place->print_templates = $templates;
 
 		$place->save();
 

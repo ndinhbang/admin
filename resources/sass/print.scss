@@ -370,7 +370,8 @@ body.legal            .sheet { width: 216mm; height: 356mm }
 body.legal.landscape  .sheet { width: 357mm; height: 215mm }
 
 /** Padding area **/
-.sheet.padding-5mm { padding: 5mm 6mm 5mm 5mm }
+.sheet.padding-2mm { padding: 2mm }
+.sheet.padding-5mm { padding: 5mm }
 .sheet.padding-10mm { padding: 10mm }
 .sheet.padding-15mm { padding: 15mm }
 .sheet.padding-20mm { padding: 20mm }
@@ -382,7 +383,8 @@ body.legal.landscape  .sheet { width: 357mm; height: 215mm }
     .sheet {
         background: white;
         box-shadow: 0 .5mm 2mm rgba(0,0,0,.3);
-        margin: 5mm;
+        // margin: 5mm;
+        margin: 0;
     }
 }
 
@@ -462,8 +464,63 @@ th {
     text-align: right;
 }
 
+.text-center {
+    text-align: center;
+}
+
+.py-0 {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.py-1 {
+    padding-top: .25rem;
+    padding-bottom: .25rem;
+}
+.pb-1 {
+    padding-bottom: .25rem;
+}
+.pt-1 {
+    padding-top: .25rem;
+}
+.my-0 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.my-1 {
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+}
+
+.my-2 {
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+}
+
+.my-3 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
 .nowrap {
     width: 1px;
     padding-left: 10px;
     white-space: nowrap;
+}
+
+.mark {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    font-size: 8px;
+    padding: 3px;
 }

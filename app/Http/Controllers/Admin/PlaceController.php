@@ -34,6 +34,12 @@ class PlaceController extends Controller
         $place = \DB::transaction(function () use ($request) {
 
             if($user = User::findUuid($request->user['uuid'])) {
+                // print templates
+                $templates = [
+                    'pos80' => minifyHtml(view('print.templates.pos80')->render()),
+                    'pos58' => minifyHtml(view('print.templates.pos58')->render()),
+                ];
+
                 $arr = array_merge($request->all(), [
                     'uuid'          => nanoId(),
                     'contact_name'  => $user->display_name,
@@ -41,6 +47,8 @@ class PlaceController extends Controller
                     'contact_email' => $user->email,
                     'status'        => 'trial',
                     'user_id'       => $user->id,
+                    'print_templates' => $templates,
+                    'print_config' => config('default.print.config', [])
                 ]);
 
                 $place = Place::create($arr);
@@ -77,9 +85,7 @@ class PlaceController extends Controller
 
                     if(count($rolePermissions))
                         $role->givePermissionTo($rolePermissions);
-
                 }
-                // return data from within transaction
                 return $place;
             }
         }, 5);

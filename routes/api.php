@@ -108,7 +108,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Areas & Tables ================= **/
 	Route::apiResource('areas', 'AreaController');
-	Route::apiResource('tables', 'TableController');
+    Route::apiResource('tables', 'TableController');
+
+    /** =============== Print ================= **/
+    Route::put('config/print', 'PrintController@configPrint')->name('config.print');
+    Route::put('config/printers', 'PrintController@configPrinters')->name('config.printers');
 
 	Route::group(['prefix' => 'pos'], function () {
 		/** =============== Pos Order ================= **/

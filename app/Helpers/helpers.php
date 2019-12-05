@@ -117,3 +117,18 @@ if ( !function_exists('isOrderClosed') ) {
         return $order->is_canceled || $order->is_returned || $order->is_completed;
     }
 }
+
+if ( !function_exists('minifyHtml') ) {
+    /**
+     * @param  string  $html
+     * @return string
+     */
+    function minifyHtml($html)
+    {
+        $minifier = new \App\Helpers\HtmlMinifier([
+            'collapse_whitespace' => true,
+            'disable_comments' => true,
+        ]);
+        return $minifier->minify($html);
+    }
+}
