@@ -5,14 +5,15 @@ namespace App\Models;
 use App\Scopes\PlaceScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\GenerateCode;
 
 /**
  * @method static create( array $voucherData )
  */
 class Voucher extends Model
 {
-    use SoftDeletes;
-    
+    use SoftDeletes, GenerateCode;
+
     protected $primaryKey = 'id';
     protected $table = 'vouchers';
 
@@ -84,8 +85,7 @@ class Voucher extends Model
     public function setCodeAttribute($value)
     {
         $this->attributes['code'] = is_null($value)
-            ? $this->codePrefix[ $this->type ] . str_pad(static::where('type', $this->type)->withTrashed()
-                    ->count() + 1, 6, "0", STR_PAD_LEFT)
+            ? $this->gencode($this->codePrefix[ $this->type ])
             : $value;
     }
 
