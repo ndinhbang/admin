@@ -4,29 +4,10 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link href="/css/print.css" rel="stylesheet">
-    <style>
-        @page {
-            size: auto
-        }
-
-        /* output size */
-        body.receipt .sheet {
-            width: auto
-        }
-
-        /* sheet size */
-        @media print {
-            body.receipt {
-                width: auto
-            }
-        }
-
-        /* fix for Chrome */
-    </style>
 </head>
 
-<body class="receipt">
-    <section class="sheet padding-5mm">
+<body class="receipt w80mm">
+    <section class="sheet p-0>
         <div class="print">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">

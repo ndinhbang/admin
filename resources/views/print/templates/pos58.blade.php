@@ -77,7 +77,7 @@ th{color:#333;border-bottom:1px solid #ddd}
     </style>
 </head>
 
-<body class="receipt">
+<body class="receipt w50mm">
         <section class="sheet p-0">
             <div class="print">
                 <div class="print-header my-0 mb-3">
