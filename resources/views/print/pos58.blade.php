@@ -6,8 +6,8 @@
     <link href="/css/print.css" rel="stylesheet">
 </head>
 
-<body class="receipt w50mm">
-    <section class="sheet p-0">
+<body class="receipt">
+    <section class="sheet padding-2mm">
         <div class="print">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">

@@ -8,7 +8,7 @@
     </style>
 </head>
 
-<body class="receipt w80mm">
+<body class="receipt">
     <section class="sheet padding-2mm">
         <div class="print">
             {{-- <div class="print-logo">
@@ -25,9 +25,7 @@
                 <p class="text-center my-1 mt-3"><strong>Hóa đơn thanh toán</strong></p>
                 <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
                 <p class="my-1"><strong>Bàn:</strong>
-                    @{{#table}}
-                    <span id="computer">@{{ name }}</span>
-                    @{{/table}}
+                    <span id="computer">@{{ table_name }}</span>
                 </p>
                 <p class="my-1"><strong>Thời gian:</strong>
                     <span id="time">@{{ created_at }}</span>
