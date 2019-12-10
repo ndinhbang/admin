@@ -14,28 +14,34 @@
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">
             </div> --}}
-            @{{#order}}
+
             <div class="print-header">
                 @{{#place}}
                 <p class="my-1"><strong>@{{ title }}</strong></p>
                 <p class="my-1">Địa chỉ: @{{ address }}</p>
                 <p class="my-1">Liên hệ: @{{ contact_phone }}</p>
                 @{{/place}}
-
-                <p class="text-center my-1 mt-3"><strong>Hóa đơn thanh toán</strong></p>
-                <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
-                <p class="my-1"><strong>Bàn:</strong>
-                    <span id="computer">@{{ table_name }}</span>
-                </p>
-                <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">@{{ created_at }}</span>
-                </p>
-                <p class="my-1"><strong>Nhân viên:</strong>
-                    @{{#creator}}
+                @{{#order}}
+                    <p class="text-center my-1 mt-3"><strong>Hóa đơn thanh toán</strong></p>
+                    @{{#if code}}
+                        <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
+                    @{{/if}}
+                    @{{#if table_name}}
+                    <p class="my-1"><strong>Bàn: </strong>
+                        <span id="computer">@{{ table_name }}</span>
+                    </p>
+                    @{{/if}}
+                    <p class="my-1"><strong>Thời gian: </strong>
+                        <span id="time">@{{ created_at }}</span>
+                    </p>
+                @{{/order}}
+                @{{#creator}}
+                <p class="my-1"><strong>Nhân viên: </strong>
                     <span id="staff">@{{ display_name }}</span>
-                    @{{/creator}}
                 </p>
+                @{{/creator}}
             </div>
+            @{{#order}}
             <div class="order-info">
                 <table>
                     <thead>
