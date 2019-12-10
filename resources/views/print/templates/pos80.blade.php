@@ -9,7 +9,7 @@
 </head>
 
 <body class="receipt w80mm">
-    <section class="sheet p-0">
+    <section class="sheet padding-2mm">
         <div class="print">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">
