@@ -8,8 +8,8 @@
     </style>
 </head>
 
-<body class="receipt">
-    <section class="sheet padding-2mm">
+<body class="receipt w80mm">
+    <section class="sheet padding-5mm">
         <div class="print">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">

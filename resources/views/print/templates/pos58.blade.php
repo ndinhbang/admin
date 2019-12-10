@@ -8,8 +8,8 @@
     </style>
 </head>
 
-<body class="receipt">
-        <section class="sheet padding-2mm">
+<body class="receipt w50mm">
+        <section class="sheet padding-5mm">
             <div class="print">
                 <div class="print-header my-0 mb-3">
                     <table>

@@ -45,14 +45,14 @@ th{color:#333;border-bottom:1px solid #ddd}
 .mark{position:absolute;right:0;bottom:0;z-index:1;font-size:8px;padding:3px}
 .w80mm{width:80mm}
 .w50mm{width:50mm}
-@page {size: auto}
+// @page {size: auto}
 /* output size */
 body.receipt .sheet {
-    width: auto
+    width: 100%
 }
 /* sheet size */
-@media print {
-    body.receipt {
-        width: auto
-    }
-}
+// @media print {
+//     body.receipt {
+//         width: auto
+//     }
+// }
