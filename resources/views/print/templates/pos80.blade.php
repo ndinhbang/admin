@@ -60,7 +60,7 @@
                         </tr>
                         @{{/each}}
                         <tr>
-                            <th class="text-right" colspan="4"></th>
+                            <th class="text-right p-0" colspan="4"></th>
                         </tr>
                         <tr>
                             <td class="text-left pb-1" colspan="2"><strong>Tổng tiền hàng: </strong></td>

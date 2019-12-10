@@ -6,8 +6,8 @@
     <link href="/css/print.css" rel="stylesheet">
 </head>
 
-<body class="receipt">
-    <section class="sheet padding-2mm">
+<body class="receipt w74mm">
+    <section class="sheet padding-5mm">
         <div class="print">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">
@@ -59,7 +59,7 @@
                         @endforeach
                         @endif
                         <tr>
-                            <th class="text-right" colspan="4"></th>
+                            <th class="text-right p-0" colspan="4"></th>
                         </tr>
                         <tr>
                             <td class="text-left pb-1" colspan="2"><strong>Tổng tiền hàng: </strong></td>
