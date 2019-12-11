@@ -60,7 +60,7 @@
                         <tr>
                             <td class="text-left">@{{money price}}</td>
                             <td class="text-right">@{{ quantity }}</td>
-                            <td class="text-right">>@{{money discount_amount}}</td>
+                            <td class="text-right">@{{money discount_amount}}</td>
                             <td class="text-right">
                                 <strong>@{{money total_price}}</strong></td>
                         </tr>
@@ -71,17 +71,26 @@
                         <tr>
                             <td class="text-left pb-1" colspan="2"><strong>Tổng tiền hàng: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
+                                <strong>@{{total amount discount_amount }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-left pb-1" colspan="2"><strong>Khuyến mãi: </strong></td>
+                            <td class="text-right py-0 pb-1" colspan="2">@{{money discount_amount}}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-left pb-1" colspan="2"><strong>Tổng thanh toán: </strong></td>
+                            <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{money amount}}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="2"><strong>Khách trả: </strong></td>
+                            <td class="text-left py-0 pb-1" colspan="2"><strong>Nhận của khách: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{money received_amount}}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="2"><strong>Đã thanh toán: </strong></td>
+                            <td class="text-left py-0 pb-1" colspan="2"><strong>Trả lại khách: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
-                                <strong>@{{money paid}}</strong></td>
+                                <strong>@{{payback received_amount amount}}</strong></td>
                         </tr>
                         <tr>
                             <td class="text-left py-0 pb-1" colspan="4">Ghi chú:</td>
