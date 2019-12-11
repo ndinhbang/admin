@@ -22,7 +22,7 @@ class PosProductResource extends JsonResource
             'price'      => $this->price,
             'price_sale' => $this->price_sale,
             'is_hot'     => $this->is_hot,
-            'thumbnail'  => config('app.media_url') . ( $this->thumbnail ? '/products/' . $this->thumbnail : '' ),
+            'thumbnail'  => ( $this->thumbnail ? config('app.media_url') . '/products/' . $this->thumbnail : '' ),
             'supplies'   => SupplyResource::collection($this->whenLoaded('supplies')),
             $this->mergeWhen($this->resource->relationLoaded('category'), [
                 'category_uuid' => $this->category->uuid,
