@@ -5,9 +5,10 @@ namespace App\Models;
 use App\Traits\HasVoucher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\GenerateCode;
 
 class InventoryOrder extends Model {
-	use SoftDeletes, HasVoucher;
+	use SoftDeletes, HasVoucher, GenerateCode;
 
 	protected $table = 'inventory_orders';
 	protected $codePrefix = [
@@ -54,9 +55,7 @@ class InventoryOrder extends Model {
 	// ======================= Mutators ================= //
 
 	public function setCodeAttribute($value) {
-		$this->attributes['code'] = is_null($value)
-		? $this->codePrefix[$this->type] . str_pad(static::withTrashed()->count() + 1, 6, "0", STR_PAD_LEFT)
-		: $value;
+        $this->attributes['code'] = is_null($value) ? $this->gencode($this->codePrefix[$this->type]) : $value;
 	}
 
 	// ======================= Relationships ================= //
