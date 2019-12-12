@@ -17,6 +17,7 @@ trait GenerateCode
         $codeId = 0;
         // todo: dont cache this query
         if (!is_null($row = static::select('code')
+        ->where('code', 'like', "{$codePrefix}%")
         ->orderBy('id', 'desc')
         ->take(1)
         ->first())) {
