@@ -14,12 +14,12 @@ class PermissionScope implements Scope
      * @param \Illuminate\Database\Eloquent\Builder $builder
      * @param \Illuminate\Database\Eloquent\Model   $model
      * @return void
+     * @throws \Exception
      */
     public function apply(Builder $builder, Model $model)
     {
         if (!is_null($currentPlace = currentPlace())) {
-            $placeIds = [0];
-            $placeIds[] = $currentPlace->id;
+            $placeIds = [0, $currentPlace->id];
             $builder->whereIn($model->getTable() . '.place_id', $placeIds);
         }
     }

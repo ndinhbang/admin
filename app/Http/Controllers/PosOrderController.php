@@ -43,13 +43,14 @@ class PosOrderController extends Controller
      * @param  PosOrderRequest  $request
      * @return PosOrderResource
      * @throws \Exception
+     * @throws \Throwable
      */
     public function store(PosOrderRequest $request)
     {
         $order = DB::transaction(
             function () use ($request) {
                 $now   = Carbon::now();
-                $order = Order::create(array_merge($request->only(['kind']), [
+                $order = Order::create(array_merge($request->only([ 'kind' ]), [
                     'uuid'       => nanoId(),
                     'place_id'   => currentPlace()->id,
                     'creator_id' => $request->user()->id,
@@ -58,12 +59,11 @@ class PosOrderController extends Controller
                     'month'      => $now->month,
                     'day'        => $now->day,
                 ]));
-
                 $order = $this->updateTable($request, $order);
                 list($order, $products) = $this->updateItems($request, $order);
                 // Customer
                 $customer = getBindVal('orderCustomer');
-                if ($customer) {
+                if ( $customer ) {
                     $order->customer_id = $customer->id;
                 }
                 $order->note        = $request->note ?? '';
@@ -72,16 +72,16 @@ class PosOrderController extends Controller
                 $order              = $this->updatePayment($request, $order);
                 $order->save();
                 // neu kich hoat bep
-                if ($enableKitchen = config('default.pos.enable_kitchen', false)) {
+                if ( $enableKitchen = config('default.pos.enable_kitchen', false) ) {
                     // update batch
                     $this->createBatchItems($request, $order, $products);
                 }
                 // nếu bán thành công
-                if ($order->is_completed || $order->is_paid) {
+                if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
                     $this->subtractInventory($request, $order);
                 }
-                if ($order->paid) {
+                if ( $order->paid ) {
                     // tao phieu thu
                     $order->createVoucher();
                 }
@@ -97,6 +97,215 @@ class PosOrderController extends Controller
             },
         ]);
         return new PosOrderResource($order);
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order|mixed
+     * @throws \Throwable
+     */
+    private function updateTable(PosOrderRequest $request, Order $order)
+    {
+        // todo: 1 ban co the co nhieu order
+        if ( empty($request->table_uuid) ) {
+            return $order;
+        }
+        if ( is_null($table = Table::where('uuid', $request->table_uuid)
+            ->withCount([ 'orders' ])
+            ->first()) ) {
+            throw new \Exception('Table not found');
+        }
+        $order->table_id = $table->id;
+        return $order;
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Models\Order|array
+     * @throws \Exception
+     */
+    private function updateItems(PosOrderRequest $request, Order $order)
+    {
+        if ( !empty($request->items) ) {
+            $collection    = ( new Collection($request->items) )
+                ->unique('uuid');
+            $productsUuids = $collection->pluck('uuid');
+            $products      = Product::whereIn('uuid', $productsUuids)
+                ->get();
+            if ( $products->isEmpty() ) {
+                // throw error if products not exist
+                throw new \Exception('ERROR: items not found');
+            }
+            $keyedProducts       = $products->keyBy('uuid');
+            $items               = [];
+            $orderAmount         = 0;
+            $discountItemsAmount = 0;
+            $totalDish           = 0;
+            foreach ( $collection as $item ) {
+                $product         = $keyedProducts[ $item['uuid'] ];
+                $quantity        = (int) $item['quantity'];
+                $discount_amount = $item['discount_amount'] ?? 0;
+                // tinh tong tien / item
+                $totalPrice            = ( $quantity * $product->price ) - $discount_amount;
+                $items[ $product->id ] = [
+                    'quantity'        => $quantity,
+                    'discount_amount' => $discount_amount,
+                    'total_price'     => $totalPrice,
+                    'note'            => $item['note'] ?? '',
+                    // last note on item
+                    //                    'state'       => $item['state'] ?? 0,
+                ];
+                $discountItemsAmount   += $discount_amount;
+                $orderAmount           += $totalPrice;
+                $totalDish += $quantity;
+            }
+            // cap nhat items trong order
+            $changes = $order->products()
+                ->sync($items);
+            // cap nhat tong tien cua order
+            $order->discount_items_amount = $discountItemsAmount;
+            $order->discount_amount       = $request->discount_amount ?? 0;
+            $order->amount                = $orderAmount - $order->discount_amount;
+            $order->total_dish            = $totalDish;
+        }
+        $order->load([ 'items' ]);
+        return [
+            $order,
+            $keyedProducts ?? new Collection([]),
+        ];
+    }
+
+    private function updatePayment(PosOrderRequest $request, Order $order)
+    {
+        $amount = $order->amount ?? 0;
+        // Neu order chua co item
+        if ( !$amount ) {
+            return $order;
+        }
+        $paid           = 0;
+        $debt           = 0;
+        $isPaid         = false;
+        $receivedAmount = $request->received_amount ?? 0;
+        $isCompleted    = false; // hoan thanh order
+        if ( $receivedAmount >= $amount ) {
+            $paid        = $amount;
+            $isPaid      = true;
+            $isCompleted = true;
+        } else {
+            $paid = $receivedAmount;
+            $debt = $amount - $receivedAmount;
+            // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
+            if ( $paid ) {
+                $isPaid = true;
+            }
+        }
+        $order->paid            = $paid;
+        $order->debt            = $debt;
+        $order->is_paid         = $isPaid;
+        $order->received_amount = $receivedAmount;
+        $order->is_completed    = $isCompleted;
+        return $order;
+    }
+
+    protected function createBatchItems(PosOrderRequest $request, Order $order, Collection $keyedProducts)
+    {
+        if ( !empty($request->items) ) {
+            $newCollection = ( new Collection($request->batchItems) )
+                ->unique('uuid');
+            $batchs        = [];
+            foreach ( $newCollection as $batchItem ) {
+                $product  = $keyedProducts[ $batchItem['uuid'] ];
+                $quantity = (int) $batchItem['quantity'];
+                $batchs[] = [
+                    'place_id'   => $order->place_id,
+                    'product_id' => $product->id,
+                    'quantity'   => $quantity,
+                    'note'       => $batchItem['note'] ?? '',
+                    'state'      => 0,
+                ];
+            }
+            $order->batchs()
+                ->createMany($batchs);
+        }
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @throws \Exception
+     */
+    private function subtractInventory(PosOrderRequest $request, Order $order)
+    {
+        $order->load([
+            'items'                          => function ($query) {
+                $query->where('products.can_stock', 1) // skip item khong quan ly ton kho
+                ->orderBy('pivot_id', 'asc');
+            },
+            'items.supplies.availableStocks' => function ($query) {
+                $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
+                ->orderBy('inventory_orders.id', 'asc');
+            },
+        ]);
+        $items = $order->items ?? collect([]);
+        if ( $items->isEmpty() ) {
+            return;
+        }
+        foreach ( $items as $item ) {
+            $supplies = $item->supplies ?? collect([]);
+            if ( $supplies->isEmpty() ) {
+                throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$item->name}.");
+            };
+            $now = Carbon::now()
+                ->format('Y-m-d H:i:s');
+            // số lượng sản phẩm trong order
+            $productQuantity = $item->pivot->quantity;
+            foreach ( $supplies as $supply ) {
+                // dump($supply);
+                $stocks = $supply->availableStocks ?? collect([]);
+                // throw error if empty
+                if ( $stocks->isEmpty() ) {
+                    throw new \Exception("Không đủ nguyên liệu: {$supply->name} trong kho.");
+                };
+                // số lượng nguyên liệu / 1 sản phẩm
+                $supplyQuantity = $supply->pivot->quantity;
+                //tổng số lương trừ kho
+                $outQuantity = $supplyQuantity * $productQuantity;
+                // lặp các lần nhập kho
+                foreach ( $stocks as $stock ) {
+                    if ( $outQuantity <= 0 ) {
+                        break;
+                    }
+                    // nếu tồn kho nhiều hơn tổng trừ kho
+                    if ( $stock->pivot->remain >= $outQuantity ) {
+                        // ... thực hiện trừ kho
+                        $supply->stocks()
+                            ->updateExistingPivot($stock->id, [
+                                'remain'     => $stock->pivot->remain - $outQuantity,
+                                'updated_at' => $now,
+                            ]);
+                        $outQuantity = 0;
+                        break;
+                    }
+                    // nếu tổng trừ kho nhiều hơn tồn kho trong lần nhập kho hiện tại
+                    // số lượng trừ kho còn lại
+                    $outQuantity = $outQuantity - $stock->pivot->remain;
+                    // ... trừ hết số lượng tồn
+                    $supply->stocks()
+                        ->updateExistingPivot($stock->id, [
+                            'remain'     => 0,
+                            'updated_at' => $now,
+                        ]);
+                } // end of stocks
+                // nếu tống trừ kho lớn hơn tổng tồn kho
+                if ( $outQuantity > 0 ) {
+                    throw new \Exception("{$supply->name} tồn kho không đủ số lượng");
+                }
+            } // end of supplies
+            // unload redundant relations
+            $item->unsetRelation('supplies');
+        }
     }
 
     /**
@@ -129,7 +338,7 @@ class PosOrderController extends Controller
      */
     public function update(PosOrderRequest $request, Order $order)
     {
-        if (isOrderClosed($order)) {
+        if ( isOrderClosed($order) ) {
             return response()->json([
                 'message' => 'Order đã đóng không thể cập nhật',
             ], 403);
@@ -140,7 +349,7 @@ class PosOrderController extends Controller
                 list($order, $products) = $this->updateItems($request, $order);
                 // Customer
                 $customer = getBindVal('orderCustomer');
-                if ($customer) {
+                if ( $customer ) {
                     $order->customer_id = $customer->id;
                 }
                 $order->note        = $request->note ?? '';
@@ -149,12 +358,12 @@ class PosOrderController extends Controller
                 $order              = $this->updatePayment($request, $order);
                 $order->save();
                 // neu kich hoat bep
-                if ($enableKitchen = config('default.pos.enable_kitchen', false)) {
+                if ( $enableKitchen = config('default.pos.enable_kitchen', false) ) {
                     // update batch
                     $this->createBatchItems($request, $order, $products);
                 }
                 // nếu bán thành công
-                if ($order->is_completed || $order->is_paid) {
+                if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
                     $this->subtractInventory($request, $order);
                     // tao phieu thu
@@ -177,223 +386,12 @@ class PosOrderController extends Controller
     /**
      * @param  \App\Http\Requests\PosOrderRequest  $request
      * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order|mixed
-     * @throws \Throwable
-     */
-    private function updateTable(PosOrderRequest $request, Order $order)
-    {
-        // todo: 1 ban co the co nhieu order
-        if (empty($request->table_uuid)) {
-            return $order;
-        }
-        if (is_null($table = Table::where('uuid', $request->table_uuid)
-            ->withCount(['orders'])
-            ->first())) {
-            throw new \Exception('Table not found');
-        }
-        $order->table_id = $table->id;
-        return $order;
-    }
-
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order|array
-     * @throws \Exception
-     */
-    private function updateItems(PosOrderRequest $request, Order $order)
-    {
-        if (!empty($request->items)) {
-            $collection    = (new Collection($request->items))
-                ->unique('uuid');
-            $productsUuids = $collection->pluck('uuid');
-            $products      = Product::whereIn('uuid', $productsUuids)
-                ->get();
-            if ($products->isEmpty()) {
-                // throw error if products not exist
-                throw new \Exception('ERROR: items not found');
-            }
-            $keyedProducts = $products->keyBy('uuid');
-            $items         = [];
-            $orderAmount   = 0;
-            $discountItemsAmount   = 0;
-            $totalDish     = 0;
-            foreach ($collection as $item) {
-                $product  = $keyedProducts[$item['uuid']];
-                $quantity = (int) $item['quantity'];
-                $discount_amount = $item['discount_amount'] ?? 0;
-                // tinh tong tien / item
-                $totalPrice            = ($quantity * $product->price) - $discount_amount;
-                $items[$product->id] = [
-                    'quantity'    => $quantity,
-                    'discount_amount' => $discount_amount,
-                    'total_price' => $totalPrice,
-                    'note'        => $item['note'] ?? '',
-                    // last note on item
-                    //                    'state'       => $item['state'] ?? 0,
-                ];
-                $discountItemsAmount   += $discount_amount;
-                $orderAmount           += $totalPrice;
-                $totalDish += $quantity;
-            }
-            // cap nhat items trong order
-            $changes = $order->products()
-                ->sync($items);
-
-            // cap nhat tong tien cua order
-            $order->discount_items_amount   = $discountItemsAmount;
-            $order->discount_amount         = $request->discount_amount ?? 0;
-            $order->amount     = $orderAmount - $order->discount_amount;
-            $order->total_dish = $totalDish;
-        }
-        $order->load(['items']);
-        return [
-            $order,
-            $keyedProducts ?? new Collection([]),
-        ];
-    }
-
-    protected function createBatchItems(PosOrderRequest $request, Order $order, Collection $keyedProducts)
-    {
-        if (!empty($request->items)) {
-            $newCollection = (new Collection($request->batchItems))
-                ->unique('uuid');
-            $batchs        = [];
-            foreach ($newCollection as $batchItem) {
-                $product  = $keyedProducts[$batchItem['uuid']];
-                $quantity = (int) $batchItem['quantity'];
-                $batchs[] = [
-                    'place_id'   => $order->place_id,
-                    'product_id' => $product->id,
-                    'quantity'   => $quantity,
-                    'note'       => $batchItem['note'] ?? '',
-                    'state'      => 0,
-                ];
-            }
-            $order->batchs()
-                ->createMany($batchs);
-        }
-    }
-
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @throws \Exception
-     */
-    private function subtractInventory(PosOrderRequest $request, Order $order)
-    {
-        $order->load([
-            'items'                          => function ($query) {
-                $query->where('products.can_stock', 1) // skip item khong quan ly ton kho
-                    ->orderBy('pivot_id', 'asc');
-            },
-            'items.supplies.availableStocks' => function ($query) {
-                $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
-                    ->orderBy('inventory_orders.id', 'asc');
-            },
-        ]);
-        $items = $order->items ?? collect([]);
-        if ($items->isEmpty()) {
-            return;
-        }
-        foreach ($items as $item) {
-            $supplies = $item->supplies ?? collect([]);
-            if ($supplies->isEmpty()) {
-                throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$item->name}.");
-            };
-            $now = Carbon::now()
-                ->format('Y-m-d H:i:s');
-            // số lượng sản phẩm trong order
-            $productQuantity = $item->pivot->quantity;
-            foreach ($supplies as $supply) {
-                // dump($supply);
-                $stocks = $supply->availableStocks ?? collect([]);
-                // throw error if empty
-                if ($stocks->isEmpty()) {
-                    throw new \Exception("Không đủ nguyên liệu: {$supply->name} trong kho.");
-                };
-                // số lượng nguyên liệu / 1 sản phẩm
-                $supplyQuantity = $supply->pivot->quantity;
-                //tổng số lương trừ kho
-                $outQuantity = $supplyQuantity * $productQuantity;
-                // lặp các lần nhập kho
-                foreach ($stocks as $stock) {
-                    if ($outQuantity <= 0) {
-                        break;
-                    }
-                    // nếu tồn kho nhiều hơn tổng trừ kho
-                    if ($stock->pivot->remain >= $outQuantity) {
-                        // ... thực hiện trừ kho
-                        $supply->stocks()
-                            ->updateExistingPivot($stock->id, [
-                                'remain'     => $stock->pivot->remain - $outQuantity,
-                                'updated_at' => $now,
-                            ]);
-                        $outQuantity = 0;
-                        break;
-                    }
-                    // nếu tổng trừ kho nhiều hơn tồn kho trong lần nhập kho hiện tại
-                    // số lượng trừ kho còn lại
-                    $outQuantity = $outQuantity - $stock->pivot->remain;
-                    // ... trừ hết số lượng tồn
-                    $supply->stocks()
-                        ->updateExistingPivot($stock->id, [
-                            'remain'     => 0,
-                            'updated_at' => $now,
-                        ]);
-                } // end of stocks
-                // nếu tống trừ kho lớn hơn tổng tồn kho
-                if ($outQuantity > 0) {
-                    throw new \Exception("{$supply->name} tồn kho không đủ số lượng");
-                }
-            } // end of supplies
-        }
-        // unload redundant relations
-        $item->unsetRelation('supplies');
-    }
-
-    private function updatePayment(PosOrderRequest $request, Order $order)
-    {
-        $amount = $order->amount ?? 0;
-        // Neu order chua co item
-        if (!$amount) {
-            return $order;
-        }
-        $paid           = 0;
-        $debt           = 0;
-        $isPaid         = false;
-        $receivedAmount = $request->received_amount ?? 0;
-        $isCompleted    = false; // hoan thanh order
-        if ($receivedAmount >= $amount) {
-            $paid        = $amount;
-            $isPaid      = true;
-            $isCompleted = true;
-        } else {
-            $paid = $receivedAmount;
-            $debt = $amount - $receivedAmount;
-
-            // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
-            if($paid) {
-                $isPaid      = true;
-            }
-        }
-        $order->paid            = $paid;
-        $order->debt            = $debt;
-        $order->is_paid         = $isPaid;
-        $order->received_amount = $receivedAmount;
-        $order->is_completed    = $isCompleted;
-
-        return $order;
-    }
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
      * @return \App\Http\Resources\PosOrderResource
      * @throws \Exception
      */
     public function payment(PosOrderRequest $request, Order $order)
     {
-        $order              = $this->updatePayment($request, $order);
+        $order = $this->updatePayment($request, $order);
         $order->save();
         $order->load([
             'table',
@@ -415,11 +413,11 @@ class PosOrderController extends Controller
     {
         $isCanceled = $request->is_canceled ?? false;
         $reason     = $request->reason ?? '';
-        if ($isCanceled) {
-            if (!$reason) {
+        if ( $isCanceled ) {
+            if ( !$reason ) {
                 throw new \Exception('ERROR: Chưa nhập lý do hủy');
             }
-            if (isOrderClosed($order)) {
+            if ( isOrderClosed($order) ) {
                 throw new \Exception('ERROR: Order đã đóng không thể hủy');
             }
             $order->is_canceled = 1;

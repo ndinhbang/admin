@@ -11,21 +11,23 @@ use App\Traits\GenerateCode;
 /**
  * @property float|int    amount
  * @property int          total_dish
- * @property mixed        id
- * @property int          is_canceled
- * @property mixed|string reason
- * @property int|mixed    total_eater
- * @property mixed|string note
- * @property int|mixed    customer_id
- * @property int|mixed    paid
- * @property int|mixed    debt
- * @property bool         is_paid
- * @property int|mixed    received_amount
- * @property mixed        is_returned
- * @property mixed        is_completed
- * @property mixed|string card_name
- * @property mixed        place_id
+ * @property mixed         id
+ * @property int           is_canceled
+ * @property mixed|string  reason
+ * @property int|mixed     total_eater
+ * @property mixed|string  note
+ * @property int|mixed     customer_id
+ * @property int|mixed     paid
+ * @property int|mixed     debt
+ * @property bool          is_paid
+ * @property int|mixed     received_amount
+ * @property mixed         is_returned
+ * @property mixed         is_completed
+ * @property mixed|string  card_name
+ * @property mixed         place_id
  * @property  integer|null table_id
+ * @property int           discount_items_amount
+ * @property int|mixed     discount_amount
  * @method static select( string $string )
  * @method static create( array $array_merge )
  */

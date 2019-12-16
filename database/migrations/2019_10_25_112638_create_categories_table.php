@@ -19,7 +19,7 @@ class CreateCategoriesTable extends Migration
             $table->integer('place_id')->unsigned()->index();
             $table->string('name');
             $table->tinyInteger('position')->unsigned()->default(0);
-            $table->string('state')->default(1);
+            $table->boolean('state')->default(1);
             $table->timestamps();
         });
     }

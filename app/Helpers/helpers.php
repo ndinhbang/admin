@@ -45,11 +45,16 @@ if ( !function_exists('getClassShortName') ) {
     }
 }
 if ( !function_exists('uploadImage') ) {
-    function uploadImage(\Illuminate\Http\UploadedFile $file = null, $targetPath = 'medias/')
+    function uploadImage(\Illuminate\Http\UploadedFile $file = null, $targetPath = 'medias/', $keepOriginalSize = false)
     {
         if ( !is_null($file) ) {
             $extension = $file->getClientOriginalExtension();
-            $filename  = uniqid();
+            // create folder if not exists
+            $path = public_path(trim($targetPath, '/'));
+            if ( !File::isDirectory($path) ) {
+                File::makeDirectory($path, 0755, true, true);
+            }
+            $filename = uniqid();
             $baseName = $filename . "." . $extension;
             $filePath = $targetPath . $baseName;
             $img      = \Image::make($file);
@@ -62,7 +67,9 @@ if ( !function_exists('uploadImage') ) {
             //         $constraint->aspectRatio();
             //     });
             // }
-            $img->fit(500, 320);
+            if ( !$keepOriginalSize ) {
+                $img->fit(500, 320);
+            }
             $img->save($filePath);
             return $baseName;
         }
@@ -117,7 +124,6 @@ if ( !function_exists('isOrderClosed') ) {
         return $order->is_canceled || $order->is_returned || $order->is_completed;
     }
 }
-
 if ( !function_exists('minifyHtml') ) {
     /**
      * @param  string  $html
@@ -127,8 +133,25 @@ if ( !function_exists('minifyHtml') ) {
     {
         $minifier = new \App\Helpers\HtmlMinifier([
             'collapse_whitespace' => true,
-            'disable_comments' => true,
+            'disable_comments'    => true,
         ]);
         return $minifier->minify($html);
     }
 }
+if ( !function_exists('imageToBase64') ) {
+    /**
+     * @param  string  $imagePath
+     * @param  string  $mimeType
+     * @return string
+     */
+    function imageToBase64($imagePath, $mimeType = null)
+    {
+        if ( is_null($mimeType) ) {
+            $mimeType = mime_content_type($imagePath);
+        }
+        $data   = file_get_contents($imagePath);
+        $base64 = 'data:' . $mimeType . ';base64,' . base64_encode($data);
+        return $base64;
+    }
+}
+

@@ -17,10 +17,9 @@ class PlaceScope implements Scope {
 	 */
 	public function apply(Builder $builder, Model $model) {
 		if(!request()->is('print/*')) {
+            $builder->where($model->getTable() . '.place_id', currentPlace()->id);
 			if ($model->getTable() == 'categories') {
-				$builder->where($model->getTable() . '.place_id', currentPlace()->id)->orWhere($model->getTable() . '.place_id', 0);
-			} else {
-				$builder->where($model->getTable() . '.place_id', currentPlace()->id);
+				$builder->orWhere($model->getTable() . '.place_id', 0);
 			}
 		}
 		
