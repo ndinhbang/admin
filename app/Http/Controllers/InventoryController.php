@@ -24,6 +24,9 @@ class InventoryController extends Controller {
 		case 'in': // Đang tồn
 			$stock_range = [0, 9999999];
 			break;
+		case 'almost': // Đang tồn
+			$stock_range = 'min_stock';
+			break;
 		case 'out': // Đã hết
 			$stock_range = [-1, 1];
 			break;
@@ -33,23 +36,46 @@ class InventoryController extends Controller {
 		}
 
 		$supplyInventory = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
-			->where(function ($query) use ($request) {
+			->where(function ($query) use ($request, $stock_range) {
 				if ($request->keyword) {
 					$query->where('supplies.name', 'like', '%' . $request->keyword . '%');
 				}
 			})
 			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
 			->groupBy('supplies.id')
-			->with(['unit'])
-			->havingRaw('SUM(inventory.remain) > ? AND SUM(inventory.remain) < ?', $stock_range)
-			->paginate($request->per_page);
+			->with(['unit']);
+
+		if($request->type == 'almost') {
+			$supplyInventory = $supplyInventory->havingRaw('SUM(inventory.remain) < supplies.min_stock')
+				->get();
+		} else {
+			$supplyInventory = $supplyInventory->havingRaw('SUM(inventory.remain) > ? AND SUM(inventory.remain) < ?', $stock_range)
+				->paginate($request->per_page);
+		}
 
 		// return $supplyInventory->toJson();
 		return SupplyResource::collection($supplyInventory);
 	}
+	
+	/**
+	 * Almost out of stock.
+	 *
+	 * @return \Illuminate\Http\Response
+	 */
+	public function almostOos() {
+		$supplies = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
+			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
+			->groupBy('supplies.id')
+			->with(['unit'])
+			->havingRaw('SUM(inventory.remain) < supplies.min_stock')
+			->get();
+
+		return response()->json($supplies);
+	}
 
 	public function statistic(Request $request) {
-		$statistic = Inventory::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
+		$statistic = Inventory::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total, supplies.min_stock'))
+			->join('supplies', 'inventory.supply_id', '=', 'supplies.id')
 			->groupBy('inventory.supply_id')
 			->get();
 

@@ -16,6 +16,7 @@ class SupplyController extends Controller {
 		'updated_at',
 		'created_at',
 	];
+
 	/**
 	 * Display a listing of the resource.
 	 *
@@ -23,6 +24,7 @@ class SupplyController extends Controller {
 	 */
 	public function index() {
 		$supplies = Supply::all()->keyBy('uuid');
+		$supplies->load(['unit']);
 
 		return response()->json($supplies);
 	}

@@ -52,6 +52,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Manage =========== **/
 	Route::get('manage/overview', 'ManageController@overview');
+	Route::get('manage/dailyRevenues', 'ManageController@dailyRevenues');
 
 	/** =============== Profile ================= **/
 	Route::group(['prefix' => 'profile'], function () {
@@ -97,6 +98,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('product', 'ProductController');
 
 	/** =============== Inventory ================= **/
+	Route::get('inventory/almostoos', 'InventoryController@almostOos'); // Almost out of stock.
 	Route::get('inventory/statistic', 'InventoryController@statistic');
 	Route::apiResource('inventory', 'InventoryController');
 

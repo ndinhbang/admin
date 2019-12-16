@@ -66,4 +66,27 @@ class ManageController extends Controller {
 
 		return response()->json(compact('vouchers', 'orders'));
 	}
+
+    public function dailyRevenues(Request $request) {
+
+        $dailyRevenues = Voucher::selectRaw("DATE(vouchers.created_at) as day,
+                SUM(if(vouchers.type='0',amount,0)) as chi_amount,
+                SUM(if(vouchers.type='1',amount,0)) as thu_amount,
+                SUM(if(vouchers.category_id='21',amount,0)) as chimuahang_amount,
+                SUM(if(vouchers.category_id='29',amount,0)) as thubanhang_amount")
+            ->where(function ($query) use ($request) {
+                // date time range
+                $startDate = Carbon::parse($request->get('start', Carbon::now()))->format('Y-m-d 00:00:00');
+                $endDate = Carbon::parse($request->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
+
+                if(Carbon::parse($startDate)->diffInDays($endDate) < 7)
+                    $startDate = Carbon::parse($endDate)->subDays(7)->format('Y-m-d 00:00:00');
+
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->groupBy(DB::raw('DATE(vouchers.created_at)'))
+            ->get();
+
+        return response()->json(compact('dailyRevenues'));
+    }
 }
