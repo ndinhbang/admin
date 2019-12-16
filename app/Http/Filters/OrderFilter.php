@@ -13,6 +13,13 @@ class OrderFilter extends QueryFilter {
 
 		return $this->builder->where('orders.code', 'like', "%{$search}%");
 	}
+	public function keyword($search) {
+		if (is_null($search)) {
+			return $this->builder;
+		}
+
+		return $this->builder->where('orders.code', 'like', "%{$search}%");
+	}
 	public function start($search) {
 		if (is_null($search)) {
 			return $this->builder;
