@@ -96,6 +96,7 @@ class ReportController extends Controller
         $stats = OrderItem::selectRaw("
                 SUM(order_items.total_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
@@ -111,6 +112,7 @@ class ReportController extends Controller
         $items = Order::selectRaw("products.*, 
                 SUM(order_items.total_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity
             ")
             ->join('order_items', 'order_items.order_id', '=', 'orders.id')
