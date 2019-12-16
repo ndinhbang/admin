@@ -23,6 +23,21 @@ class EmployeeController extends Controller {
 		return $users->toJson();
 	}
 
+	/**
+	 * Display a listing of the resource.
+	 *
+	 * @param CategoryRequest $request
+	 * @param CategoryFilter  $filter
+	 * @return \Illuminate\Http\Response
+	 */
+	public function all_active(Request $request) {
+		$employees = \App\User::with('roles')
+			->orderBy('name', 'asc')
+			->where('status', 'activated')
+			->get();
+		return $employees->toJson();
+	}
+
 	public function store(EmployeeRequest $request) {
 		// \DB::enableQueryLog();
 		$employee = DB::transaction(function () use ($request) {

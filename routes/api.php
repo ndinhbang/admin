@@ -73,6 +73,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::group(['prefix' => 'employee'], function () {
 		Route::post('/update-avatar/{uuid}', 'EmployeeController@updateAvatar')->name('employee.update-avatar');
 	});
+
+	Route::get('/employee/all_active', 'EmployeeController@all_active')->name('employee.all-active');
 	Route::resource('employee', 'EmployeeController');
 	Route::resource('users', 'EmployeeController');
 
@@ -107,6 +109,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Orders ================= **/
 	Route::apiResource('orders', 'OrderController');
+
+	/** =============== Report ================= **/
+	Route::get('report/revenues', 'ReportController@revenues');
 
 	/** =============== Areas & Tables ================= **/
 	Route::apiResource('areas', 'AreaController');

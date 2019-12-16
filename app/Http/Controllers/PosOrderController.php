@@ -234,7 +234,7 @@ class PosOrderController extends Controller
                 ];
                 $discountItemsAmount   += $discount_amount;
                 $orderAmount           += $totalPrice;
-                $totalDish++;
+                $totalDish += $quantity;
             }
             // cap nhat items trong order
             $changes = $order->products()
