@@ -17,15 +17,19 @@ class Place extends Model
         'contact_phone',
         'contact_email',
         'user_id',
+        'config_print',
+        'config_screen2nd',
     ];
     protected $primaryKey = 'id';
     protected $table = 'places';
 
     protected $casts = [
-        'user_id' => 'integer',
-        'printers' => 'array',
-        'print_templates' => 'array',
-        'print_config' => 'array',
+        'user_id'          => 'integer',
+        'printers'         => 'array',
+        'print_templates'  => 'array',
+        'print_config'     => 'array',
+        'config_print'     => 'array',
+        'config_screen2nd' => 'array',
     ];
 
     /**
@@ -39,28 +43,29 @@ class Place extends Model
         'pivot',
     ];
 
-    public function scopeCurr()
+    public static function findUuid($uuid)
     {
-        $placeId = request()->header('X-Place-Id');
-        if (!is_null($placeId) || $placeId != 'undefined') {
-            return Place::where('uuid', $placeId)->first();
+        if ( $uuid ) {
+            return Place::where('uuid', $uuid)
+                ->first();
         }
-
         return null;
     }
 
-
-    public static function findUuid($uuid)
+    public function scopeCurr()
     {
-        if($uuid)
-            return Place::where('uuid', $uuid)->first();
-
+        $placeId = request()->header('X-Place-Id');
+        if ( !is_null($placeId) || $placeId != 'undefined' ) {
+            return Place::where('uuid', $placeId)
+                ->first();
+        }
         return null;
     }
 
     public function user()
     {
-        return $this->belongsTo('App\User')->with('roles');
+        return $this->belongsTo('App\User')
+            ->with('roles');
     }
 
     /**
@@ -75,7 +80,6 @@ class Place extends Model
     // {
     //     return $this->hasMany('App\Printer');
     // }
-
     /**
      * The users that belong to the role.
      */
@@ -83,7 +87,6 @@ class Place extends Model
     // {
     //     return $this->hasMany('Spatie\Permission\Models\Role');
     // }
-
     /**
      * Get the route key for the model.
      *
