@@ -64,6 +64,10 @@ class Supply extends Model {
             ->withTimestamps();
     }
 
+	public function avgBuyingPrice() {
+	    return $this->stocks()->avg('price_pu');
+    }
+
     public function availableStocks() {
         return $this->stocks()->wherePivot('remain', '>', 0);
     }

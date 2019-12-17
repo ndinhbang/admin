@@ -154,11 +154,24 @@ class PosOrderController extends Controller
                 $discount_amount = $item['discount_amount'] ?? 0;
                 // tinh tong tien / item
                 $totalPrice            = ( $quantity * $product->price ) - $discount_amount;
+
+                // tính tiền vốn
+                $totalBuyingPrice = 0;
+                $totalAvgBuyingPrice = 0;
+                if($product->can_stock) {
+                    foreach ($product->supplies as $key => $supply) {
+                        $totalBuyingPrice += $supply->pivot->quantity * $supply->price_in;
+                        $totalAvgBuyingPrice += $supply->pivot->quantity * $supply->price_avg_in;
+                    }
+                }
+
                 $items[ $product->id ] = [
                     'quantity'              => $quantity,
                     'total_price'           => $totalPrice,
+                    'total_buying_price'     => $quantity * $totalBuyingPrice,
+                    'total_buying_avg_price' => $quantity * $totalAvgBuyingPrice,
                     'discount_amount'       => $discount_amount,
-                    'discount_order_amount' => ($totalPrice*$discountOrderPercent)/100,
+                    'discount_order_amount' => round(($totalPrice*$discountOrderPercent)/100),
                     'note'                  => $item['note'] ?? '',
                     // last note on item
                     //                    'state'       => $item['state'] ?? 0,

@@ -79,6 +79,14 @@ class InventoryOrderController extends Controller {
 			$keyedArr = $this->addSupplies($inventoryOrder, $request->input('supplies', []));
 			$inventoryOrder->supplies()->attach($keyedArr);
 
+			// cập nhật giá nhập trung bình cho nguyên liệu
+			foreach ($keyedArr as $supply_id => $inventory) {
+				$supply = Supply::find($supply_id);
+				// Lưu giá nhập trung bình trên mỗi đơn vị
+				$supply->price_avg_in = $supply->avgBuyingPrice();
+				$supply->save();
+			}
+
 			// tạo phiếu chi/thu tương ứng với giá nhập/trả
 			if ($inventoryOrder->status) {
 				// Lưu

@@ -10,21 +10,23 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ReportController extends Controller
 {
     private $start_date = null;
     private $end_date = null;
-    private $employee_uuid = null;
+    private $employee_uuid = [];
     private $category_uuid = [];
+
     /**
      * Báo cáo doanh số.
      */
     public function revenues(OrderRequest $request) {
         $this->start_date = Carbon::parse(request()->get('start', Carbon::now()))->format('Y-m-d 23:59:59');
         $this->end_date = Carbon::parse(request()->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
-        $this->employee_uuid = request()->get('employee_uuid', null);
+        $this->employee_uuid = request()->get('employee_uuid', []);
         $this->category_uuid = request()->get('category_uuid', []);
 
         $type = request()->get('type', 'order');
@@ -41,15 +43,34 @@ class ReportController extends Controller
             case 'cashier':
                 return $this->revenueByCashier($request);
                 break;
-            
-            default:
-                # code...
+        }
+    }
+    
+    /**
+     * Báo cáo lợi nhuận.
+     */
+    public function profits(OrderRequest $request) {
+        $this->start_date = Carbon::parse(request()->get('start', Carbon::now()))->format('Y-m-d 23:59:59');
+        $this->end_date = Carbon::parse(request()->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
+        $this->employee_uuid = request()->get('employee_uuid', []);
+        $this->category_uuid = request()->get('category_uuid', []);
+
+        $type = request()->get('type', 'daily');
+        
+        switch ($type) {
+            case 'daily':
+                return $this->profitByDaily($request);
+                break;
+
+            case 'product':
+                return $this->profitByProduct($request);
                 break;
         }
     }
 
+
     /**
-     * Báo cáo doanh số theo thời gian.
+     * Báo cáo doanh số theo đơn hàng.
      */
     private function revenueByOrder($request) {
         // stats
@@ -65,8 +86,8 @@ class ReportController extends Controller
             ")
             ->join('users', 'users.id', '=', 'orders.creator_id')
             ->where(function ($query) use ($request) {
-                if ($this->employee_uuid) {
-                    $query->where('users.uuid', $this->employee_uuid);
+                if (count($this->employee_uuid)) {
+                    $query->whereIn('users.uuid', $this->employee_uuid);
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
@@ -76,8 +97,8 @@ class ReportController extends Controller
         // items Orders
         $items = Order::select('orders.*', 'users.display_name')->join('users', 'users.id', '=', 'orders.creator_id')
             ->where(function ($query) use ($request) {
-                if ($this->employee_uuid) {
-                    $query->where('users.uuid', $this->employee_uuid);
+                if (count($this->employee_uuid)) {
+                    $query->whereIn('users.uuid', $this->employee_uuid);
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
@@ -151,5 +172,45 @@ class ReportController extends Controller
             ->paginate($request->per_page);
 
         return response()->json(compact('items', 'stats'));
+    }
+
+
+    /////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * Báo cáo lợi nhuận theo ngày.
+     */
+    private function profitByDaily($request) {
+        $items['data'] = OrderItem::selectRaw("
+                DATE(order_items.created_at) as days,
+                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
+                SUM(order_items.quantity) as total_quantity,
+                SUM(order_items.total_buying_price) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+            ")
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->where(function ($query) use ($request) {
+                if (count($this->category_uuid)) {
+                    $query->whereIn('categories.uuid', $this->category_uuid);
+                }
+            })
+            ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->groupBy(DB::raw('DATE(order_items.created_at)'))
+            ->orderBy('days', 'desc')
+            ->get();
+
+        return response()->json(compact('items'));
+    }
+
+    /**
+     * Báo cáo lợi nhuận theo sản phẩm.
+     */
+    private function profitByProduct($request) {
     }
 }

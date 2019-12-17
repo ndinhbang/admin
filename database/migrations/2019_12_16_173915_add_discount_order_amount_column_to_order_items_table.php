@@ -14,7 +14,7 @@ class AddDiscountOrderAmountColumnToOrderItemsTable extends Migration
     public function up()
     {
         Schema::table('order_items', function (Blueprint $table) {
-            $table->double('discount_order_amount', 12, 2)->default(0)->after('discount_amount');
+            $table->double('discount_order_amount', 12, 2)->default(0)->after('discount_amount'); // giá giảm theo đơn đơn hàng
         });
     }
 
