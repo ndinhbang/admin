@@ -8,13 +8,11 @@ use App\Models\Place;
 use App\Models\Role;
 use Illuminate\Http\Request;
 
-//use Bouncer;
 class PlaceController extends Controller
 {
-
     protected $place_path = 'medias/places/';
 
-    public function getMy(Request $request)
+    public function current(Request $request)
     {
         $user = $request->user();
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
@@ -24,20 +22,22 @@ class PlaceController extends Controller
             ->join('place_user', 'place_user.place_id', '=', 'places.id')
             ->where('place_user.user_id', $user->id)
             ->get();
-        $currentPlace = null;
-        $permissions  = [];
+//        $requirePlace = getBindVal('__requirePlace');
         // lấy điểm đầu tiên nếu ko chỉ định
-        if ( $places->count() == 1 ) {
-            $currentPlace = $places->first();
-        } else {
-            $placeUuid = request()->header('X-Place-Id');
-            if ( !is_null($placeUuid) || $placeUuid != 'undefined' ) {
-                $currentPlace = Place::findUuid($placeUuid);
-            }
-            if ( is_null($currentPlace) ) {
-                $currentPlace = $places->first();
-            }
-        }
+        $currentPlace = getBindVal('__currentPlace', $places->first());
+        $permissions  = [];
+
+//        if ( $places->count() == 1 ) {
+//            $currentPlace = $places->first();
+//        } else {
+//            $placeUuid = request()->header('X-Place-Id');
+//            if ( !is_null($placeUuid) || $placeUuid != 'undefined' ) {
+//                $currentPlace = Place::findUuid($placeUuid);
+//            }
+//            if ( is_null($currentPlace) ) {
+//                $currentPlace = $places->first();
+//            }
+//        }
         if ( !is_null($currentPlace) ) {
             $currentPlace->load([ 'user' ]);
         }
@@ -67,7 +67,7 @@ class PlaceController extends Controller
             'permissions'  => $permissions,
             'roles'        => $roles,
             'places'       => PlaceResource::collection($places),
-            'currentPlace' => new PlaceResource($currentPlace),
+            'currentPlace' => $currentPlace ? new PlaceResource($currentPlace) : null,
         ]);
     }
 

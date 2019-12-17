@@ -13,10 +13,10 @@ if ( !function_exists('currentPlace') ) {
      */
     function currentPlace()
     {
-        if ( app()->offsetExists('_currentPlace') ) {
-            return app('_currentPlace');
+        if ( app()->offsetExists('__currentPlace') ) {
+            return app('__currentPlace');
         }
-        if ( getBindVal('_requirePlace') ) {
+        if ( getBindVal('__requirePlace') ) {
             throw new \Exception('Place is required');
         }
         return null;

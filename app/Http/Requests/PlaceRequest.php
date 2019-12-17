@@ -24,7 +24,7 @@ class PlaceRequest extends FormRequest
      */
     public function rules()
     {
-        if ($this->routeIs('place.my') || $this->routeIs('admin.place.store')) {
+        if ($this->routeIs('place.current') || $this->routeIs('admin.place.store')) {
             return [
                 'title'   => 'required',
                 'code'    => 'required|unique:places',

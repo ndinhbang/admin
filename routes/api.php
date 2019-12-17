@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Place ================= **/
 	Route::group(['prefix' => 'place'], function () {
-		Route::get('/my', 'PlaceController@getMy')->name('place.my');
+		Route::get('/current', 'PlaceController@current')->name('place.current');
 		Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
 	});
 	Route::put('/place/{place}/printers', 'PlaceController@printers')->name('place.printers');

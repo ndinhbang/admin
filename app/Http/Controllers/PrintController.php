@@ -47,7 +47,7 @@ class PrintController extends Controller
 
     public function configPrint(PrintRequest $request)
     {
-        $place = getBindVal('_currentPlace');
+        $place = getBindVal('__currentPlace');
         $place->print_config = $request->config;
         $place->save();
 
@@ -59,7 +59,7 @@ class PrintController extends Controller
 
     public function configPrinters(PrintRequest $request)
     {
-        $place = getBindVal('_currentPlace');
+        $place = getBindVal('__currentPlace');
         $place->printers = $request->printers;
 		$place->save();
 

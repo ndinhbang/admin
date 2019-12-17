@@ -17,7 +17,7 @@ class ConfigController extends Controller
      */
     public function configScreen2nd(ConfigRequest $request)
     {
-        $place = getBindVal('_currentPlace');
+        $place = getBindVal('__currentPlace');
         $image = $request->image ?? '';
         if ( $request->hasFile('imageFile') ) {
             $image = uploadImage($request->file('imageFile'), $this->thumbnail_path, true);
@@ -53,7 +53,7 @@ class ConfigController extends Controller
 
     public function configPrint(ConfigRequest $request)
     {
-        $place = getBindVal('_currentPlace');
+        $place = getBindVal('__currentPlace');
         $place->update([ 'config_print' => $request->config ]);
         return response()->json([
             'message'      => 'Lưu cấu hình in thành công!',

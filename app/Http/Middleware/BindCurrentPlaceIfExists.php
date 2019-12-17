@@ -20,14 +20,14 @@ class BindCurrentPlaceIfExists
         $place = Place::where('uuid', $uuid)->first();
 
         // return error if place is not exists in case of requiring place uuid
-        if (getBindVal('_requirePlace') && is_null($place)) {
+        if (getBindVal('__requirePlace') && is_null($place)) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Bad request'], 400)
                 : response('Bad request', 400);
         }
 
         // make current place instance available as a global
-        app()->instance('_currentPlace', $place);
+        app()->instance('__currentPlace', $place);
 
         return $next($request);
     }

@@ -12,6 +12,7 @@ class RequirePlace
         'api/place*',
         'api/roles*',
         'api/admin*',
+        'api/profile*',
         'print/preview*',
     ];
 
@@ -35,7 +36,7 @@ class RequirePlace
         }
 
         // mark require place
-        app()->instance('_requirePlace', true);
+        app()->instance('__requirePlace', true);
 
         return $next($request);
     }
