@@ -45,7 +45,7 @@ class ConfigController extends Controller
         return response()->json([
             'message'          => 'Lưu cấu hình thành công!',
             'config_screen2nd' => [
-                'useImage' => $place->config_screen2nd['useImage'] ?? false,
+                'useImage' => (bool) $place->config_screen2nd['useImage'] ?? false,
                 'image'    => config('app.media_url') . '/screen2nd/' . ( $image ?? $request->input('image') ),
             ],
         ]);
