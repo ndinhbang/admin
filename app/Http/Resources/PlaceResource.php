@@ -41,7 +41,7 @@ class PlaceResource extends JsonResource
             'expired_date'         => $this->expired_date,
             'config_print'         => $this->config_print,
             'config_screen2nd' => [
-                'useImage' => $this->config_screen2nd['useImage'] ?? false,
+                'useImage' => (bool) $this->config_screen2nd['useImage'] ?? false,
                 'image'     => $this->config_screen2nd['image']
                     ? config('app.media_url') . '/screen2nd/' . $this->config_screen2nd['image']
                     : '',
