@@ -138,20 +138,16 @@ if ( !function_exists('minifyHtml') ) {
         return $minifier->minify($html);
     }
 }
-if ( !function_exists('imageToBase64') ) {
+if ( !function_exists('mediaUrl') ) {
     /**
-     * @param  string  $imagePath
-     * @param  string  $mimeType
+     * @param $path
      * @return string
      */
-    function imageToBase64($imagePath, $mimeType = null)
+    function mediaUrl($path)
     {
-        if ( is_null($mimeType) ) {
-            $mimeType = mime_content_type($imagePath);
+        if (strpos($path, 'media/') === 0) {
+            $path = str_replace('media/', '', $path);
         }
-        $data   = file_get_contents($imagePath);
-        $base64 = 'data:' . $mimeType . ';base64,' . base64_encode($data);
-        return $base64;
+        return config('app.media_url') . '/' . trim($path, '/');
     }
 }
-
