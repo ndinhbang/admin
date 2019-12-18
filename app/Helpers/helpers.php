@@ -145,8 +145,14 @@ if ( !function_exists('mediaUrl') ) {
      */
     function mediaUrl($path)
     {
-        if (strpos($path, 'media/') === 0) {
-            $path = str_replace('media/', '', $path);
+        $replaceArr = [
+            '/medias/',
+            'medias/',
+        ];
+        foreach ( $replaceArr as $str ) {
+            if ( strpos($path, $str) === 0 ) {
+                $path = str_replace($str, '', $path);
+            }
         }
         return config('app.media_url') . '/' . trim($path, '/');
     }
