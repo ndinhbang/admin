@@ -38,23 +38,26 @@ class ConfigController extends Controller
         }
         $place->update([
             'config_screen2nd' => [
-                'useImage' => $request->useImage ?? false,
+                'useImage' => (bool) $request->useImage,
                 'image'    => $image,
             ],
         ]);
         return response()->json([
             'message'          => 'Lưu cấu hình thành công!',
             'config_screen2nd' => [
-                'useImage' => (bool) $place->config_screen2nd['useImage'] ?? false,
-                'image'    => config('app.media_url') . '/screen2nd/' . ( $image ?? $request->input('image') ),
+                'useImage' => $place->config_screen2nd['useImage'],
+                'image'    => mediaUrl($this->thumbnail_path . $place->config_screen2nd['image']),
             ],
         ]);
     }
 
     public function configPrint(ConfigRequest $request)
     {
-        $place = getBindVal('__currentPlace');
-        $place->update([ 'config_print' => $request->config ]);
+        $place   = getBindVal('__currentPlace');
+        $default = config('default.print.config');
+        $place->update([
+            'config_print' => array_replace_recursive($default, $request->config),
+        ]);
         return response()->json([
             'message'      => 'Lưu cấu hình in thành công!',
             'config_print' => $place->config_print,

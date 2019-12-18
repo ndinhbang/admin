@@ -51,6 +51,16 @@ class ConfigRequest extends FormRequest
                 ],
             ];
         }
+        if ($this->routeIs(['config.print'])) {
+            return [
+                'config'   => 'bail|required|array|size:3',
+                'config.*.title' => 'bail|sometimes|nullable|string|max:25',
+                'config.*.printer' => 'bail|sometimes|nullable|string|max:191',
+                'config.*.print_draft' => 'bail|required|boolean',
+                'config.*.print_when_accepted' => 'bail|required|boolean',
+                'config.*.print_when_paid' => 'bail|required|boolean',
+            ];
+        }
         return [
             //
         ];

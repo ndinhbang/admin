@@ -50,152 +50,295 @@ return [
         'admin.abilities'          => [
             'name'  => 'admin.abilities',
             'title' => 'Quản lý quyền hạn',
-            'roles' => ['superadmin'],
+            'roles' => [ 'superadmin' ],
         ],
         'admin.roles'              => [
             'name'  => 'admin.roles',
             'title' => 'Quản lý chức vụ',
-            'roles' => ['superadmin'],
+            'roles' => [ 'superadmin' ],
         ],
         'admin.users'              => [
             'name'  => 'admin.users',
             'title' => 'Quản lý tài khoản',
-            'roles' => ['admin', 'superadmin'],
+            'roles' => [
+                'admin',
+                'superadmin',
+            ],
         ],
         // Quản lý cửa hàng - gia hạn, hợp đồng, tạo thêm/chỉnh sửa cửa hàng...
         'admin.places'             => [
             'name'  => 'admin.places',
             'title' => 'Quản lý của hàng',
-            'roles' => ['admin', 'superadmin'],
+            'roles' => [
+                'admin',
+                'superadmin',
+            ],
         ],
-
         // Quản lý
         'pos'                      => [
             'name'  => 'pos',
             'title' => 'Bán hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s', 'waiter__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+                'waiter__%s',
+            ],
         ],
         'manage.overview'          => [
             'name'  => 'manage.overview',
             'title' => 'Xem tổng quan',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+            ],
         ],
         'manage.orders'            => [
             'name'  => 'manage.orders',
             'title' => 'Quản lý đơn hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s', 'waiter__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+                'waiter__%s',
+            ],
         ],
         'manage.order-items'       => [
             'name'  => 'manage.order-items',
             'title' => 'Quản lý hàng trong đơn',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s', 'waiter__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+                'waiter__%s',
+            ],
         ],
         'manage.products'          => [
             'name'  => 'manage.products',
             'title' => 'Quản lý sản phẩm',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'chef__%s',
+            ],
         ],
         'manage.categories'        => [
             'name'  => 'manage.categories',
             'title' => 'Quản lý danh mục',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'manage.inventory'         => [
             'name'  => 'manage.inventory',
             'title' => 'Quản lý kho',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'chef__%s',
+            ],
         ],
         'manage.purchases'         => [
             'name'  => 'manage.purchases',
             'title' => 'Quản lý nhập hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+            ],
         ],
         'manage.promotions'        => [
             'name'  => 'manage.promotions',
             'title' => 'Quản lý khuyến mãi',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
-
         // CRM
         'crm.customers'            => [
             'name'  => 'crm.customers',
             'title' => 'Quản lý khách hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+            ],
         ],
         'crm.suppliers'            => [
             'name'  => 'crm.suppliers',
             'title' => 'Quản lý nhà cung cấp',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+            ],
         ],
         'crm.shippers'             => [
             'name'  => 'crm.shippers',
             'title' => 'Quản lý đơn vị vận chuyển',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+            ],
         ],
         // Báo cáo
         'reports.revenues'         => [
             'name'  => 'reports.revenues',
             'title' => 'Báo cáo doanh số',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+            ],
         ],
         'reports.profits'          => [
             'name'  => 'reports.profits',
             'title' => 'Báo cáo lợi nhuận',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'reports.net-profits'      => [
             'name'  => 'reports.net-profits',
             'title' => 'Báo cáo lãi lỗ',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'reports.stocks'           => [
             'name'  => 'reports.stocks',
             'title' => 'Báo cáo tồn kho',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'chef__%s',
+            ],
         ],
-
         // Sổ quỹ
         'cashflow.overview'        => [
             'name'  => 'cashflow.overview',
             'title' => 'Sổ quỹ tổng quan',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'cashflow.ledger'          => [
             'name'  => 'cashflow.ledger',
             'title' => 'Sổ quỹ thu chi',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s', 'cashier__%s', 'chef__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+                'cashier__%s',
+                'chef__%s',
+            ],
         ],
         'cashflow.approve-expense' => [
             'name'  => 'cashflow.approve-expense',
             'title' => 'Duyệt phiếu chi',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
-
         // Thiết lập
         'settings.general'         => [
             'name'  => 'settings.general',
             'title' => 'Thiết lập chung',
-            'roles' => ['admin', 'superadmin', 'boss__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+            ],
         ],
         'settings.employees'       => [
             'name'  => 'settings.employees',
             'title' => 'Thiết lập nhân viên',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'settings.sales'           => [
             'name'  => 'settings.sales',
             'title' => 'Thiết lập bán hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'settings.print-form'      => [
             'name'  => 'settings.print-form',
             'title' => 'Thiết lập mẫu in',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
         'settings.order_states'    => [
             'name'  => 'settings.order_states',
             'title' => 'Thiết lập trạng thái đơn hàng',
-            'roles' => ['admin', 'superadmin', 'boss__%s', 'manager__%s'],
+            'roles' => [
+                'admin',
+                'superadmin',
+                'boss__%s',
+                'manager__%s',
+            ],
         ],
     ],
     'categories'  => [
@@ -327,15 +470,32 @@ return [
         'enable_shipment' => false,
     ],
     'print'       => [
-        'templates'  => [
+        'templates' => [
             'pos80',
             'pos58',
         ],
-        'config' => [
-            'print_both' => true, // tu dong in ca lable va hoa don
-            'print_when_paid' => true, // in khi thanh toan
-            'print_when_accepted' => true, // in khi bao bep
-            'print_draft' => true, // cho phep in tam
+        'config'    => [
+            'receipt' => [
+                'title'               => 'In hóa đơn',
+                'printer'             => null,
+                'print_draft'         => false,
+                'print_when_paid'     => false,
+                'print_when_accepted' => false,
+            ],
+            'lable' => [
+                'title'               => 'In tem',
+                'printer'             => null,
+                'print_draft'         => false,
+                'print_when_paid'     => false,
+                'print_when_accepted' => false,
+            ],
+            'kitchen' => [
+                'title'               => 'In bếp',
+                'printer'             => null,
+                'print_draft'         => false,
+                'print_when_paid'     => false,
+                'print_when_accepted' => false,
+            ],
         ],
     ],
 ];

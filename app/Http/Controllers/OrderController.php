@@ -12,18 +12,19 @@ class OrderController extends Controller {
 	/**
 	 * Display a listing of the resource.
 	 *
-	 * @return \Illuminate\Http\Response
+	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
 	 */
 	public function index(OrderRequest $request) {
 		$orders = Order::with([
 			'creator',
 			'customer',
 			'table',
-			'items',
+            'items',
+            'items.category',
 		])
 			->filter(new OrderFilter($request))
 			->orderBy('orders.id', 'desc')
-			->paginate($request->per_page);
+            ->paginate($request->per_page);
 
 		return OrderResource::collection($orders);
 	}

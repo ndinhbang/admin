@@ -44,28 +44,4 @@ class PrintController extends Controller
 
         return view('print.' . $template, $data);
     }
-
-    public function configPrint(PrintRequest $request)
-    {
-        $place = getBindVal('__currentPlace');
-        $place->print_config = $request->config;
-        $place->save();
-
-        return response()->json([
-			'message' => 'Lưu cấu hình in thành công!',
-			'print_config' => $place->print_config,
-		]);
-    }
-
-    public function configPrinters(PrintRequest $request)
-    {
-        $place = getBindVal('__currentPlace');
-        $place->printers = $request->printers;
-		$place->save();
-
-		return response()->json([
-			'message' => 'Lưu cấu hình máy in thành công!',
-			'printers' => $place->printers,
-		]);
-    }
 }
