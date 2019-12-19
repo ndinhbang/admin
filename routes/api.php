@@ -113,6 +113,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	/** =============== Report ================= **/
 	Route::get('report/revenues', 'ReportController@revenues');
 	Route::get('report/profits', 'ReportController@profits');
+	Route::get('report/net-profits', 'ReportController@netProfits');
 
 	/** =============== Areas & Tables ================= **/
 	Route::apiResource('areas', 'AreaController');

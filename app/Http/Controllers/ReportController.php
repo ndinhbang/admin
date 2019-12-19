@@ -17,17 +17,21 @@ class ReportController extends Controller
 {
     private $start_date = null;
     private $end_date = null;
+    private $code = 'this_month';
     private $employee_uuid = [];
     private $category_uuid = [];
 
+    public function __construct(Request $request) {
+        $this->start_date = Carbon::parse(request()->get('start', Carbon::now()))->setTimezone(config('app.timezone'))->format('Y-m-d 00:00:00');
+        $this->end_date = Carbon::parse(request()->get('end', Carbon::now()))->setTimezone(config('app.timezone'))->format('Y-m-d 23:59:59');
+        $this->code = request()->get('code', 'this_month');
+        $this->employee_uuid = request()->get('employee_uuid', []);
+        $this->category_uuid = request()->get('category_uuid', []);
+    }
     /**
      * Báo cáo doanh số.
      */
     public function revenues(OrderRequest $request) {
-        $this->start_date = Carbon::parse(request()->get('start', Carbon::now()))->format('Y-m-d 23:59:59');
-        $this->end_date = Carbon::parse(request()->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
-        $this->employee_uuid = request()->get('employee_uuid', []);
-        $this->category_uuid = request()->get('category_uuid', []);
 
         $type = request()->get('type', 'order');
         
@@ -50,10 +54,6 @@ class ReportController extends Controller
      * Báo cáo lợi nhuận.
      */
     public function profits(OrderRequest $request) {
-        $this->start_date = Carbon::parse(request()->get('start', Carbon::now()))->format('Y-m-d 23:59:59');
-        $this->end_date = Carbon::parse(request()->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
-        $this->employee_uuid = request()->get('employee_uuid', []);
-        $this->category_uuid = request()->get('category_uuid', []);
 
         $type = request()->get('type', 'daily');
         
@@ -66,6 +66,55 @@ class ReportController extends Controller
                 return $this->profitByProduct($request);
                 break;
         }
+    }
+    
+    /**
+     * Báo cáo lãi lỗ
+     */
+    public function netProfits(OrderRequest $request) {
+        // $items['prev_time']
+
+        $items['this_time'] = OrderItem::selectRaw("
+                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
+                SUM(order_items.quantity) as total_quantity,
+                SUM(order_items.total_buying_price) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+            ")
+            ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->first();
+
+
+        $startPrevDate = $this->start_date;
+        $diffDay = Carbon::parse($this->start_date)->diffInDays($this->end_date);
+
+        $endPrevDate = $this->start_date;
+        if($diffDay == 0) {
+            $diffDay = 1;
+            $endPrevDate = Carbon::parse($this->start_date)->setTimezone(config('app.timezone'))->subDays($diffDay)->format('Y-m-d 23:59:59');
+        }
+
+        $startPrevDate = Carbon::parse($this->start_date)->setTimezone(config('app.timezone'))->subDays($diffDay)->format('Y-m-d 00:00:00');
+
+        $items['prev_time'] = OrderItem::selectRaw("
+                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
+                SUM(order_items.quantity) as total_quantity,
+                SUM(order_items.total_buying_price) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+            ")
+            ->whereBetween('order_items.created_at', [$startPrevDate, $endPrevDate])
+            ->first();
+
+        $time_range['this']['start'] = $this->start_date;
+        $time_range['this']['end'] = $this->end_date;
+
+        $time_range['prev']['start'] = $startPrevDate;
+        $time_range['prev']['end'] = $endPrevDate;
+
+        return response()->json(compact('items', 'time_range'));
     }
 
 
@@ -212,5 +261,27 @@ class ReportController extends Controller
      * Báo cáo lợi nhuận theo sản phẩm.
      */
     private function profitByProduct($request) {
+        $items['data'] = OrderItem::selectRaw("
+                products.*,
+                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.discount_amount) as total_discount_amount,
+                SUM(order_items.discount_order_amount) as total_discount_order_amount,
+                SUM(order_items.quantity) as total_quantity,
+                SUM(order_items.total_buying_price) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+            ")
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->where(function ($query) use ($request) {
+                if (count($this->category_uuid)) {
+                    $query->whereIn('categories.uuid', $this->category_uuid);
+                }
+            })
+            ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->groupBy('products.id')
+            ->orderBy('total_amount', 'desc')
+            ->get();
+
+        return response()->json(compact('items'));
     }
 }
