@@ -206,7 +206,7 @@ class ReportController extends Controller
      */
     private function revenueByCashier($request) {
 
-        $stats = [];
+        $stats = (object) [];
 
         $items = Order::selectRaw("users.*, 
                 SUM(orders.amount) as total_amount,
