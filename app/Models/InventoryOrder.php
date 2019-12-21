@@ -6,6 +6,7 @@ use App\Traits\HasVoucher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GenerateCode;
+use App\Scopes\PlaceScope;
 
 class InventoryOrder extends Model {
 	use SoftDeletes, HasVoucher, GenerateCode;
@@ -50,6 +51,17 @@ class InventoryOrder extends Model {
 	 */
 	public function getRouteKeyName() {
 		return 'uuid';
+	}
+
+	/**
+	 * The "booting" method of the model.
+	 *
+	 * @return void
+	 */
+	protected static function boot() {
+		parent::boot();
+
+		static::addGlobalScope(new PlaceScope);
 	}
 
 	// ======================= Mutators ================= //

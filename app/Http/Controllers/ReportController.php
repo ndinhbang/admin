@@ -82,7 +82,9 @@ class ReportController extends Controller
                 SUM(order_items.total_buying_price) as total_buying_amount,
                 SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
             ")
+            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
 
@@ -105,7 +107,9 @@ class ReportController extends Controller
                 SUM(order_items.total_buying_price) as total_buying_amount,
                 SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
             ")
+            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->whereBetween('order_items.created_at', [$startPrevDate, $endPrevDate])
+            ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
         $time_range['this']['start'] = $this->start_date;
@@ -177,6 +181,7 @@ class ReportController extends Controller
                 }
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
         $items = Order::selectRaw("products.*, 
@@ -250,6 +255,7 @@ class ReportController extends Controller
                 }
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->groupBy(DB::raw('DATE(order_items.created_at)'))
             ->orderBy('days', 'desc')
             ->get();
@@ -278,6 +284,7 @@ class ReportController extends Controller
                 }
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
+            ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->groupBy('products.id')
             ->orderBy('total_amount', 'desc')
             ->get();

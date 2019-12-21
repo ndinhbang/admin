@@ -74,8 +74,8 @@ class InventoryController extends Controller {
 	}
 
 	public function statistic(Request $request) {
-		$statistic = Inventory::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total, supplies.min_stock'))
-			->join('supplies', 'inventory.supply_id', '=', 'supplies.id')
+		$statistic = Supply::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total, supplies.min_stock'))
+			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
 			->groupBy('inventory.supply_id')
 			->get();
 

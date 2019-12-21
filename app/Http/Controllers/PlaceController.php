@@ -16,12 +16,7 @@ class PlaceController extends Controller
     {
         $user = $request->user();
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
-        $places       = Place::select('places.*')
-            ->with('user')
-            ->with('users')
-            ->join('place_user', 'place_user.place_id', '=', 'places.id')
-            ->where('place_user.user_id', $user->id)
-            ->get();
+        $places       = $user->places;
 //        $requirePlace = getBindVal('__requirePlace');
         // lấy điểm đầu tiên nếu ko chỉ định
         $currentPlace = getBindVal('__currentPlace', $places->first());
@@ -56,6 +51,7 @@ class PlaceController extends Controller
                     ->toArray();
             }
         }
+
         // lay vi tri co level cao nhat cua user
         $maxRoleLevel = $user->roles($currentPlace->id ?? 0)
             ->max('level');

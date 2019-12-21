@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Scopes\PlaceScope;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class OrderItem extends Pivot
