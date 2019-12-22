@@ -56,4 +56,12 @@ class PlaceRequest extends FormRequest
 
         return [];
     }
+
+    public function messages()
+    {
+        return [
+            'address.min' => 'Địa chỉ tối thiểu 10 ký tự.',
+            'logo.mimes' => 'Định dạng tệp tin tải lên không hợp lệ.',
+        ];
+    }
 }

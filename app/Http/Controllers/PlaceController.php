@@ -73,8 +73,8 @@ class PlaceController extends Controller
 
     public function store(PlaceRequest $request)
     {
-        $place = \DB::transaction(function () use ($request) {
-            $user  = $request->user();
+        $user  = $request->user();
+        $place = \DB::transaction(function () use ($request, $user) {
             $arr   = array_merge($request->all(), [
                 'uuid'          => nanoId(),
                 'contact_name'  => $user->display_name,
@@ -113,10 +113,14 @@ class PlaceController extends Controller
             // return data from within transaction
             return $place;
         }, 5);
+        
+        $place->load([ 'user' ]);
+        $places = $request->user()->places;
+
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',
-            'place'   => $place->load([ 'user' ]),
-            'places'  => $request->user()->places,
+            'places'  => PlaceResource::collection($places),
+            'place'   => $place ? new PlaceResource($place) : null,
         ]);
     }
 
@@ -150,20 +154,22 @@ class PlaceController extends Controller
         ];
         $place->print_templates = $templates;
         $place->save();
+
+        $place->load([ 'user' ]);
+        $places = $request->user()->places;
+
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
-            'place'   => $place->load([ 'user' ]),
-            'places'  => $user->places,
+            'places'  => PlaceResource::collection($places),
+            'place'   => $place ? new PlaceResource($place) : null,
         ]);
     }
 
     public function updateLogo(PlaceRequest $request)
     {
         $user  = $request->user();
-        $place = Place::curr();
-        if ( !$place ) {
-            return response()->json([ 'errors' => [ '' => [ 'Không tìm thấy thông tin cửa hàng!' ] ] ], 422);
-        }
+        $place = getBindVal('__currentPlace');
+        
         if ( $place->logo && \File::exists($this->place_path . $place->logo) ) {
             \File::delete($this->place_path . $place->logo);
         }
@@ -176,10 +182,14 @@ class PlaceController extends Controller
         $img->save($filePath);
         $place->logo = $filename . $extension;
         $place->save();
+
+        $place->load([ 'user' ]);
+        $places = $request->user()->places;
+
         return response()->json([
-            'message' => 'Cập nhật ảnh đại diện thành công!',
-            'place'   => $place->with('user')
-                ->first(),
+            'message' => 'Cập nhật thông tin cửa hàng thành công!',
+            'places'  => PlaceResource::collection($places),
+            'place'   => $place ? new PlaceResource($place) : null,
         ]);
     }
 }

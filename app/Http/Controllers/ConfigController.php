@@ -51,6 +51,20 @@ class ConfigController extends Controller
         ]);
     }
 
+    public function configSale(ConfigRequest $request)
+    {
+        $place   = getBindVal('__currentPlace');
+        $default = config('default.config.sale');
+        $place->update([
+            'config_sale' => array_replace_recursive($default, $request->config),
+        ]);
+
+        return response()->json([
+            'message'      => 'Lưu cấu hình bán hàng thành công!',
+            'config_sale' => $place->config_sale,
+        ]);
+    }
+
     public function configPrint(ConfigRequest $request)
     {
         $place   = getBindVal('__currentPlace');

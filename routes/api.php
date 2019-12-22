@@ -64,7 +64,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	/** =============== Place ================= **/
 	Route::group(['prefix' => 'place'], function () {
 		Route::get('/current', 'PlaceController@current')->name('place.current');
-		Route::post('/update-logo', 'PlaceController@updateLogo')->name('profile.update-logo');
+		Route::post('/update-logo', 'PlaceController@updateLogo')->name('place.update-logo');
 	});
 	Route::put('/place/{place}/printers', 'PlaceController@printers')->name('place.printers');
 	Route::resource('place', 'PlaceController');
@@ -122,6 +122,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     /** =============== Config ================= **/
     Route::put('config/print', 'ConfigController@configPrint')->name('config.print');
     Route::put('config/screen2nd', 'ConfigController@configScreen2nd')->name('config.screen2nd');
+    Route::put('config/sale', 'ConfigController@configSale')->name('config.sale');
 
 	Route::group(['prefix' => 'pos'], function () {
 		/** =============== Pos Order ================= **/

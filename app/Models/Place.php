@@ -17,6 +17,7 @@ class Place extends Model
         'contact_phone',
         'contact_email',
         'user_id',
+        'config_sale',
         'config_print',
         'config_screen2nd',
     ];
@@ -28,6 +29,7 @@ class Place extends Model
         'printers'         => 'array',
         'print_templates'  => 'array',
         'print_config'     => 'array',
+        'config_sale'      => 'array',
         'config_print'     => 'array',
         'config_screen2nd' => 'array',
     ];

@@ -61,6 +61,11 @@ class ConfigRequest extends FormRequest
                 'config.*.print_when_paid' => 'bail|required|boolean',
             ];
         }
+        if ($this->routeIs(['config.sale'])) {
+            return [
+                'config'   => 'bail|required|array'
+            ];
+        }
         return [
             //
         ];

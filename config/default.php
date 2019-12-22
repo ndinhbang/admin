@@ -469,6 +469,14 @@ return [
         'enable_kitchen'  => false,
         'enable_shipment' => false,
     ],
+    'config' => [
+        'sale' => [
+            'allowPayLater'  => false,  // cho phép bán nợ
+            'offlineMode'    => false,
+            'allowOverstock' => false, // bán khi tồn kho không đủ
+            'costingMethod'  => false, // Tính giá vốn: 0: giá nhập gần nhất, 1: giá nhập trung bình
+        ]
+    ],
     'print'       => [
         'templates' => [
             'pos80',
