@@ -8,17 +8,16 @@
 
 <body class="receipt w50mm">
     <section class="sheet padding-5mm">
-        <div class="print">
+        <div class="print p-0">
             {{-- <div class="print-logo">
                 <img src="/images/logo.svg">
             </div> --}}
-
             <div class="print-header">
                 <table>
                     <thead>
                         <tr>
-                            <td class="text-left"><strong>Bàn:</strong> {{ $order->table->name ?? '' }}</td>
-                            <td class="text-right">{{ $stt }}/{{ $item->pivot->quantity ?? 0 }}</td>
+                            <td class="text-left p-0"><strong>Bàn:</strong> {{ $order->table->name ?? '' }}</td>
+                            <td class="text-right p-0">{{ $stt }}/{{ $item->pivot->quantity ?? 0 }}</td>
                         </tr>
                     </thead>
                 </table>
@@ -27,7 +26,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <td class="text-left"><strong>{{ $item->name }}</strong></td>
+                            <td class="text-left p-0"><strong>{{ $item->name }}</strong></td>
+                            <td class="text-right p-0">{{ number_format($item->price ?? 0, 0, ',', '.')
+                            }}</td>
                         </tr>
                     </thead>
                 </table>

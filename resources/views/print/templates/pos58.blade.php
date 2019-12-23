@@ -10,13 +10,13 @@
 
 <body class="receipt w50mm">
         <section class="sheet padding-5mm">
-            <div class="print">
-                <div class="print-header my-0 mb-3">
+            <div class="print p-0">
+                <div class="print-header m-0 p-0">
                     <table>
                         <thead>
                             <tr>
-                                <td class="text-left py-0"><strong>Bàn:</strong> @{{ table_name }}</td>
-                                <td class="text-right py-0">@{{ stt }}</td>
+                                <td class="text-left p-0"><strong>Bàn:</strong> @{{ table_name }}</td>
+                                <td class="text-right p-0">@{{ stt }}</td>
                             </tr>
                         </thead>
                     </table>
@@ -25,9 +25,8 @@
                     <table>
                         <thead>
                             <tr>
-                                {{-- @{{#item}} --}}
-                                <td class="text-left "><strong>@{{ item_name }}</strong></td>
-                                {{-- @{{/item}} --}}
+                                <td class="text-left p-0"><strong>@{{ item_name }}</strong></td>
+                                <td class="text-right p-0">@{{ item_price }}</td>
                             </tr>
                         </thead>
                     </table>
