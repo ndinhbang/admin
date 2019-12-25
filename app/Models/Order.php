@@ -7,6 +7,7 @@ use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasVoucher;
 use App\Traits\GenerateCode;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property float|int    amount
@@ -33,7 +34,7 @@ use App\Traits\GenerateCode;
  */
 class Order extends Model
 {
-    use Filterable, HasVoucher, GenerateCode;
+    use Filterable, SoftDeletes, HasVoucher, GenerateCode;
 
     protected $table = 'orders';
     protected $codePrefix = 'HD';
