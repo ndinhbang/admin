@@ -86,6 +86,7 @@ class Product extends Model {
 	public function supplies() {
 		return $this->belongsToMany('App\Models\Supply', 'product_supply', 'product_id', 'supply_id')
 			->withPivot('quantity')
+			->with('unit')
 			->with('stocks');
 	}
 }

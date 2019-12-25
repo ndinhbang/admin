@@ -58,4 +58,14 @@ class EmployeeRequest extends FormRequest
         }
         return [];
     }
+
+    public function messages()
+    {
+        return [
+            'name.unique'       => 'Tên đăng nhập đã có người sử dụng',
+            'phone.unique'       => 'Số điện thoại đã có người sử dụng',
+            'email.unique'       => 'Email đã có người sử dụng',
+            'avatar.mimes'       => 'Định dạng ảnh không hợp lệ',
+        ];
+    }
 }

@@ -32,6 +32,7 @@ class VoucherResource extends JsonResource
                 'payer_payee_name' => $this->payer_payee->name ?? '',
                 'payer_payee_code' => $this->payer_payee->code ?? '',
                 'payer_payee_type' => $this->payer_payee->type ?? '',
+                'payer_payee' => $this->payer_payee,
             ]),
             $this->mergeWhen($this->resource->relationLoaded('category'), [
                 'category_uuid' => $this->category->uuid ?? null,
