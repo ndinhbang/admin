@@ -4,13 +4,13 @@ namespace App\Models;
 
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
-use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasVoucher;
 use App\Traits\GenerateCode;
+use App\Traits\HasVoucher;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property float|int    amount
- * @property int          total_dish
+ * @property float|int     amount
+ * @property int           total_dish
  * @property mixed         id
  * @property int           is_canceled
  * @property mixed|string  reason
@@ -78,7 +78,6 @@ class Order extends Model
     /**
      * Default values for attributes
      * Note: Keep it in sync with default values that you set for filed in database
-     *
      * @var  array
      */
     protected $attributes = [
@@ -112,24 +111,22 @@ class Order extends Model
 
     /**
      * The "booting" method of the model.
-     *
      * @return void
      */
     protected static function boot()
     {
         parent::boot();
-
         static::addGlobalScope(new PlaceScope);
     }
 
     // ======================= Mutators ================= //
-    public function setCodeAttribute($value)
+    public function setCodeAttribute( $value )
     {
         $this->attributes['code'] = is_null($value) ? $this->gencode($this->codePrefix) : $value;
     }
 
     // ======================= Local Scopes ================= //
-    public function scopeProgressing($query)
+    public function scopeProgressing( $query )
     {
         return $query->where('is_returned', 0)
             ->where('is_canceled', 0)
@@ -163,10 +160,13 @@ class Order extends Model
         return $this->hasMany('App\Models\OrderBatch', 'order_id');
     }
 
+    /**
+     * Items of the order
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function orderItems()
     {
-        return $this->hasMany('App\Models\OrderItem', 'order_id')
-            ->withTimestamps();
+        return $this->hasMany('App\Models\OrderItem', 'order_id');
     }
 
     public function items()

@@ -26,9 +26,7 @@ class Place extends Model
 
     protected $casts = [
         'user_id'          => 'integer',
-        'printers'         => 'array',
         'print_templates'  => 'array',
-        'print_config'     => 'array',
         'config_sale'      => 'array',
         'config_print'     => 'array',
         'config_screen2nd' => 'array',
@@ -36,7 +34,6 @@ class Place extends Model
 
     /**
      * The attributes that should be hidden for arrays.
-     *
      * @var array
      */
     protected $hidden = [
@@ -45,7 +42,7 @@ class Place extends Model
         'pivot',
     ];
 
-    public static function findUuid($uuid)
+    public static function findUuid( $uuid )
     {
         if ( $uuid ) {
             return Place::where('uuid', $uuid)
@@ -54,16 +51,10 @@ class Place extends Model
         return null;
     }
 
-    public function scopeCurr()
-    {
-        $placeId = request()->header('X-Place-Id');
-        if ( !is_null($placeId) || $placeId != 'undefined' ) {
-            return Place::where('uuid', $placeId)
-                ->first();
-        }
-        return null;
-    }
-
+    /**
+     * The owner of place
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function user()
     {
         return $this->belongsTo('App\User')
@@ -71,27 +62,21 @@ class Place extends Model
     }
 
     /**
-     * The users that belong to the role.
+     * Users of place
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function users()
     {
         return $this->belongsToMany('App\User');
     }
 
-    // public function printers()
-    // {
-    //     return $this->hasMany('App\Printer');
-    // }
-    /**
-     * The users that belong to the role.
-     */
-    // public function roles()
-    // {
-    //     return $this->hasMany('Spatie\Permission\Models\Role');
-    // }
+    public function orders()
+    {
+        return $this->hasMany('App\Models\Order', 'place_id');
+    }
+
     /**
      * Get the route key for the model.
-     *
      * @return string
      */
     public function getRouteKeyName()

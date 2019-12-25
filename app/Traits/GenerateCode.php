@@ -7,10 +7,9 @@ trait GenerateCode
 {
     /**
      * Auto generate code based on last inserted code
-     *
      * @param string $codePrefix
      * @param integer $padLength
-     * @return void
+     * @return string
      */
     public function gencode($codePrefix, $padLength = 6)
     {
