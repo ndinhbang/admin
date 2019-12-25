@@ -18,6 +18,7 @@ class SupplyResource extends JsonResource
             'uuid'           => $this->uuid,
             'name'           => $this->name,
             'price_in'       => $this->price_in,
+            'price_avg_in'       => $this->price_avg_in,
             $this->mergeWhen($this->resource->relationLoaded('unit'), [
                 'unit_uuid' => isset($this->unit->uuid) ? $this->unit->uuid : '',
                 'unit_name' => isset($this->unit->name) ? $this->unit->name : '',
@@ -34,6 +35,7 @@ class SupplyResource extends JsonResource
             'quantity'       => $this->whenPivotLoaded('product_supply', function () {
                 return $this->pivot->quantity;
             }),
+            'created_at'       => $this->created_at,
         ];
     }
 }

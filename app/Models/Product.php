@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GenerateCode;
 
 class Product extends Model {
-	use Filterable, GenerateCode;
+	use Filterable, GenerateCode, SoftDeletes;
 
 	protected $table = 'products';
 	protected $codePrefix = 'P';

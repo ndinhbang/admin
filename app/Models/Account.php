@@ -61,8 +61,7 @@ class Account extends Model
                 SUM(if(type=0,amount,0)) as total_amount, 
                 SUM(if(type=1,amount,0)) as total_return_amount, 
                 SUM(debt) as total_debt")
-            ->where('status', 1)
-            ->whereNotNull('deleted_at')->first();
+            ->where('status', 1)->first();
 
         $this->total_amount = $inventoryOrdersStats->total_amount;
         $this->total_return_amount = $inventoryOrdersStats->total_return_amount;

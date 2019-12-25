@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Filters\InventoryOrderFilter;
 use App\Http\Requests\InventoryOrderRequest;
 use App\Http\Resources\InventoryOrderResource;
 use App\Models\InventoryOrder;
@@ -31,40 +32,27 @@ class InventoryOrderController extends Controller {
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function index(Request $request) {
-		$purchases = InventoryOrder::with(['creator', 'supplier', 'supplies', 'vouchers'])->where(function ($query) use ($request) {
-				$query->where('type', $request->get('type', 1));
-				// 0: Đơn trả nhà Cung cấp
-				// 1: Đơn nhập
+	public function index(InventoryOrderRequest $request) {
 
-				if ($request->keyword) {
-					$query->orWhere('code', 'like', '%' . $request->keyword . '%');
-					// cần tìm theo tên sản phẩm
-				}
+		$summary = InventoryOrder::selectRaw('SUM(amount) as total_amount, 
+			SUM(debt) as total_debt, 
+			COUNT(id) as total')
+			->filter(new InventoryOrderFilter($request))
+			->first();
 
-				switch ($request->get('list', 'all')) {
-					case 'all':
-						# code...
-						break;
-					case 'debt':
-						$query->where('debt', '>', 0);
-						break;
-					case 'trashed':
-						$query->whereNotNull('deleted_at');
-						break;
-				}
-
-				// date time range
-				$startDate = Carbon::parse($request->get('start', Carbon::now()))->format('Y-m-d 00:00:00');
-				$endDate = Carbon::parse($request->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
-
-				$query->whereBetween('inventory_orders.created_at', [$startDate, $endDate]);
-			})
+		$purchases = InventoryOrder::with([
+				'creator', 
+				'supplier', 
+				'supplies', 
+				'vouchers'
+			])
+			->filter(new InventoryOrderFilter($request))
 			->withTrashed()
 			->orderBy('inventory_orders.id', 'desc')
 			->paginate($request->per_page);
 
-		return InventoryOrderResource::collection($purchases);
+		return InventoryOrderResource::collection($purchases)
+			->additional(['summary' => $summary]);
 	}
 
 	/**
