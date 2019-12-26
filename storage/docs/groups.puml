@@ -1,0 +1,32 @@
+@startuml
+title Group - Nhóm khách hàng
+
+
+class Group {
+  +string Title
+  +string Description
+  +Account accounts
+  +Conditions conditions
+}
+
+Group -right* Account : Has many
+Group -left* Condition : Has many
+
+
+class Account {
+    +int id
+    +int phoneNumber
+}
+
+class Condition {
+    +int id
+    +string property
+    +int condition
+    +int value
+}
+
+
+
+
+
+@enduml
