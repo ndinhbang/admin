@@ -5,9 +5,9 @@ namespace App\Models;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use App\Traits\GenerateCode;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasVoucher;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property float|int     amount

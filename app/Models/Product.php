@@ -7,10 +7,10 @@ use App\Traits\Filterable;
 use App\Traits\GenerateCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\GenerateCode;
 
-class Product extends Model {
-	use Filterable, GenerateCode, SoftDeletes;
+class Product extends Model
+{
+    use Filterable, GenerateCode, SoftDeletes;
 
     protected $table = 'products';
     protected $guarded = [ 'id' ];
@@ -92,12 +92,14 @@ class Product extends Model {
         return $this->hasMany('App\Models\OrderItem', 'product_id');
     }
 
-	public function supplies() {
-		return $this->belongsToMany('App\Models\Supply', 'product_supply', 'product_id', 'supply_id')
-			->withPivot('quantity')
-			->with('unit')
-			->with('stocks');
-	}
+    public function supplies()
+    {
+        return $this->belongsToMany('App\Models\Supply', 'product_supply', 'product_id', 'supply_id')
+            ->withPivot('quantity')
+            ->with('unit')
+            ->with('stocks');
+    }
+
     public function orders()
     {
         return $this->belongsToMany('App\Models\Order', 'order_items', 'product_id', 'order_id');
