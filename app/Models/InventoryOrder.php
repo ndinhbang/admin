@@ -6,10 +6,11 @@ use App\Traits\HasVoucher;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GenerateCode;
+use App\Traits\Filterable;
 use App\Scopes\PlaceScope;
 
 class InventoryOrder extends Model {
-	use SoftDeletes, HasVoucher, GenerateCode;
+	use Filterable, SoftDeletes, HasVoucher, GenerateCode;
 
 	protected $table = 'inventory_orders';
 	protected $codePrefix = [

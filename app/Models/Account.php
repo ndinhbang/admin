@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
+use Carbon\Carbon;
 
 class Account extends Model
 {
@@ -51,5 +52,45 @@ class Account extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+
+    public function updateInventoryOrdersStats() {
+        $inventoryOrdersStats = $this->hasOne('App\Models\InventoryOrder', 'supplier_id', 'id')
+            ->selectRaw("
+                SUM(if(type=0,amount,0)) as total_amount, 
+                SUM(if(type=1,amount,0)) as total_return_amount, 
+                SUM(debt) as total_debt")
+            ->where('status', 1)->first();
+
+        $this->total_amount = $inventoryOrdersStats->total_amount;
+        $this->total_return_amount = $inventoryOrdersStats->total_return_amount;
+        $this->total_debt = $inventoryOrdersStats->total_debt;
+        $this->last_order_at = Carbon::now();
+
+        // save self acount
+        $this->save();
+
+        return $this;
+    }
+
+
+    public function updateOrdersStats() {
+        $inventoryOrdersStats = $this->hasOne('App\Models\Order', 'customer_id', 'id')
+            ->selectRaw("
+                SUM(if(type=1,amount,0)) as total_amount, 
+                SUM(if(type=0,amount,0)) as total_return_amount, 
+                SUM(debt) as total_debt")
+            ->where('is_paid', 1)->first();
+
+        $this->total_amount = $inventoryOrdersStats->total_amount;
+        $this->total_return_amount = $inventoryOrdersStats->total_return_amount;
+        $this->total_debt = $inventoryOrdersStats->total_debt;
+        $this->last_order_at = Carbon::now();
+
+        // save self acount
+        $this->save();
+
+        return $this;
     }
 }

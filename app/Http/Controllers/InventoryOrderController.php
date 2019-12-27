@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Filters\InventoryOrderFilter;
 use App\Http\Requests\InventoryOrderRequest;
 use App\Http\Resources\InventoryOrderResource;
 use App\Models\InventoryOrder;
@@ -24,33 +25,34 @@ class InventoryOrderController extends Controller {
 		'created_at',
 		'payment_method',
 		'place',
+		'supplier',
 	];
 	/**
 	 * Display a listing of the resource.
 	 *
 	 * @return \Illuminate\Http\Response
 	 */
-	public function index(Request $request) {
-		$purchases = InventoryOrder::with(['creator', 'supplier', 'supplies'])->where(function ($query) use ($request) {
-			$query->where('type', $request->get('type', 1));
-			// 0: Đơn trả nhà Cung cấp
-			// 1: Đơn nhập
+	public function index(InventoryOrderRequest $request) {
 
-			if ($request->keyword) {
-				$query->orWhere('code', 'like', '%' . $request->keyword . '%');
-				// cần tìm theo tên sản phẩm
-			}
+		$summary = InventoryOrder::selectRaw('SUM(amount) as total_amount, 
+			SUM(debt) as total_debt, 
+			COUNT(id) as total')
+			->filter(new InventoryOrderFilter($request))
+			->first();
 
-			// date time range
-			$startDate = Carbon::parse($request->get('start', Carbon::now()))->format('Y-m-d 00:00:00');
-			$endDate = Carbon::parse($request->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
-
-			$query->whereBetween('inventory_orders.created_at', [$startDate, $endDate]);
-		})
+		$purchases = InventoryOrder::with([
+				'creator', 
+				'supplier', 
+				'supplies', 
+				'vouchers'
+			])
+			->filter(new InventoryOrderFilter($request))
+			->withTrashed()
 			->orderBy('inventory_orders.id', 'desc')
 			->paginate($request->per_page);
 
-		return InventoryOrderResource::collection($purchases);
+		return InventoryOrderResource::collection($purchases)
+			->additional(['summary' => $summary]);
 	}
 
 	/**
@@ -64,7 +66,6 @@ class InventoryOrderController extends Controller {
 			$placeId = currentPlace()->id;
 
 			$supplier = getBindVal('account');
-
 			// create inventory order
 			$inventoryOrder = InventoryOrder::create(array_merge($request->except($this->exceptAttributes), [
 				'uuid' => nanoId(),
@@ -90,7 +91,10 @@ class InventoryOrderController extends Controller {
 			// tạo phiếu chi/thu tương ứng với giá nhập/trả
 			if ($inventoryOrder->status) {
 				// Lưu
-				$voucher = $inventoryOrder->createVoucher($request->input('payment_method'));
+				$voucher = $inventoryOrder->createVoucher($request->input('payment_method'), null, null, 'Thanh toán');
+			
+				// Cập nhật thông tin tổng quan cho account
+		        $supplier->updateInventoryOrdersStats();
 			}
 
 			return $inventoryOrder;
@@ -180,7 +184,67 @@ class InventoryOrderController extends Controller {
 	 * @param  int  $id
 	 * @return \Illuminate\Http\Response
 	 */
-	public function destroy($id) {
-		//
+	public function destroy(InventoryOrder $inventoryOrder) {
+		$deleted = DB::transaction(function () use ($inventoryOrder) {
+			// thông tin nhà cung cấp
+			$supplier = $inventoryOrder->supplier;
+
+			// xóa nguyên liệu nhập của đơn nhập
+			$inventoryOrder->supplies()->detach();
+
+			// xóa phiếu chi/thu
+			if ($inventoryOrder->status) {
+				$vouchers = $inventoryOrder->vouchers()->delete();
+			}
+
+			$inventoryOrder->delete();
+
+			// Cập nhật thông tin tổng quan cho account
+	        $supplier->updateInventoryOrdersStats();
+
+			return true;
+		}, 5);
+
+		return response()->json([
+			'message' => $deleted ? 'Xóa đơn nhập thành công!' : 'Có lỗi xảy ra!',
+		]);
+	}
+
+	/**
+	 * Pay debt.
+	 *
+	 * @param  int  $id
+	 * @return \Illuminate\Http\Response
+	 */
+	public function payDebt(InventoryOrderRequest $request, $uuid) {
+
+		if(!is_null($inventoryOrder = InventoryOrder::where('uuid', $uuid)->first())) {
+			$inventoryOrder = DB::transaction(function () use ($request, $inventoryOrder) {
+				$oldPaid = $inventoryOrder->paid;
+
+				$inventoryOrder->paid = $request->input('amount');
+				$note = $request->input('note');
+
+				$voucher = $inventoryOrder->createVoucher($request->input('payment_method'), $request->user()->id, null, ($note ? $note.' | ' : '').'Trả nợ');
+
+				$inventoryOrder->debt = $inventoryOrder->debt - $inventoryOrder->paid;
+				$inventoryOrder->paid = $inventoryOrder->paid + $oldPaid;
+				$inventoryOrder->save();
+
+				// Cập nhật thông tin tổng quan cho account
+		        $inventoryOrder->supplier->updateInventoryOrdersStats();
+
+				return $inventoryOrder;
+			}, 5);
+
+			return response()->json([
+				'message' => 'Trả nợ NCC thành công!',
+				'data' => $inventoryOrder,
+			]);
+		}
+
+		return response()->json([
+			'message' => 'Có lỗi xảy ra!',
+		]);
 	}
 }

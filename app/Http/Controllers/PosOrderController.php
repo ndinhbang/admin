@@ -80,10 +80,16 @@ class PosOrderController extends Controller
                 if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
                     $this->subtractInventory($request, $order);
-                }
-                if ( $order->paid ) {
-                    // tao phieu thu
-                    $order->createVoucher();
+
+                    if ( $order->paid ) {
+                        // tao phieu thu
+                        $order->createVoucher($request->input('payment_method'));
+                    }
+
+                    if ( $customer ) {
+                        // Cập nhật thông tin tổng quan cho account
+                        $customer->updateOrdersStats();
+                    }
                 }
                 return $order;
             },

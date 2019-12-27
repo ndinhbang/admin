@@ -20,12 +20,16 @@ class InventoryOrderResource extends JsonResource {
 				'supplier_name' => isset($this->supplier->name) ? $this->supplier->name : null,
 				'supplier_code' => isset($this->supplier->code) ? $this->supplier->code : null,
 				'supplier_type' => isset($this->supplier->type) ? $this->supplier->type : null,
+				'supplier' => $this->supplier,
+				
 			]),
 			$this->mergeWhen($this->resource->relationLoaded('creator'), [
 				'creator_uuid' => isset($this->creator->uuid) ? $this->creator->uuid : null,
 				'creator_name' => isset($this->creator->display_name) ? $this->creator->display_name : null,
 			]),
 			'supplies' => InventorySupplyResource::collection($this->whenLoaded('supplies')),
+
+			'vouchers' => VoucherResource::collection($this->whenLoaded('vouchers')),
 
 			'on_date' => $this->on_date,
 			'amount' => $this->amount,
@@ -36,6 +40,7 @@ class InventoryOrderResource extends JsonResource {
 			'type' => $this->type,
 			'user_id' => $this->user_id,
 			'updated_at' => $this->updated_at,
+			'deleted_at' => $this->deleted_at,
 		];
 	}
 }
