@@ -11,13 +11,13 @@ class PosCategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @param  \App\Http\Requests\CategoryRequest  $request
+     * @param    \App\Http\Requests\CategoryRequest    $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(CategoryRequest $request)
+    public function index( CategoryRequest $request )
     {
         $categories = Category::filter(new CategoryFilter($request))
+            ->with([ 'products' ])
             ->orderBy('categories.position', 'asc')
             ->orderBy('categories.id', 'desc')
             ->take(50) // max:50 category
@@ -27,11 +27,10 @@ class PosCategoryController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param  \App\Models\Category  $category
+     * @param    \App\Models\Category    $category
      * @return \App\Http\Resources\PosCategoryResource
      */
-    public function show(Category $category)
+    public function show( Category $category )
     {
         return new PosCategoryResource($category);
     }

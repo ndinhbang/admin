@@ -22,7 +22,6 @@ class TableResource extends JsonResource
         return [
             'uuid'         => $this->uuid,
             'name'         => $this->name,
-            'orders_count' => $this->when(isset($this->orders_count), $this->orders_count),
             'area'         => new AreaResource($this->whenLoaded('area')),
         ];
     }

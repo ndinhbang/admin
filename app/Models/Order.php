@@ -50,30 +50,33 @@ class Order extends Model
 
     // ======================= Attribute Casting ================= //
     protected $casts = [
-        'uuid'            => 'string',
-        'place_id'        => 'integer',
-        'creator_id'      => 'integer',
-        'customer_id'     => 'integer',
-        'table_id'        => 'integer',
-        'state'           => 'integer',
-        'kind'            => 'integer',
-        'total_dish'      => 'integer',
-        'total_eater'     => 'integer',
-        'note'            => 'string',
-        'reason'          => 'string',
-        'received_amount' => 'integer',
-        'debt'            => 'integer',
-        'paid'            => 'integer',
-        'amount'          => 'integer',
-        'day'             => 'integer',
-        'month'           => 'integer',
-        'year'            => 'integer',
-        'is_returned'     => 'boolean',
-        'is_canceled'     => 'boolean',
-        'is_served'       => 'boolean',
-        'is_paid'         => 'boolean',
-        'is_completed'    => 'boolean',
-        'card_name'       => 'string',
+        'uuid'                  => 'string',
+        'code'                  => 'string',
+        'place_id'              => 'integer',
+        'creator_id'            => 'integer',
+        'customer_id'           => 'integer',
+        'table_id'              => 'integer',
+        'state'                 => 'integer',
+        'kind'                  => 'integer',
+        'total_dish'            => 'integer',
+        'total_eater'           => 'integer',
+        'note'                  => 'string',
+        'reason'                => 'string',
+        'received_amount'       => 'integer',
+        'discount_amount'       => 'integer',
+        'discount_items_amount' => 'integer',
+        'debt'                  => 'integer',
+        'paid'                  => 'integer',
+        'amount'                => 'integer',
+        'day'                   => 'integer',
+        'month'                 => 'integer',
+        'year'                  => 'integer',
+        'is_returned'           => 'boolean',
+        'is_canceled'           => 'boolean',
+        'is_served'             => 'boolean',
+        'is_paid'               => 'boolean',
+        'is_completed'          => 'boolean',
+        'card_name'             => 'string',
     ];
 
     /**
@@ -82,20 +85,22 @@ class Order extends Model
      * @var  array
      */
     protected $attributes = [
-        'received_amount' => 0,
-        'state'           => 0,
-        'amount'          => 0,
-        'discount_amount' => 0,
-        'debt'            => 0,
-        'paid'            => 0,
-        'total_dish'      => 0,
-        'total_eater'     => 0,
-        'is_returned'     => false,
-        'is_canceled'     => false,
-        'is_served'       => false,
-        'is_paid'         => false,
-        'is_completed'    => false,
-        'type'            => 1,
+        'state'                 => 0,
+        'amount'                => 0,
+        'received_amount'       => 0,
+        'discount_amount'       => 0,
+        'discount_items_amount' => 0,
+        'debt'                  => 0,
+        'paid'                  => 0,
+        'total_dish'            => 0,
+        'total_eater'           => 0,
+        'is_returned'           => false,
+        'is_canceled'           => false,
+        'is_served'             => false,
+        'is_paid'               => false,
+        'is_completed'          => false,
+        'type'                  => 1,
+        // 1: đã bán, 0: trả lại
     ];
 
     protected $guarded = [ 'id' ];
@@ -172,23 +177,24 @@ class Order extends Model
 
     public function items()
     {
-        return $this->products()
-            ->withPivot([
-                'id',
-                'quantity',
-                'total_price',
-                'discount_amount',
-                'pending',
-                'accepted',
-                'doing',
-                'done',
-                'delivering',
-                'completed',
-                'canceled',
-                'note',
-                'created_at',
-                'updated_at',
-            ]);
+        return $this->hasMany('App\Models\OrderItem', 'order_id');
+//        return $this->products()
+//            ->withPivot([
+//                'id',
+//                'quantity',
+//                'total_price',
+//                'discount_amount',
+//                'pending',
+//                'accepted',
+//                'doing',
+//                'done',
+//                'delivering',
+//                'completed',
+//                'canceled',
+//                'note',
+//                'created_at',
+//                'updated_at',
+//            ]);
     }
 
     public function products()

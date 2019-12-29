@@ -38,20 +38,19 @@ class PosOrderRequest extends FormRequest
             $countItems = empty($items = $this->items ?? []) ? 0 : count($items);
             $countBatchItems = empty($batchItems = $this->batchItems ?? []) ? 0 : count($batchItems);
             return [
-                // general info
-                'total_eater'      => [ 'bail', 'sometimes', 'numeric'],
-                'card_name'        => [ 'bail', 'sometimes', 'nullable', 'string', 'max:10'],
-                'note'             => [ 'bail', 'sometimes', 'nullable', 'string', 'max:191'],
-                'customer_uuid'    => [
-                    'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21',
-                    new ExistsThenBindVal(
-                        \App\Models\Account::class,
-                        'uuid',
-                        'orderCustomer'
-                    ),
-                ],
+                'total_eater'      => [ 'bail', 'required', 'numeric'],
+                'total_dish'       => [ 'bail', 'required', 'numeric'],
+                'discount_amount'  => [ 'bail', 'required', 'numeric'],
+                'card_name'        => [ 'bail', 'required', 'nullable', 'string', 'max:10'],
+                'note'             => [ 'bail', 'required', 'nullable', 'string', 'max:191'],
+
                 'items'            => [ 'bail', 'sometimes', 'array', 'max:100'],
                 'items.*.uuid'     => [
+                    'bail', 'alpha_dash', 'size:21',
+                    Rule::requiredIf($countItems),
+                ],
+                // product
+                'items.*.product_uuid'     => [
                     'bail', 'alpha_dash', 'size:21',
                     Rule::requiredIf($countItems),
                 ],
@@ -60,31 +59,25 @@ class PosOrderRequest extends FormRequest
                     Rule::requiredIf($countItems),
                 ],
                 'items.*.note'     => [ 'bail', 'sometimes', 'string', 'max:191'],
-                'batchItems'            => [
-                    'bail', 'sometimes', 'array', 'max:100',
-                    // max batch items = items
-                    function ($attribute, $value, $fail)
-                        use ($countItems, $countBatchItems) {
-                            if ($countBatchItems > $countItems) {
-                                $fail($attribute.' is invalid.');
-                            }
-                    },
+                // child items
+                'items.*.children'                      => [ 'bail', 'sometimes', 'array', 'max:10'],
+                'items.*.children.*.uuid'               => [ 'bail', 'sometimes', 'alpha_dash', 'size:21'],
+                'items.*.children.*.product_uuid'       => [ 'bail', 'sometimes', 'alpha_dash', 'size:21'],
+                'items.*.children.*.quantity'           => [ 'bail', 'sometimes', 'numeric', 'min:1', 'max:255'],
+                'customer_uuid'    => [
+                    'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21',
+                    new ExistsThenBindVal(
+                        \App\Models\Account::class,
+                        'uuid',
+                        '__customer'
+                    ),
                 ],
-                'batchItems.*.uuid'     => [
-                    'bail', 'alpha_dash', 'size:21',
-                    Rule::requiredIf($countBatchItems),
-                ],
-                'batchItems.*.quantity' => [
-                    'bail', 'numeric', 'min:1', 'max:255',
-                    Rule::requiredIf($countBatchItems),
-                ],
-                'batchItems.*.note'     => [ 'bail', 'sometimes', 'string', 'max:191'],
                 'table_uuid' => [
                     'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21',
                     new ExistsThenBindVal(
                         \App\Models\Table::class,
                         'uuid',
-                        'orderTable'
+                        '__table'
                     ),
                 ],
             ];

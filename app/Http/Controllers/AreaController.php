@@ -14,34 +14,30 @@ class AreaController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
-     * @param  AreaRequest  $request
+     * @param    AreaRequest    $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(AreaRequest $request)
+    public function index( AreaRequest $request )
     {
         $areas = Area::with([
-            'tables' => function ($query) {
-                $query->withCount(['orders']);
-            },
+            'tables',
         ])
             ->filter(new AreaFilter($request))
-            ->orderBy('areas.id', 'desc')
-            ->simplePaginate(50);
+            ->orderBy('areas.id', 'asc')
+            ->get();
         return AreaResource::collection($areas);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\AreaRequest  $request
+     * @param    \App\Http\Requests\AreaRequest    $request
      * @return \Illuminate\Http\Response
      * @throws \Throwable
      */
-    public function store(AreaRequest $request)
+    public function store( AreaRequest $request )
     {
         // todo: gioi han so luong area dc tao cua 1 place ~50
-        $area = DB::transaction(function () use ($request) {
+        $area = DB::transaction(function () use ( $request ) {
             $placeId         = currentPlace()->id;
             $area            = Area::create(array_merge($request->only('name'), [
                 'uuid'     => nanoId(),
@@ -69,11 +65,10 @@ class AreaController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param  \App\Area  $area
+     * @param    \App\Area    $area
      * @return AreaResource
      */
-    public function show(Area $area)
+    public function show( Area $area )
     {
         $area->load('tables');
         return new AreaResource($area);
@@ -81,12 +76,11 @@ class AreaController extends Controller
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  Area                      $area
+     * @param    \Illuminate\Http\Request    $request
+     * @param    Area                        $area
      * @return AreaResource
      */
-    public function update(Request $request, Area $area)
+    public function update( Request $request, Area $area )
     {
         $area->name = $request->input('name');
         $area->save();
@@ -96,14 +90,13 @@ class AreaController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  \App\Area  $area
+     * @param    \App\Area    $area
      * @return \Illuminate\Http\Response
      * @throws \Throwable
      */
-    public function destroy(Area $area)
+    public function destroy( Area $area )
     {
-        DB::transaction(function () use ($area) {
+        DB::transaction(function () use ( $area ) {
             $area->tables()
                 ->delete();
             $area->delete();

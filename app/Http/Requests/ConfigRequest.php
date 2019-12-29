@@ -47,7 +47,7 @@ class ConfigRequest extends FormRequest
                         !$this->input('useImage', false)
                         && !$this->input('image', false)
                     ),
-                    Rule::dimensions()->maxWidth(1920)->maxHeight(1080),
+                    Rule::dimensions()->maxWidth(5000)->maxHeight(3000),
                 ],
             ];
         }

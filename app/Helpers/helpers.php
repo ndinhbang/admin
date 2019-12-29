@@ -157,3 +157,26 @@ if ( !function_exists('mediaUrl') ) {
         return config('app.media_url') . '/' . trim($path, '/');
     }
 }
+if ( !function_exists('getOrderKind') ) {
+    /**
+     * @param    integer    $kindNumber
+     * @param    bool       $reverse
+     * @return string
+     */
+    function getOrderKind($kindNumber, $reverse = false)
+    {
+        $kindArr = [
+            0 => 'takeaway',
+            1 => 'inplace',
+            2 => 'online',
+            3 => 'booking',
+        ];
+        if ($reverse) {
+            $kindArr = array_flip($kindArr);
+        }
+        if (!isset($kindArr[$kindNumber])) {
+            throw new \OutOfRangeException('Order kind is out of range');
+        }
+        return $kindArr[$kindNumber];
+    }
+}

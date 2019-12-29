@@ -45,6 +45,7 @@ class EmployeeController extends Controller {
 			$arr = $request->all();
 			$arr['uuid'] = nanoId();
 			$arr['password'] = \Hash::make($request->password);
+            $arr['email'] = $arr['name'] . '@goido.net';
 			// create employee
 			$employee = User::create($arr);
 			// assign employee to place

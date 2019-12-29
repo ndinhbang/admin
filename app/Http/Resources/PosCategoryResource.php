@@ -12,15 +12,16 @@ class PosCategoryResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
+     * @param    \Illuminate\Http\Request    $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray( $request )
     {
         return [
             'uuid' => $this->uuid,
-            'name'  => $this->name,
+            'name' => $this->name,
+            'type' => $this->type,
+            'products' => PosProductResource::collection($this->whenLoaded('products'))
         ];
     }
 }

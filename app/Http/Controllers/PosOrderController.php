@@ -6,9 +6,10 @@ use App\Http\Filters\OrderFilter;
 use App\Http\Requests\PosOrderRequest;
 use App\Http\Resources\PosOrderResource;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Table;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -16,20 +17,20 @@ class PosOrderController extends Controller
 {
     /**
      * Display a listing of the resource.
-     *
      * @param  PosOrderRequest  $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(PosOrderRequest $request)
+    public function index( PosOrderRequest $request )
     {
         $orders = Order::with([
             'creator',
             'customer',
             'table',
-            'items' => function ($query) {
-                $query->orderBy('order_items.id', 'asc');
+            'items' => function ( $query ) {
+                $query->orderBy('parent_id', 0);
             },
-            'items.category',
+            'items.children.product',
+            'items.product',
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
@@ -39,265 +40,365 @@ class PosOrderController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
      * @param  PosOrderRequest  $request
      * @return PosOrderResource
      * @throws \Exception
      * @throws \Throwable
      */
-    public function store(PosOrderRequest $request)
+    public function store( PosOrderRequest $request )
     {
-        $order = DB::transaction(
-            function () use ($request) {
-                $now   = Carbon::now();
-                $order = Order::create(array_merge($request->only([ 'kind' ]), [
-                    'uuid'       => nanoId(),
-                    'place_id'   => currentPlace()->id,
-                    'creator_id' => $request->user()->id,
-                    'code'       => $request->input('code'),
-                    'year'       => $now->year,
-                    'month'      => $now->month,
-                    'day'        => $now->day,
-                ]));
-                $order = $this->updateTable($request, $order);
-                list($order, $products) = $this->updateItems($request, $order);
-                // Customer
-                $customer = getBindVal('orderCustomer');
+        $data         = $request->all();
+        $items        = $data['items'] ?? [];
+        $productUuids = $this->getProductUuidOfAllOrderItems($items);
+        $products     = Product::whereIn('uuid', $productUuids)
+            ->get();
+        if ( $products->isEmpty()
+            || $products->count() != count($productUuids) ) {
+            throw new \InvalidArgumentException('Malformed data.');
+        }
+        $user  = $request->user();
+        $order = DB::transaction(function () use ( $products, $data, $user ) {
+            // tao order
+            $now       = Carbon::now();
+            $customer  = getBindVal('__customer');
+            $orderData = array_merge($this->prepareOrderData($data), [
+                'uuid'       => nanoId(),
+                'place_id'   => currentPlace()->id,
+                'creator_id' => $user->id,
+                'kind'       => getOrderKind($data['kind'], true),
+                'code'       => $data['code'] ?? null,
+                'year'       => $now->year,
+                'month'      => $now->month,
+                'day'        => $now->day,
+            ]);
+            // calculate items price
+            $products->load('supplies');
+            $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
+            $calculatedOrderData = $this->calculateOrderData($orderData, $calculatedItemsData);
+            // save new order
+            $order = Order::create($calculatedOrderData);
+            // save new items
+            $this->createItems($calculatedItemsData, $order);
+            //nếu bán thành công
+            if ( $order->is_completed || $order->is_paid ) {
+                // trù kho
+                $this->subtractInventory($products, new Collection($data['items']));
+                if ( $order->paid ) {
+                    // tao phieu thu
+                    $order->createVoucher($data['payment_method']);
+                }
                 if ( $customer ) {
-                    $order->customer_id = $customer->id;
+                    // Cập nhật thông tin tổng quan cho account
+                    $customer->updateOrdersStats();
                 }
-                $order->note        = $request->note ?? '';
-                $order->card_name   = $request->card_name ?? '';
-                $order->total_eater = $request->total_eater ?? 1;
-                $order              = $this->updatePayment($request, $order);
-                $order->save();
-                // neu kich hoat bep
-                if ( $enableKitchen = config('default.pos.enable_kitchen', false) ) {
-                    // update batch
-                    $this->createBatchItems($request, $order, $products);
-                }
-                // nếu bán thành công
-                if ( $order->is_completed || $order->is_paid ) {
-                    // trù kho
-                    $this->subtractInventory($request, $order);
-
-                    if ( $order->paid ) {
-                        // tao phieu thu
-                        $order->createVoucher($request->input('payment_method'));
-                    }
-
-                    if ( $customer ) {
-                        // Cập nhật thông tin tổng quan cho account
-                        $customer->updateOrdersStats();
-                    }
-                }
-                return $order;
-            },
-            5
-        );
+            }
+            return $order;
+        }, 5);
+        unset($products);
         $order->load([
             'table',
             'customer',
-            'items' => function ($query) {
-                $query->orderBy('pivot_id', 'asc');
+            'items' => function ( $query ) {
+                $query->where('parent_id', 0);
             },
+            'items.children.product',
+            'items.product',
+        ]);
+        return new PosOrderResource($order);
+    }
+
+    private function createItems( array $data, Order $order, OrderItem $parentItem = null )
+    {
+        $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
+        // create order items
+        foreach ( $data as $itemUuid => $itemData ) {
+            $discountOrderAmount = round(( $itemData['total_price'] * $discountOrderPercent ) / 100);
+            $pareparedData        = Arr::only($itemData, [
+                'quantity',
+                'discount_amount',
+                'children_discount_amount',
+                'simple_price',
+                'total_price',
+                'total_buying_price',
+                'total_buying_avg_price',
+                'product_id',
+                // data from request
+                'note',
+                'canceled',
+                'completed',
+                'delivering',
+                'done',
+                'doing',
+                'accepted',
+                'pending',
+                'discount_id',
+            ]);
+            $item  = OrderItem::create(array_merge($pareparedData, [
+                'place_id'              => $order->place_id,
+                'order_id'              => $order->id,
+                'parent_id'             => $parentItem->id ?? 0,
+                'discount_order_amount' => $discountOrderAmount,
+            ]));
+
+            if (!empty($item['child_data'])) {
+                $this->createItems($item['child_data'], $order);
+            }
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     * @param  PosOrderRequest  $request
+     * @param  Order            $order
+     * @return PosOrderResource
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public function update( PosOrderRequest $request, Order $order )
+    {
+        if ( isOrderClosed($order) ) {
+            return response()->json([
+                'message' => 'Order đã đóng không thể cập nhật',
+            ], 403);
+        }
+        $data         = $request->all();
+        $items        = $data['items'] ?? [];
+        $productUuids = $this->getProductUuidOfAllOrderItems($items);
+        $products     = Product::whereIn('uuid', $productUuids)
+            ->get();
+        if ( $products->isEmpty()
+            || $products->count() != count($productUuids) ) {
+            throw new \InvalidArgumentException('Malformed data.');
+        }
+        $order = DB::transaction(function () use ( $products, $data, $order ) {
+            $orderData = $this->prepareOrderData($data);
+            $products->load([ 'supplies' ]);
+            $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
+            $calculatedOrderData = $this->calculateOrderData($orderData, $calculatedItemsData);
+            $oldPaid             = $order->paid;
+            // update order
+            $order->update($calculatedOrderData);
+            //nếu bán thành công
+            if ( $order->is_completed || $order->is_paid ) {
+                // trù kho
+                $this->subtractInventory($products, new Collection($data['items']));
+                if ( $order->paid
+                    && $order->paid > $oldPaid ) {
+                    // tao phieu thu
+                    $order->createVoucher($data['payment_method']);
+                }
+            }
+            return $order;
+        }, 5);
+        unset($products);
+        $order->load([
+            'table',
+            'customer',
+            'items' => function ( $query ) {
+                $query->where('parent_id', 0);
+            },
+            'items.children.product',
+            'items.product',
         ]);
         return new PosOrderResource($order);
     }
 
     /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order|mixed
-     * @throws \Throwable
+     * @param  array  $items
+     * @return   array
      */
-    private function updateTable(PosOrderRequest $request, Order $order)
+    private function getProductUuidOfAllOrderItems( array $items )
     {
-        // todo: 1 ban co the co nhieu order
-        if ( empty($request->table_uuid) ) {
-            return $order;
+        if ( empty($items) ) {
+            throw new \InvalidArgumentException('Order require items');
         }
-        if ( is_null($table = Table::where('uuid', $request->table_uuid)
-            ->withCount([ 'orders' ])
-            ->first()) ) {
-            throw new \Exception('Table not found');
+        $uuids = [];
+        foreach ( $items as $item ) {
+            // throw error here if price not found
+            $uuids[ $item['product_uuid'] ] = 1;
+            $children                       = $item['children'] ?? [];
+            if ( empty($item['children']) ) {
+                continue;
+            }
+            foreach ( $children as $child ) {
+                // throw error here if price not found
+                $uuids[ $child['product_uuid'] ] = 1;
+            }
         }
-        $order->table_id = $table->id;
-        return $order;
+        return array_keys($uuids);
     }
 
     /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @return \App\Models\Order|array
-     * @throws \Exception
+     * @param  array  $requestData
+     * @return array
      */
-    private function updateItems(PosOrderRequest $request, Order $order)
+    private function prepareOrderData( array $requestData )
     {
-        if ( !empty($request->items) ) {
-            $collection    = ( new Collection($request->items) )
-                ->unique('uuid');
-            $productsUuids = $collection->pluck('uuid');
-            $products      = Product::whereIn('uuid', $productsUuids)
-                ->get();
-            if ( $products->isEmpty() ) {
-                // throw error if products not exist
-                throw new \Exception('ERROR: items not found');
-            }
-            $keyedProducts       = $products->keyBy('uuid');
-            $items               = [];
-            $orderAmount         = 0;
-            $discountItemsAmount = 0;
-            $totalDish           = 0;
-            $discountOrderAmount = $request->discount_amount ?? 0;
-            $orderAmount         = $request->amount ?? 0;
-
-            $discountOrderPercent = ($discountOrderAmount*100)/($orderAmount+$discountOrderAmount);
-
-            foreach ( $collection as $item ) {
-                $product         = $keyedProducts[ $item['uuid'] ];
-                $quantity        = (int) $item['quantity'];
-                $discount_amount = $item['discount_amount'] ?? 0;
-                // tinh tong tien / item
-                $totalPrice            = ( $quantity * $product->price ) - $discount_amount;
-
-                // tính tiền vốn
-                $totalBuyingPrice = 0;
-                $totalAvgBuyingPrice = 0;
-                if($product->can_stock) {
-                    foreach ($product->supplies as $key => $supply) {
-                        $totalBuyingPrice += $supply->pivot->quantity * $supply->price_in;
-                        $totalAvgBuyingPrice += $supply->pivot->quantity * $supply->price_avg_in;
-                    }
-                }
-
-                $items[ $product->id ] = [
-                    'quantity'              => $quantity,
-                    'total_price'           => $totalPrice,
-                    'total_buying_price'     => $quantity * $totalBuyingPrice,
-                    'total_buying_avg_price' => $quantity * $totalAvgBuyingPrice,
-                    'discount_amount'       => $discount_amount,
-                    'discount_order_amount' => round(($totalPrice*$discountOrderPercent)/100),
-                    'note'                  => $item['note'] ?? '',
-                    // last note on item
-                    //                    'state'       => $item['state'] ?? 0,
-                ];
-                $discountItemsAmount   += $discount_amount;
-                $totalDish += $quantity;
-            }
-
-
-            // cap nhat items trong order
-            $changes = $order->products()
-                ->sync($items);
-            // cap nhat tong tien cua order
-            $order->discount_items_amount = $discountItemsAmount;
-            $order->discount_amount       = $discountOrderAmount;
-            $order->amount                = $orderAmount;
-            $order->total_dish            = $totalDish;
-        }
-        $order->load([ 'items' ]);
+        $table    = getBindVal('__table');
+        $customer = getBindVal('__customer');
         return [
-            $order,
-            $keyedProducts ?? new Collection([]),
+            'table_id'              => $table->id ?? null,
+            'customer_id'           => $customer->id ?? 0,
+            'note'                  => $requestData['note'] ?? '',
+            'reason'                => $requestData['reason'] ?? '',
+            'card_name'             => $requestData['card_name'] ?? '',
+            'total_eater'           => (int) $requestData['total_eater'],
+            'total_dish'            => (int) $requestData['total_dish'],
+            'received_amount'       => (int) $requestData['received_amount'],
+            'discount_amount'       => (int) $requestData['discount_amount'],
+            'is_returned'           => (bool) $requestData['is_returned'],
+            'is_canceled'           => (bool) $requestData['is_canceled'],
+            'is_served'             => (bool) $requestData['is_served'],
+            // update later
+            'amount'                => 0,
+            'discount_items_amount' => 0,
+            'paid'                  => 0,
+            'debt'                  => 0,
+            'is_paid'               => false,
+            'is_completed'          => false,
         ];
     }
 
-    private function updatePayment(PosOrderRequest $request, Order $order)
+    /**
+     * @param  array  $orderData
+     * @param  array  $calculatedItemsData
+     * @return array
+     */
+    private function calculateOrderData( array $orderData, array $calculatedItemsData )
     {
-        $amount = $order->amount ?? 0;
-        // Neu order chua co item
-        if ( !$amount ) {
-            return $order;
+        $orderBaseAmount = 0;
+        foreach ( $calculatedItemsData as $item ) {
+            $orderData['discount_items_amount'] += $item['total_discount_amount'];
+            $orderBaseAmount                    += $item['total_price'];
         }
-        $paid           = 0;
-        $debt           = 0;
-        $isPaid         = false;
-        $receivedAmount = $request->received_amount ?? 0;
-        $isCompleted    = false; // hoan thanh order
-        if ( $receivedAmount >= $amount ) {
-            $paid        = $amount;
-            $isPaid      = true;
-            $isCompleted = true;
-        } else {
-            $paid = $receivedAmount;
-            $debt = $amount - $receivedAmount;
-            // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
-            if ( $paid ) {
-                $isPaid = true;
+        $orderData['amount'] = $orderBaseAmount - $orderData['discount_amount'];
+        if ( $orderData['received_amount'] > 0 ) {
+            if ( $orderData['received_amount'] >= $orderData['amount'] ) {
+                $orderData['paid'] = $orderData['amount'];
+            } else {
+                $orderData['paid'] = $orderData['received_amount'];
+                $orderData['debt'] = $orderData['amount'] - $orderData['received_amount'];
             }
         }
-        $order->paid            = $paid;
-        $order->debt            = $debt;
-        $order->is_paid         = $isPaid;
-        $order->received_amount = $receivedAmount;
-        $order->is_completed    = $isCompleted;
-        return $order;
-    }
-
-    protected function createBatchItems(PosOrderRequest $request, Order $order, Collection $keyedProducts)
-    {
-        if ( !empty($request->items) ) {
-            $newCollection = ( new Collection($request->batchItems) )
-                ->unique('uuid');
-            $batchs        = [];
-            foreach ( $newCollection as $batchItem ) {
-                $product  = $keyedProducts[ $batchItem['uuid'] ];
-                $quantity = (int) $batchItem['quantity'];
-                $batchs[] = [
-                    'place_id'   => $order->place_id,
-                    'product_id' => $product->id,
-                    'quantity'   => $quantity,
-                    'note'       => $batchItem['note'] ?? '',
-                    'state'      => 0,
-                ];
-            }
-            $order->batchs()
-                ->createMany($batchs);
-        }
+        // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
+        $orderData['is_paid']      = $orderData['paid'] > 0;
+        $orderData['is_completed'] = $orderData['paid'] > 0 && ( $orderData['paid'] == $orderData['amount'] );
+        return $orderData;
     }
 
     /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
+     * @param  array                           $items
+     * @param  \Illuminate\Support\Collection  $keyedProducts
+     * @return array
+     */
+    private function calculateItemsData( array $items, Collection $keyedProducts )
+    {
+        $result = [];
+        foreach ( $items as $item ) {
+            $itemProduct = $keyedProducts[ $item['product_uuid'] ];
+            // tiền vốn
+            $itemTotalBuyingPrice    = 0;
+            $itemTotalAvgBuyingPrice = 0;
+            if ( $itemProduct->can_stock ) {
+                foreach ( $itemProduct->supplies as $key => $supply ) {
+                    $itemTotalBuyingPrice    += $supply->pivot->quantity * $supply->price_in;
+                    $itemTotalAvgBuyingPrice += $supply->pivot->quantity * $supply->price_avg_in;
+                }
+            }
+            // tinh gia
+            $itemQuantity       = (int) $item['quantity'];
+            $itemDiscountAmount = $item['discount_amount'] ?? 0;
+            $itemBasePrice      = $itemQuantity * $itemProduct->price;
+            // giá sản phẩm (sau khi giảm giá)
+            $itemSimplePrice = $itemBasePrice - $itemDiscountAmount;
+            // tổng giá của các sản phẩm bán kèm
+            $itemChildrenPrice = 0;
+            // tổng giá giảm trên các sản phẩm bán kèm
+            $itemChildDiscountAmount = 0;
+            $children                = $item['children'] ?? [];
+            $datas                   = [];
+            if ( !empty($children) ) {
+                $datas = $this->calculateItemsData($children, $keyedProducts);
+                foreach ( $datas as $data ) {
+                    $itemChildrenPrice       += $data['total_price'];
+                    $itemChildDiscountAmount += $data['total_discount_amount'];
+                }
+            }
+            // tổng giảm giá (bao gồm giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm)
+            $itemTotalDiscountAmount = $itemDiscountAmount + $itemChildDiscountAmount;
+            // tổng giá sau giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm
+            $itemTotalPrice          = $itemSimplePrice + $itemChildrenPrice;
+            $result[ $item['uuid'] ] = [
+                // calculated
+                'product_id'               => $itemProduct->id,
+                'quantity'                 => $itemQuantity,
+                'discount_amount'          => $itemDiscountAmount,
+                'children_discount_amount' => $itemChildDiscountAmount,
+                'simple_price'             => $itemSimplePrice,
+                'total_price'              => $itemTotalPrice,
+                'total_buying_price'       => $itemTotalBuyingPrice,
+                'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
+                // data from request
+                'note'                     => $item['note'],
+                'canceled'                 => $item['canceled'],
+                'completed'                => $item['completed'],
+                'delivering'               => $item['delivering'],
+                'done'                     => $item['done'],
+                'doing'                    => $item['doing'],
+                'accepted'                 => $item['accepted'],
+                'pending'                  => $item['pending'],
+                'discount_id'              => $item['discount_id'],
+                // need to remove when create or update item
+                'base_price'               => $itemBasePrice,
+                'total_discount_amount'    => $itemTotalDiscountAmount,
+                'child_data'               => $datas,
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection  $products
+     * @param  \Illuminate\Support\Collection  $itemCollection
      * @throws \Exception
      */
-    private function subtractInventory(PosOrderRequest $request, Order $order)
+    private function subtractInventory( Collection $products, Collection $itemCollection )
     {
-        $order->load([
-            'items'                          => function ($query) {
-                $query->where('products.can_stock', 1) // skip item khong quan ly ton kho
-                ->orderBy('pivot_id', 'asc');
-            },
-            'items.supplies.availableStocks' => function ($query) {
+        $canStockProducts = $products->where('can_stock', true);
+        $canStockProducts->load([
+            'supplies.availableStocks' => function ( $query ) {
                 $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
                 ->orderBy('inventory_orders.id', 'asc');
             },
         ]);
-        $items = $order->items ?? collect([]);
-        if ( $items->isEmpty() ) {
-            return;
-        }
-        foreach ( $items as $item ) {
-            $supplies = $item->supplies ?? collect([]);
+        $groupedItems = $itemCollection->groupBy('product_uuid');
+        foreach ( $canStockProducts as $product ) {
+            $supplies = $product->supplies ?? collect([]);
             if ( $supplies->isEmpty() ) {
-                throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$item->name}.");
+                throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$product->name}.");
             };
+            $itemsOfProduct = $groupedItems->get($product->uuid);
+            if ( $itemsOfProduct->isEmpty() ) {
+                throw new \Exception("Không tìm thấy item ứng với sản phẩm {$product->name}.");
+            }
+            // tổng số lượng sản phẩm trong order
+            $totalQuantity = 0;
+            foreach ( $itemsOfProduct as $item ) {
+                $totalQuantity += ( (int) $item['quantity'] );
+            }
             $now = Carbon::now()
                 ->format('Y-m-d H:i:s');
-            // số lượng sản phẩm trong order
-            $productQuantity = $item->pivot->quantity;
             foreach ( $supplies as $supply ) {
                 // dump($supply);
                 $stocks = $supply->availableStocks ?? collect([]);
                 // throw error if empty
                 if ( $stocks->isEmpty() ) {
-                    throw new \Exception("Không đủ nguyên liệu: {$supply->name} trong kho.");
+                    throw new \Exception("Không đủ nguyên liệu: \"{$supply->name}\" cho sản phẩm \"{$product->name}\" trong kho.");
                 };
                 // số lượng nguyên liệu / 1 sản phẩm
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
-                $outQuantity = $supplyQuantity * $productQuantity;
+                $outQuantity = $supplyQuantity * $totalQuantity;
                 // lặp các lần nhập kho
                 foreach ( $stocks as $stock ) {
                     if ( $outQuantity <= 0 ) {
@@ -326,26 +427,25 @@ class PosOrderController extends Controller
                 } // end of stocks
                 // nếu tống trừ kho lớn hơn tổng tồn kho
                 if ( $outQuantity > 0 ) {
-                    throw new \Exception("{$supply->name} tồn kho không đủ số lượng");
+                    throw new \Exception("\"{$supply->name}\" tồn kho không đủ số lượng bán của sản phẩm \"{$product->name}\" ");
                 }
             } // end of supplies
             // unload redundant relations
-            $item->unsetRelation('supplies');
+            $product->unsetRelation('supplies');
         }
     }
 
     /**
      * Display the specified resource.
-     *
      * @param  Order  $order
      * @return PosOrderResource
      */
-    public function show(Order $order)
+    public function show( Order $order )
     {
         $order->load([
             'customer',
             'table',
-            'items' => function ($query) {
+            'items' => function ( $query ) {
                 $query->orderBy('pivot_id', 'asc');
             },
             'items.category',
@@ -354,88 +454,12 @@ class PosOrderController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  PosOrderRequest  $request
-     * @param  Order            $order
-     * @return PosOrderResource
-     * @throws \Exception
-     * @throws \Throwable
-     */
-    public function update(PosOrderRequest $request, Order $order)
-    {
-        if ( isOrderClosed($order) ) {
-            return response()->json([
-                'message' => 'Order đã đóng không thể cập nhật',
-            ], 403);
-        }
-        $order = DB::transaction(
-            function () use ($request, $order) {
-                $order = $this->updateTable($request, $order);
-                list($order, $products) = $this->updateItems($request, $order);
-                // Customer
-                $customer = getBindVal('orderCustomer');
-                if ( $customer ) {
-                    $order->customer_id = $customer->id;
-                }
-                $order->note        = $request->note ?? '';
-                $order->card_name   = $request->card_name ?? '';
-                $order->total_eater = $request->total_eater ?? 1;
-                $order              = $this->updatePayment($request, $order);
-                $order->save();
-                // neu kich hoat bep
-                if ( $enableKitchen = config('default.pos.enable_kitchen', false) ) {
-                    // update batch
-                    $this->createBatchItems($request, $order, $products);
-                }
-                // nếu bán thành công
-                if ( $order->is_completed || $order->is_paid ) {
-                    // trù kho
-                    $this->subtractInventory($request, $order);
-                    // tao phieu thu
-                    $order->createVoucher();
-                }
-                return $order;
-            },
-            5
-        );
-        $order->load([
-            'table',
-            'customer',
-            'items' => function ($query) {
-                $query->orderBy('pivot_id', 'asc');
-            },
-        ]);
-        return new PosOrderResource($order);
-    }
-
-    /**
      * @param  \App\Http\Requests\PosOrderRequest  $request
      * @param  \App\Models\Order                   $order
      * @return \App\Http\Resources\PosOrderResource
      * @throws \Exception
      */
-    public function payment(PosOrderRequest $request, Order $order)
-    {
-        $order = $this->updatePayment($request, $order);
-        $order->save();
-        $order->load([
-            'table',
-            'customer',
-            'items' => function ($query) {
-                $query->orderBy('pivot_id', 'asc');
-            },
-        ]);
-        return new PosOrderResource($order);
-    }
-
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @param  \App\Models\Order                   $order
-     * @return \App\Http\Resources\PosOrderResource
-     * @throws \Exception
-     */
-    public function canceled(PosOrderRequest $request, Order $order)
+    public function canceled( PosOrderRequest $request, Order $order )
     {
         $isCanceled = $request->is_canceled ?? false;
         $reason     = $request->reason ?? '';
@@ -453,7 +477,7 @@ class PosOrderController extends Controller
         $order->load([
             'table',
             'customer',
-            'items' => function ($query) {
+            'items' => function ( $query ) {
                 $query->orderBy('pivot_id', 'asc');
             },
         ]);

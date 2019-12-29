@@ -17,12 +17,44 @@ class OrderItem extends Pivot
         'order_id',
         'product_id',
         'parent_id',
+        'discount_id',
+    ];
+
+    // ======================= Attribute Casting ================= //
+    protected $casts = [
+        'uuid'                   => 'string',
+        'place_id'               => 'integer',
+        'parent_id'              => 'integer',
+        'order_id'               => 'integer',
+        'product_id'             => 'integer',
+        'quantity'               => 'integer',
+        'total_price'            => 'integer',
+        'simple_price'           => 'integer',
+        'children_price'         => 'integer',
+        'total_buying_price'     => 'integer',
+        'total_buying_avg_price' => 'integer',
+        'discount_id'            => 'integer',
+        'discount_amount'        => 'integer',
+        'discount_order_amount'  => 'integer',
+        'canceled'               => 'integer',
+        'completed'              => 'integer',
+        'delivering'             => 'integer',
+        'done'                   => 'integer',
+        'doing'                  => 'integer',
+        'accepted'               => 'integer',
+        'pending'                => 'integer',
+        'note'                   => 'string',
     ];
 
     protected static function boot()
     {
         parent::boot();
         static::addGlobalScope(new PlaceScope);
+    }
+
+    public function place()
+    {
+        return $this->belongsTo('App\Models\Place', 'place_id');
     }
 
     /**
@@ -42,6 +74,11 @@ class OrderItem extends Pivot
     {
         return $this->belongsTo('App\Models\Product', 'product_id');
     }
+
+//    public function parent()
+//    {
+//        return $this->belongsTo('App\Models\OrderItem', 'parent_id');
+//    }
 
     public function children()
     {

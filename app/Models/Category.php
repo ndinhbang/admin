@@ -59,6 +59,10 @@ class Category extends Model
         return $this->belongsTo('App\Models\Place');
     }
 
+    public function products() {
+        return $this->hasMany('App\Models\Product', 'category_id');
+    }
+
     /**
      * Get the route key for the model.
      *

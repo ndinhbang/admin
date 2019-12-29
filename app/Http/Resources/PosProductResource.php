@@ -8,14 +8,14 @@ class PosProductResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
+     * @param    \Illuminate\Http\Request    $request
      * @return array
      */
-    public function toArray($request)
+    public function toArray( $request )
     {
         $stateArr      = config('default.orders.state');
         $enableKitchen = config('default.pos.enable_kitchen');
+
         return [
             'uuid'       => $this->uuid,
             'name'       => $this->name,
@@ -24,37 +24,12 @@ class PosProductResource extends JsonResource
             'is_hot'     => $this->is_hot,
             'thumbnail'  => ( $this->thumbnail ? config('app.media_url') . '/products/' . $this->thumbnail : '' ),
             'supplies'   => SupplyResource::collection($this->whenLoaded('supplies')),
-            $this->mergeWhen($this->resource->relationLoaded('category'), [
+            'items'      => OrderItemResource::collection($this->whenLoaded('items')),
+            $this->mergeWhen($this->whenLoaded('category'), [
                 'category_uuid' => $this->category->uuid,
                 'category_name' => $this->category->name,
             ]),
-            $this->mergeWhen(
-                $this->resource->pivot
-                && $this->resource->pivot->getTable() === 'order_items',
-                [
-                    'itemId'      => $this->pivot->id ?? 0,
-                    'quantity'    => $this->pivot->quantity ?? 0,
-                    'pending'     => $this->pivot->pending ?? 0,
-                    'accepted'    => $this->pivot->accepted ?? 0,
-                    'doing'       => $this->pivot->doing ?? 0,
-                    'done'        => $this->pivot->done ?? 0,
-                    'delivering'  => $this->pivot->delivering ?? 0,
-                    'completed'   => $this->pivot->completed ?? 0,
-                    'canceled'    => $this->pivot->canceled ?? 0,
-                    'total_price' => $this->pivot->total_price ?? 0,
-                    'discount_amount' => $this->pivot->discount_amount ?? 0,
-                    'note'        => $this->pivot->note ?? '',
-                    'created_at'  => $this->pivot->created_at ?? '',
-//                    'batch'         => $this->pivot->batch ?? 0,
-//                    'is_canceled'   => $this->pivot->is_canceled ?? false,
-//                    'is_served'     => $this->pivot->is_served ?? false,
-//                    'is_done'       => $this->pivot->is_done ?? false,
-//                    'state'         => $this->pivot->state ?? 0,
-//                    '_currentState' => currentState($this->pivot->state ?? 0),
-//                    '_nextState'    => nextState($this->pivot->state ?? 0),
-                ]
-            ),
-            'created_at'       => $this->created_at,
+            'created_at' => $this->created_at,
         ];
     }
 }
