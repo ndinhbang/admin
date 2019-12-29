@@ -17,26 +17,15 @@ class PlaceController extends Controller
         $user = $request->user();
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
         $places       = $user->places;
-//        $requirePlace = getBindVal('__requirePlace');
+
         // lấy điểm đầu tiên nếu ko chỉ định
         $currentPlace = getBindVal('__currentPlace', $places->first());
         $permissions  = [];
 
-//        if ( $places->count() == 1 ) {
-//            $currentPlace = $places->first();
-//        } else {
-//            $placeUuid = request()->header('X-Place-Id');
-//            if ( !is_null($placeUuid) || $placeUuid != 'undefined' ) {
-//                $currentPlace = Place::findUuid($placeUuid);
-//            }
-//            if ( is_null($currentPlace) ) {
-//                $currentPlace = $places->first();
-//            }
-//        }
         if ( !is_null($currentPlace) ) {
             $currentPlace->load([ 'user' ]);
         }
-        // $roles = $user->roles($currentPlace->id)->get();
+
         if ( $user->hasAnyRole([
             'superadmin',
             'admin',
@@ -52,11 +41,7 @@ class PlaceController extends Controller
             }
         }
 
-        // lay vi tri co level cao nhat cua user
-        $maxRoleLevel = $user->roles($currentPlace->id ?? 0)
-            ->max('level');
-        // chi cho phep nguoi dung phan cac vi tri co level thap hon
-        $roles = Role::where('place_id', $currentPlace->id ?? 0)->where('level', '<', $maxRoleLevel ?? 0)
+        $roles = Role::where('place_id', $currentPlace->id ?? 0)
             ->get();
         return response()->json([
             'user'         => $user,

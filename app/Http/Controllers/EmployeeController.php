@@ -11,13 +11,17 @@ class EmployeeController extends Controller {
 
 	protected $avatar_path = 'medias/avatars/';
 
-	public function index(Request $request) {
+	public function index(EmployeeRequest $request) {
+		$currentPlace = currentPlace();
 		$users = \App\User::with('roles')
 			->where(function ($query) use ($request) {
 				if ($request->keyword) {
 					$query->where('users.display_name', 'like', '%' . $request->keyword . '%');
 				}
 			})
+			->whereHas('places', function ($query) use ($currentPlace) {
+                $query->where('places.id', $currentPlace->id);
+            })
 			->paginate($request->per_page);
 
 		return $users->toJson();
