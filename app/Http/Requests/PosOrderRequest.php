@@ -36,15 +36,13 @@ class PosOrderRequest extends FormRequest
     {
         if ( $this->routeIs(['pos.orders.store', 'pos.orders.update']) ) {
             $countItems = empty($items = $this->items ?? []) ? 0 : count($items);
-            $countBatchItems = empty($batchItems = $this->batchItems ?? []) ? 0 : count($batchItems);
             return [
                 'total_eater'      => [ 'bail', 'required', 'numeric'],
                 'total_dish'       => [ 'bail', 'required', 'numeric'],
                 'discount_amount'  => [ 'bail', 'required', 'numeric'],
-                'card_name'        => [ 'bail', 'required', 'nullable', 'string', 'max:10'],
-                'note'             => [ 'bail', 'required', 'nullable', 'string', 'max:191'],
-
-                'items'            => [ 'bail', 'sometimes', 'array', 'max:100'],
+                'card_name'        => [ 'bail', 'sometimes', 'nullable', 'string', 'max:10'],
+                'note'             => [ 'bail', 'sometimes', 'nullable', 'string', 'max:191'],
+                'items'            => [ 'bail', 'required', 'array', 'max:100'],
                 'items.*.uuid'     => [
                     'bail', 'alpha_dash', 'size:21',
                     Rule::requiredIf($countItems),

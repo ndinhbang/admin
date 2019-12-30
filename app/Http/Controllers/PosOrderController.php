@@ -27,7 +27,7 @@ class PosOrderController extends Controller
             'customer',
             'table',
             'items' => function ( $query ) {
-                $query->orderBy('parent_id', 0);
+                $query->where('parent_id', 0);
             },
             'items.children.product',
             'items.product',
@@ -85,7 +85,7 @@ class PosOrderController extends Controller
                 $this->subtractInventory($products, $data['items']);
                 if ( $order->paid ) {
                     // tao phieu thu
-                    $order->createVoucher($data['payment_method']);
+                    $order->createVoucher($data['payment_method'] ?? 'cash');
                 }
                 if ( $customer ) {
                     // Cập nhật thông tin tổng quan cho account
@@ -108,12 +108,12 @@ class PosOrderController extends Controller
     }
 
     /**
-     * @param  array                       $data
-     * @param  \App\Models\Order           $order
-     * @param  array                       $keyedItems
-     * @param  \App\Models\OrderItem|null  $parentItem
+     * @param  array              $data
+     * @param  \App\Models\Order  $order
+     * @param  array              $keyedItems
+     * @param  int                $parentItemId
      */
-    private function syncOrderItems( array $data, Order $order, array $keyedItems = [], OrderItem $parentItem = null )
+    private function syncOrderItems( array $data, Order $order, array $keyedItems = [], $parentItemId = 0 )
     {
         $changes = [
             // mảng các item uuid tạo mới
@@ -126,20 +126,21 @@ class PosOrderController extends Controller
         $current = array_keys($data);
         $existed = empty($keyedItems) ? [] : array_keys($keyedItems);
         if ( empty($existed) ) {
-            $changes['attached'] = $current;
+            $changes['attached'] = array_flip($current);
         } else {
             $changes['attached'] = array_flip(array_diff($current, $existed)); // => [uuid] => index
             $changes['detached'] = array_flip(array_diff($existed, $current));
             $changes['updated']  = array_flip(array_intersect($current, $existed));
         }
+
+        dump($changes);
         // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         foreach ( $data as $itemUuid => $calculatedItemData ) {
             $discountOrderAmount = round(( $calculatedItemData['total_price'] * $discountOrderPercent ) / 100);
             $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedItemData), [
-                'place_id'              => $order->place_id,
-                'order_id'              => $order->id,
-                'parent_id'             => $parentItem->id ?? 0,
+                'place_id' => $order->place_id,
+                'order_id' => $order->id,
                 'discount_order_amount' => $discountOrderAmount,
             ]);
             if ( isset($changes['detached'][ $itemUuid ]) ) {
@@ -149,17 +150,28 @@ class PosOrderController extends Controller
                     ->delete();
                 continue;
             }
+            $parentIdOfChild = 0;
             if ( isset($changes['updated'][ $itemUuid ]) ) {
-                $updatedItem  = $keyedItems[ $itemUuid ];
-                $pareparedArr = array_merge($pareparedArr, [
-                    'id' => $updatedItem['id'],
-                ]);
+                $updatedItem = $keyedItems[ $itemUuid ];
+                $parentIdOfChild = $updatedItem['parent_id'];
+                OrderItem::where('id', $updatedItem['id'])
+                    ->update($pareparedArr);
             }
-            $orderItem = OrderItem::updateOrCreate($pareparedArr);
+
+            if (isset($changes['attached'][ $itemUuid ])) {
+                $orderItem = OrderItem::create(array_merge($pareparedArr, [
+                    'uuid' => nanoId(),
+                    'parent_id' => $parentItemId,
+                ]));
+                $parentIdOfChild = $orderItem->id;
+            }
+
             if ( !empty($calculatedItemData['child_data']) ) {
-                $keyedChildItems = ( new Collection($keyedItems['children']) )->keyBy('uuid');
-                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems->toArray(),
-                    $orderItem);
+                $keyedChildItems = ( new Collection($keyedItems['children'] ?? []) )
+                    ->keyBy('uuid')
+                    ->all();
+                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems,
+                    $parentIdOfChild);
             }
         }
     }
@@ -209,7 +221,7 @@ class PosOrderController extends Controller
                 if ( $order->paid
                     && $order->paid > $oldPaid ) {
                     // tao phieu thu
-                    $order->createVoucher($data['payment_method']);
+                    $order->createVoucher($data['payment_method'] ?? 'cash');
                 }
             }
             return $order;
@@ -391,7 +403,7 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
-                'note'                     => $item['note'],
+                'note'                     => $item['note'] ?? '',
                 'canceled'                 => $item['canceled'],
                 'completed'                => $item['completed'],
                 'delivering'               => $item['delivering'],
@@ -399,7 +411,7 @@ class PosOrderController extends Controller
                 'doing'                    => $item['doing'],
                 'accepted'                 => $item['accepted'],
                 'pending'                  => $item['pending'],
-                'discount_id'              => $item['discount_id'],
+                'discount_id'              => $item['discount_id'] ?? 0,
                 // need to remove when create or update item
                 'base_price'               => $itemBasePrice,
                 'total_discount_amount'    => $itemTotalDiscountAmount,
@@ -417,7 +429,7 @@ class PosOrderController extends Controller
     private function subtractInventory( Collection $products, array $items )
     {
         $canStockProducts = $products
-            ->where('can_stock', false)
+            ->where('can_stock', true)
             ->pipe(function ( $filtered ) {
                 return $filtered->load([
                     'supplies.availableStocks' => function ( $query ) {
@@ -427,6 +439,7 @@ class PosOrderController extends Controller
                 ]);
             })
             ->keyBy('uuid');
+//        dump($canStockProducts->toArray());
         foreach ( $items as $item ) {
             if ( is_null($product = $canStockProducts->get($item['product_uuid'])) ) {
                 continue;
@@ -437,7 +450,7 @@ class PosOrderController extends Controller
             };
             // tổng số lượng sản phẩm trong order
             $productQuantity = (int) $item['quantity'];
-            $now = Carbon::now()
+            $now             = Carbon::now()
                 ->format('Y-m-d H:i:s');
             foreach ( $supplies as $supply ) {
                 // dump($supply);
