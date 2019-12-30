@@ -53,7 +53,11 @@ class ProfileRequest extends FormRequest
     public function messages()
     {
         return [
-            'current_password.required' => 'Số điện thoại bắt buộc phải nhập.',
+            'name.unique'       => 'Tên đăng nhập đã có người sử dụng',
+            'phone.unique'       => 'Số điện thoại đã có người sử dụng',
+            'email.unique'       => 'Email đã có người sử dụng',
+            'avatar.mimes'       => 'Định dạng ảnh không hợp lệ',
+            'current_password.required' => 'Mật khẩu cũ bắt buộc phải nhập.',
             'new_password.different' => 'Mật khẩu mới cần phải khác với mật khẩu cũ',
             'new_password_confirmation.same' => 'Xác nhận cần phải giống với Mật khẩu mới',
         ];
