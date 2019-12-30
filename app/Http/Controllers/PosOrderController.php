@@ -78,7 +78,7 @@ class PosOrderController extends Controller
             // save new order
             $order = Order::create($calculatedOrderData);
             // save new items
-            $this->createItems($calculatedItemsData, $order);
+            $this->syncOrderItems($calculatedItemsData, $order);
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
@@ -107,44 +107,64 @@ class PosOrderController extends Controller
         return new PosOrderResource($order);
     }
 
-    private function createItems( array $data, Order $order, OrderItem $parentItem = null )
+    /**
+     * @param  array                       $data
+     * @param  \App\Models\Order           $order
+     * @param  array                       $keyedItems
+     * @param  \App\Models\OrderItem|null  $parentItem
+     */
+    private function syncOrderItems( array $data, Order $order, array $keyedItems = [], OrderItem $parentItem = null )
     {
+        $changes = [
+            // mảng các item uuid tạo mới
+            'attached' => [],
+            // mảng các item uuid bị xóa
+            'detached' => [],
+            // mảng các item uuid cập nhật
+            'updated'  => [],
+        ];
+        $current = array_keys($data);
+        $existed = empty($keyedItems) ? [] : array_keys($keyedItems);
+        if ( empty($existed) ) {
+            $changes['attached'] = $current;
+        } else {
+            $changes['attached'] = array_flip(array_diff($current, $existed)); // => [uuid] => index
+            $changes['detached'] = array_flip(array_diff($existed, $current));
+            $changes['updated']  = array_flip(array_intersect($current, $existed));
+        }
+        // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
-        // create order items
-        foreach ( $data as $itemUuid => $itemData ) {
-            $discountOrderAmount = round(( $itemData['total_price'] * $discountOrderPercent ) / 100);
-            $pareparedData        = Arr::only($itemData, [
-                'quantity',
-                'discount_amount',
-                'children_discount_amount',
-                'simple_price',
-                'total_price',
-                'total_buying_price',
-                'total_buying_avg_price',
-                'product_id',
-                // data from request
-                'note',
-                'canceled',
-                'completed',
-                'delivering',
-                'done',
-                'doing',
-                'accepted',
-                'pending',
-                'discount_id',
-            ]);
-            $item  = OrderItem::create(array_merge($pareparedData, [
+        foreach ( $data as $itemUuid => $calculatedItemData ) {
+            $discountOrderAmount = round(( $calculatedItemData['total_price'] * $discountOrderPercent ) / 100);
+            $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedItemData), [
                 'place_id'              => $order->place_id,
                 'order_id'              => $order->id,
                 'parent_id'             => $parentItem->id ?? 0,
                 'discount_order_amount' => $discountOrderAmount,
-            ]));
-
-            if (!empty($item['child_data'])) {
-                $this->createItems($item['child_data'], $order);
+            ]);
+            if (isset($changes['detached'][ $itemUuid ])) {
+                $deletedItem = $keyedItems[$itemUuid];
+                OrderItem::where('id', $deletedItem['id'])
+                    ->where('parent_id', $deletedItem['id'])
+                    ->delete();
+                continue;
             }
+            if ( isset($changes['updated'][ $itemUuid ]) ) {
+                $updatedItem = $keyedItems[$itemUuid];
+                $pareparedArr = array_merge($pareparedArr, [
+                    'id' => $updatedItem['id']
+                ]);
+            }
+
+            $orderItem = OrderItem::updateOrCreate($pareparedArr);
+            if ( !empty($calculatedItemData['child_data']) ) {
+                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedItems['children'], $orderItem);
+            }
+
         }
     }
+
+
 
     /**
      * Update the specified resource in storage.
@@ -178,6 +198,12 @@ class PosOrderController extends Controller
             $oldPaid             = $order->paid;
             // update order
             $order->update($calculatedOrderData);
+            // save items
+            $order->load(['items.children']);
+            $keyedItems = !$order->items->isEmpty()
+                ? $order->items->keyBy('uuid')
+                : new Collection();
+            $this->syncOrderItems($calculatedItemsData, $order, $keyedItems->toArray());
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
@@ -201,6 +227,34 @@ class PosOrderController extends Controller
             'items.product',
         ]);
         return new PosOrderResource($order);
+    }
+
+    /**
+     * @param  array  $calculatedItemData
+     * @return array
+     */
+    private function prepareOrderItemData( array $calculatedItemData )
+    {
+        return Arr::only($calculatedItemData, [
+            'quantity',
+            'discount_amount',
+            'children_discount_amount',
+            'simple_price',
+            'total_price',
+            'total_buying_price',
+            'total_buying_avg_price',
+            'product_id',
+            // data from request
+            'note',
+            'canceled',
+            'completed',
+            'delivering',
+            'done',
+            'doing',
+            'accepted',
+            'pending',
+            'discount_id',
+        ]);
     }
 
     /**
