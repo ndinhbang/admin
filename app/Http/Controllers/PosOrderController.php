@@ -158,13 +158,12 @@ class PosOrderController extends Controller
 
             $orderItem = OrderItem::updateOrCreate($pareparedArr);
             if ( !empty($calculatedItemData['child_data']) ) {
-                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedItems['children'], $orderItem);
+                $keyedChildItems = (new Collection($keyedItems['children']))->keyBy('uuid');
+                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems->toArray(), $orderItem);
             }
 
         }
     }
-
-
 
     /**
      * Update the specified resource in storage.
