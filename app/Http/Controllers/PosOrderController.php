@@ -82,7 +82,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, new Collection($data['items']));
+                $this->subtractInventory($products, $data['items']);
                 if ( $order->paid ) {
                     // tao phieu thu
                     $order->createVoucher($data['payment_method']);
@@ -142,26 +142,25 @@ class PosOrderController extends Controller
                 'parent_id'             => $parentItem->id ?? 0,
                 'discount_order_amount' => $discountOrderAmount,
             ]);
-            if (isset($changes['detached'][ $itemUuid ])) {
-                $deletedItem = $keyedItems[$itemUuid];
+            if ( isset($changes['detached'][ $itemUuid ]) ) {
+                $deletedItem = $keyedItems[ $itemUuid ];
                 OrderItem::where('id', $deletedItem['id'])
                     ->where('parent_id', $deletedItem['id'])
                     ->delete();
                 continue;
             }
             if ( isset($changes['updated'][ $itemUuid ]) ) {
-                $updatedItem = $keyedItems[$itemUuid];
+                $updatedItem  = $keyedItems[ $itemUuid ];
                 $pareparedArr = array_merge($pareparedArr, [
-                    'id' => $updatedItem['id']
+                    'id' => $updatedItem['id'],
                 ]);
             }
-
             $orderItem = OrderItem::updateOrCreate($pareparedArr);
             if ( !empty($calculatedItemData['child_data']) ) {
-                $keyedChildItems = (new Collection($keyedItems['children']))->keyBy('uuid');
-                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems->toArray(), $orderItem);
+                $keyedChildItems = ( new Collection($keyedItems['children']) )->keyBy('uuid');
+                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems->toArray(),
+                    $orderItem);
             }
-
         }
     }
 
@@ -198,7 +197,7 @@ class PosOrderController extends Controller
             // update order
             $order->update($calculatedOrderData);
             // save items
-            $order->load(['items.children']);
+            $order->load([ 'items.children' ]);
             $keyedItems = !$order->items->isEmpty()
                 ? $order->items->keyBy('uuid')
                 : new Collection();
@@ -206,7 +205,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, new Collection($data['items']));
+                $this->subtractInventory($products, $data['items']);
                 if ( $order->paid
                     && $order->paid > $oldPaid ) {
                     // tao phieu thu
@@ -412,38 +411,37 @@ class PosOrderController extends Controller
 
     /**
      * @param  \Illuminate\Support\Collection  $products
-     * @param  \Illuminate\Support\Collection  $itemCollection
+     * @param  array                           $items
      * @throws \Exception
      */
-    private function subtractInventory( Collection $products, Collection $itemCollection )
+    private function subtractInventory( Collection $products, array $items )
     {
-        $canStockProducts = $products->where('can_stock', true);
-        $canStockProducts->load([
-            'supplies.availableStocks' => function ( $query ) {
-                $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
-                ->orderBy('inventory_orders.id', 'asc');
-            },
-        ]);
-        $groupedItems = $itemCollection->groupBy('product_uuid');
-        foreach ( $canStockProducts as $product ) {
-            $supplies = $product->supplies ?? collect([]);
+        $canStockProducts = $products
+            ->where('can_stock', false)
+            ->pipe(function ( $filtered ) {
+                return $filtered->load([
+                    'supplies.availableStocks' => function ( $query ) {
+                        $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
+                        ->orderBy('inventory_orders.id', 'asc');
+                    },
+                ]);
+            })
+            ->keyBy('uuid');
+        foreach ( $items as $item ) {
+            if ( is_null($product = $canStockProducts->get($item['product_uuid'])) ) {
+                continue;
+            }
+            $supplies = $product->supplies ?? new Collection();
             if ( $supplies->isEmpty() ) {
                 throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$product->name}.");
             };
-            $itemsOfProduct = $groupedItems->get($product->uuid);
-            if ( $itemsOfProduct->isEmpty() ) {
-                throw new \Exception("Không tìm thấy item ứng với sản phẩm {$product->name}.");
-            }
             // tổng số lượng sản phẩm trong order
-            $totalQuantity = 0;
-            foreach ( $itemsOfProduct as $item ) {
-                $totalQuantity += ( (int) $item['quantity'] );
-            }
+            $productQuantity = (int) $item['quantity'];
             $now = Carbon::now()
                 ->format('Y-m-d H:i:s');
             foreach ( $supplies as $supply ) {
                 // dump($supply);
-                $stocks = $supply->availableStocks ?? collect([]);
+                $stocks = $supply->availableStocks ?? new Collection();
                 // throw error if empty
                 if ( $stocks->isEmpty() ) {
                     throw new \Exception("Không đủ nguyên liệu: \"{$supply->name}\" cho sản phẩm \"{$product->name}\" trong kho.");
@@ -451,7 +449,7 @@ class PosOrderController extends Controller
                 // số lượng nguyên liệu / 1 sản phẩm
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
-                $outQuantity = $supplyQuantity * $totalQuantity;
+                $outQuantity = $supplyQuantity * $productQuantity;
                 // lặp các lần nhập kho
                 foreach ( $stocks as $stock ) {
                     if ( $outQuantity <= 0 ) {
