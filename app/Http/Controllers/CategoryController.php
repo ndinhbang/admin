@@ -8,13 +8,11 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller {
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @param CategoryRequest $request
-	 * @param CategoryFilter  $filter
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Display a listing of the resource.
+     * @param    CategoryRequest    $request
+     * @return \Illuminate\Http\Response
+     */
 	public function index(CategoryRequest $request) {
 		$categories = Category::with('place')
 			->filter(new CategoryFilter($request))
@@ -23,16 +21,13 @@ class CategoryController extends Controller {
 		return $categories->toJson();
 	}
 
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @param CategoryRequest $request
-	 * @param CategoryFilter  $filter
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Display a listing of the resource.
+     * @param    \Illuminate\Http\Request    $request
+     * @return \Illuminate\Http\Response
+     */
 	public function all_active(Request $request) {
-		$categories = Category::with('place')
-			->orderBy('position', 'asc')
+		$categories = Category::orderBy('position', 'asc')
 			->where('state', 1)
 			->get();
 		return $categories->toJson();

@@ -49,7 +49,7 @@
                             <td class="text-left" colspan="4"><strong>{{ $key +1 }}.</strong> {{ $item->name }}</td>
                         </tr>
                         <tr>
-                            <td class="text-left">{{ number_format($item->price, 0, ',', '.') }}</td>
+                            <td class="text-left">{{ number_format($item->product->price, 0, ',', '.') }}</td>
                             <td class="text-right">{{ $item->pivot->quantity }}</td>
                             <td class="text-right">{{ number_format($item->pivot->discount_amount ?? 0, 0, ',', '.') }}
                             </td>
