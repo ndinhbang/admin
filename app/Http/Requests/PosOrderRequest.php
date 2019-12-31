@@ -39,7 +39,14 @@ class PosOrderRequest extends FormRequest
             return [
                 'total_eater'      => [ 'bail', 'required', 'numeric'],
                 'total_dish'       => [ 'bail', 'required', 'numeric'],
+                'amount'           => [ 'bail', 'required', 'numeric'],
                 'discount_amount'  => [ 'bail', 'required', 'numeric'],
+                'received_amount'  => [ 'bail', 'required', 'numeric'],
+                'is_canceled'      => [ 'bail', 'required', 'boolean'],
+                'is_returned'      => [ 'bail', 'required', 'boolean'],
+                'is_served'        => [ 'bail', 'required', 'boolean'],
+                'is_paid'          => [ 'bail', 'required', 'boolean'],
+                'is_completed'     => [ 'bail', 'required', 'boolean'],
                 'card_name'        => [ 'bail', 'sometimes', 'nullable', 'string', 'max:10'],
                 'note'             => [ 'bail', 'sometimes', 'nullable', 'string', 'max:191'],
                 'items'            => [ 'bail', 'required', 'array', 'max:100'],
@@ -87,13 +94,6 @@ class PosOrderRequest extends FormRequest
                     'bail', 'string', 'max:191',
                     Rule::requiredIf($this->is_canceled ?? false),
                 ],
-            ];
-        }
-
-        if ( $this->routeIs([ 'pos.orders.payment' ]) ) {
-            return [
-//                'amount'          => [ 'bail', 'required', 'numeric'],
-                'received_amount' => [ 'bail', 'required', 'numeric'],
             ];
         }
 
