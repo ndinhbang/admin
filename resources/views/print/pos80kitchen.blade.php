@@ -20,7 +20,7 @@
                     <span id="computer">{{ $order->table->name ?? '' }}</span>
                 </p>
                 <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">{{ $order->created_at }}</span>
+                    <span id="time">{{ $order->updated_at }}</span>
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>
@@ -38,16 +38,18 @@
                     <tbody>
                         @if ($items = $order->items ?? [])
                         @foreach ($items as $key => $item)
-                        <tr>
-                            <td class="text-left top-border">{{ $key +1 }}</td>
-                            <td class="text-left top-border">
-                                {{ $item->product->name }}
-                                @if($item->note)
-                                <div><em>{{ $item->note }}</em></div>
-                                @endif
-                            </td>
-                            <td class="text-right top-border">{{ $item->quantity }}</td>
-                        </tr>
+                            @if($item->added_qty > 0)
+                                <tr>
+                                    <td class="text-left top-border">{{ $key +1 }}</td>
+                                    <td class="text-left top-border">
+                                        {{ $item->product->name }}
+                                        @if($item->note)
+                                        <div><em>{{ $item->note }}</em></div>
+                                        @endif
+                                    </td>
+                                    <td class="text-right top-border">{{ $item->added_qty }}</td>
+                                </tr>
+                            @endif
                         @endforeach
                         @endif
                         <tr>
