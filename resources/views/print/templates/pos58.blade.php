@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
-        <?php include(public_path().'/css/print.css'); ?>
+        <?php include( public_path() . '/css/print.css' ); ?>
     </style>
 </head>
-
 <body class="receipt w50mm">
         <section class="sheet padding-5mm">
             <div class="print">

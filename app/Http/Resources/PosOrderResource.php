@@ -61,7 +61,9 @@ class PosOrderResource extends JsonResource
             'total_eater'     => $this->total_eater,
             'created_at'      => $this->created_at,
             'is_remote'       => true,
+            '$isDirty'        => false,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'place_uuid' => $this->whenLoaded('place', $this->place->uuid),
             $this->mergeWhen($this->whenLoaded('table'), [
                 'table_uuid' => $this->table->uuid ?? '',
                 'table'      => new TableResource($this->table),

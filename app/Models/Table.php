@@ -12,7 +12,7 @@ class Table extends Model
 {
     protected $table = 'tables';
 
-    protected $guarded = ['id'];
+    protected $guarded = [ 'id' ];
 
     protected $hidden = [
         'id',
@@ -21,8 +21,9 @@ class Table extends Model
     ];
 
     protected $casts = [
-        'uuid'        => 'string',
-        'area_id'    => 'integer',
+        'uuid'     => 'string',
+        'place_id' => 'integer',
+        'area_id'  => 'integer',
     ];
 
     /**
@@ -33,7 +34,6 @@ class Table extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::addGlobalScope(new PlaceScope);
     }
 
@@ -43,6 +43,11 @@ class Table extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    public function place()
+    {
+        return $this->belongsTo('App\Models\Place', 'place_id');
     }
 
     public function area()

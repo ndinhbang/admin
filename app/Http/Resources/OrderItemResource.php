@@ -8,10 +8,11 @@ class OrderItemResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray( $request )
+    public function toArray($request)
     {
         return [
             'uuid'                     => $this->uuid,
@@ -32,6 +33,7 @@ class OrderItemResource extends JsonResource
             'discount_amount'          => $this->discount_amount,
             'children_discount_amount' => $this->children_discount_amount,
             'discount_order_amount'    => $this->discount_order_amount,
+            '$isDirty'                 => false,
             $this->mergeWhen($this->whenLoaded('product'), [
                 'product_uuid' => $this->product->uuid,
                 'product'      => new PosProductResource($this->product),

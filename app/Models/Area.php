@@ -14,7 +14,7 @@ class Area extends Model
     use Filterable;
 
     protected $table = 'areas';
-    protected $guarded = ['id'];
+    protected $guarded = [ 'id' ];
 
     // ======================= Hidden Attributes ================= //
     protected $hidden = [
@@ -24,8 +24,8 @@ class Area extends Model
     ];
 
     protected $casts = [
-        'uuid'        => 'string',
-        'place_id'    => 'integer',
+        'uuid'     => 'string',
+        'place_id' => 'integer',
     ];
 
     /**
@@ -36,8 +36,12 @@ class Area extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::addGlobalScope(new PlaceScope);
+    }
+
+    public function place()
+    {
+        return $this->belongsTo('App\Models\Place', 'place_id');
     }
 
     public function tables()

@@ -26,11 +26,11 @@
                     @{{#if code}}
                         <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
                     @{{/if}}
-                    @{{#if table_name}}
+                    @{{#table}}
                     <p class="my-1"><strong>Bàn: </strong>
-                        <span id="computer">@{{ table_name }}</span>
+                        <span id="computer">@{{ name }}</span>
                     </p>
-                    @{{/if}}
+                    @{{/table}}
                     <p class="my-1"><strong>Thời gian: </strong>
                         <span id="time">@{{ created_at }}</span>
                     </p>
@@ -55,14 +55,19 @@
                     <tbody>
                         @{{#each items}}
                         <tr>
+                            @{{#product}}
                             <td class="text-left" colspan="4"><strong>@{{incremented @index}}.</strong> @{{ name }}</td>
+                            @{{/product}}
                         </tr>
                         <tr>
+                            @{{#product}}
                             <td class="text-left">@{{money price}}</td>
+                            @{{/product}}
                             <td class="text-right">@{{ quantity }}</td>
                             <td class="text-right">@{{money discount_amount}}</td>
                             <td class="text-right">
-                                <strong>@{{money total_price}}</strong></td>
+                                <strong>@{{money simple_price}}</strong>
+                            </td>
                         </tr>
                         @{{/each}}
                         <tr>
