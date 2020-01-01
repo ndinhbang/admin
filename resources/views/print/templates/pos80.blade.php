@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
-        <?php include(public_path().'/css/print.css?v=1'); ?>
+        <?php include(public_path().'/css/print.css'); ?>
     </style>
 </head>
 
