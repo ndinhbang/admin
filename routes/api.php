@@ -122,6 +122,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('tables', 'TableController');
 
     /** =============== Config ================= **/
+    Route::put('config/info-print', 'ConfigController@configPrintInfo')->name('config.infoprint');
     Route::put('config/print', 'ConfigController@configPrint')->name('config.print');
     Route::put('config/screen2nd', 'ConfigController@configScreen2nd')->name('config.screen2nd');
     Route::put('config/sale', 'ConfigController@configSale')->name('config.sale');

@@ -43,6 +43,7 @@ class PlaceController extends Controller
 
         $roles = Role::where('place_id', $currentPlace->id ?? 0)
             ->get();
+
         return response()->json([
             'user'         => $user,
             'permissions'  => $permissions,

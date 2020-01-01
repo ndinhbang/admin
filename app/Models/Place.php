@@ -19,6 +19,7 @@ class Place extends Model
         'user_id',
         'config_sale',
         'config_print',
+        'print_info',
         'config_screen2nd',
     ];
     protected $primaryKey = 'id';
@@ -29,6 +30,7 @@ class Place extends Model
         'print_templates'  => 'array',
         'config_sale'      => 'array',
         'config_print'     => 'array',
+        'print_info'       => 'array',
         'config_screen2nd' => 'array',
     ];
 

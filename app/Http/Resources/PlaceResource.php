@@ -44,6 +44,7 @@ class PlaceResource extends JsonResource
             'users'            => $this->whenLoaded('users'),
             'print_templates'  => $this->print_templates,
             'config_sale'      => $this->config_sale ?? config('default.config.sale'),
+            'config_print_info'=> $this->print_info ?? config('default.print.info'),
             'config_print'     => $this->config_print ?? config('default.print.config'),
             'config_screen2nd' => [
                 'useImage' => $this->config_screen2nd['useImage'] ?? false,

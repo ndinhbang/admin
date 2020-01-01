@@ -12,7 +12,7 @@ class PrintController extends Controller
     {
         $itemId = $request->item_id ?? null;
         $stt = $request->stt ?? '';
-
+        
         $template = $request->template ?? ($itemId ? 'pos58' : 'pos80');
         $order->load([
             'table',
@@ -32,12 +32,14 @@ class PrintController extends Controller
         }
 
         $data = [
-            'order' => $order
+            'order' => $order,
+            'print_info'  => $order->place->print_info ?? null,
         ];
 
         if ($itemId) {
             $data = array_merge($data, [
                 'item'  => $order->items->first() ?? null,
+                'print_info'  => $order->place->print_info ?? null,
                 'stt'   => $stt
             ]);
         }

@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
-        <?php include(public_path().'/css/print.css'); ?>
+        <?php include(public_path().'/css/print.css?v=1'); ?>
     </style>
 </head>
 
@@ -102,7 +102,7 @@
                 </table>
             </div>
             @{{/order}}
-            <span class="mark">@goido.net</span>
+            <span class="mark">@Goido.NET</span>
         </div>
     </section>
 

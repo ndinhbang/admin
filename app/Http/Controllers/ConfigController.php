@@ -73,8 +73,22 @@ class ConfigController extends Controller
             'config_print' => array_replace_recursive($default, $request->config),
         ]);
         return response()->json([
-            'message'      => 'Lưu cấu hình in thành công!',
+            'message'      => 'Lưu cấu hình máy in thành công!',
             'config_print' => $place->config_print,
+        ]);
+    }
+
+    public function configPrintInfo(ConfigRequest $request)
+    {
+        $place   = getBindVal('__currentPlace');
+        $default = config('default.print.info');
+        dump(array_replace_recursive($default, $request->configInfo));
+        $place->update([
+            'print_info' => array_replace_recursive($default, $request->configInfo),
+        ]);
+        return response()->json([
+            'message'      => 'Lưu thông tin in hóa đơn thành công!',
+            'print_info' => $place->print_info,
         ]);
     }
 }

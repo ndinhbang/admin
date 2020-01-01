@@ -31,7 +31,7 @@
                         </thead>
                     </table>
                 </div>
-                <span class="mark">@goido.net</span>
+                <span class="mark">@Goido.NET</span>
             </div>
         </section>
 
