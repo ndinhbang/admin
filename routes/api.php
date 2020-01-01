@@ -90,6 +90,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	/** =============== Account: customer, supplier, shipper, employee ==== **/
 	Route::resource('account', 'AccountController');
 
+	Route::resource('segment', 'SegmentController');
+
 	/** =============== Role ================= **/
 	Route::apiResource('roles', 'RoleController');
 
