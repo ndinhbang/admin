@@ -16,13 +16,16 @@ class PlaceController extends Controller
     {
         $user = $request->user();
         // Cần lấy cả uuid của chủ cửa hàng để đối chiếu phân quyền
-        $places = $user->places;
+        $places       = $user->places;
+
         // lấy điểm đầu tiên nếu ko chỉ định
         $currentPlace = getBindVal('__currentPlace', $places->first());
         $permissions  = [];
+
         if ( !is_null($currentPlace) ) {
             $currentPlace->load([ 'user' ]);
         }
+
         if ( $user->hasAnyRole([
             'superadmin',
             'admin',
@@ -37,8 +40,10 @@ class PlaceController extends Controller
                     ->toArray();
             }
         }
+
         $roles = Role::where('place_id', $currentPlace->id ?? 0)
             ->get();
+
         return response()->json([
             'user'         => $user,
             'permissions'  => $permissions,
@@ -94,8 +99,10 @@ class PlaceController extends Controller
             // return data from within transaction
             return $place;
         }, 5);
+        
         $place->load([ 'user' ]);
         $places = $request->user()->places;
+
         return response()->json([
             'message' => 'Thêm thông tin cửa hàng thành công!',
             'places'  => PlaceResource::collection($places),
@@ -128,14 +135,15 @@ class PlaceController extends Controller
         $place->contact_email = $request->contact_email;
         // print templates
         $templates              = [
-            'pos80'        => minifyHtml(view('print.templates.pos80')->render()),
-            'pos58'        => minifyHtml(view('print.templates.pos58')->render()),
-            'pos80kitchen' => minifyHtml(view('print.templates.pos80kitchen')->render()),
+            'pos80' => minifyHtml(view('print.templates.pos80')->render()),
+            'pos58' => minifyHtml(view('print.templates.pos58')->render()),
         ];
         $place->print_templates = $templates;
         $place->save();
+
         $place->load([ 'user' ]);
         $places = $request->user()->places;
+
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
             'places'  => PlaceResource::collection($places),
@@ -147,6 +155,7 @@ class PlaceController extends Controller
     {
         $user  = $request->user();
         $place = getBindVal('__currentPlace');
+        
         if ( $place->logo && \File::exists($this->place_path . $place->logo) ) {
             \File::delete($this->place_path . $place->logo);
         }
@@ -159,8 +168,10 @@ class PlaceController extends Controller
         $img->save($filePath);
         $place->logo = $filename . $extension;
         $place->save();
+
         $place->load([ 'user' ]);
         $places = $request->user()->places;
+
         return response()->json([
             'message' => 'Cập nhật thông tin cửa hàng thành công!',
             'places'  => PlaceResource::collection($places),
