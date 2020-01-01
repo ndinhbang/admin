@@ -28,6 +28,7 @@ class OrderItem extends Pivot
         'order_id'               => 'integer',
         'product_id'             => 'integer',
         'quantity'               => 'integer',
+        'added_qty'              => 'integer',
         'total_price'            => 'integer',
         'simple_price'           => 'integer',
         'children_price'         => 'integer',
@@ -59,6 +60,7 @@ class OrderItem extends Pivot
 
     /**
      * The order that item belongs to
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function order()
@@ -68,6 +70,7 @@ class OrderItem extends Pivot
 
     /**
      * Produc of item, 1 item has only 1 product
+     *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function product()
@@ -79,7 +82,6 @@ class OrderItem extends Pivot
 //    {
 //        return $this->belongsTo('App\Models\OrderItem', 'parent_id');
 //    }
-
     public function children()
     {
         return $this->hasMany('App\Models\OrderItem', 'parent_id');

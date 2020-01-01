@@ -221,6 +221,7 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
+                'added_qty'                => $item['added_qty'] ?? 0,
                 'note'                     => $item['note'] ?? '',
                 'canceled'                 => $item['canceled'],
                 'completed'                => $item['completed'],
@@ -283,7 +284,8 @@ class PosOrderController extends Controller
             'updated'  => [],
         ];
         $current = array_keys($data);
-        $existed = is_null($keyedItems) ? [] : $keyedItems->keys()->all();
+        $existed = is_null($keyedItems) ? [] : $keyedItems->keys()
+            ->all();
         if ( empty($existed) ) {
             $changes['attached'] = array_flip($current);
         } else {
@@ -302,30 +304,34 @@ class PosOrderController extends Controller
             ]);
             if ( isset($changes['detached'][ $itemUuid ]) ) {
                 $deletedItem = $keyedItems->get($itemUuid);
-                OrderItem::where('id', $deletedItem['id'])
-                    ->where('parent_id', $deletedItem['id'])
+                OrderItem::where('id', $deletedItem->id)
+                    ->where('parent_id', $deletedItem->id)
                     ->delete();
                 continue;
             }
             $parentIdOfChild = 0;
+            $originItem = null;
             if ( isset($changes['updated'][ $itemUuid ]) ) {
-                $updatedItem     = $keyedItems->get($itemUuid);
-                $parentIdOfChild = $updatedItem['parent_id'];
-                OrderItem::where('id', $updatedItem['id'])
-                    ->update($pareparedArr);
+                // todo: cap nhat added_qty (khong su dung so lieu duoi local) ?
+                $originItem     = $keyedItems->get($itemUuid); // instance of OrderItem
+                OrderItem::where('id',$originItem->id)
+                    ->update(array_merge($pareparedArr, [
+                        'parent_id' => $parentItemId,
+                    ]));
             }
             if ( isset($changes['attached'][ $itemUuid ]) ) {
-                $orderItem       = OrderItem::create(array_merge($pareparedArr, [
+                $originItem       = OrderItem::create(array_merge($pareparedArr, [
                     'uuid'      => nanoId(),
                     'parent_id' => $parentItemId,
                 ]));
-                $parentIdOfChild = $orderItem->id;
             }
             if ( !empty($calculatedItemData['child_data']) ) {
-                $keyedChildItems = ( new Collection($keyedItems['children'] ?? []) )
-                    ->keyBy('uuid');
+                $keyedChildItems = new Collection();
+                if ($originItem) {
+                    $keyedChildItems = $originItem->children->keyBy('uuid');
+                }
                 $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems,
-                    $parentIdOfChild);
+                    $originItem->id ?? 0);
             }
         }
     }
@@ -356,6 +362,7 @@ class PosOrderController extends Controller
             'accepted',
             'pending',
             'discount_id',
+            'added_qty',
         ]);
     }
 
@@ -471,7 +478,12 @@ class PosOrderController extends Controller
             // update order
             $order->update($calculatedOrderData);
             // save items
-            $order->load([ 'items.children' ]);
+            $order->load([
+                'items' => function ($query) {
+                    $query->where('parent_id', 0);
+                },
+                'items.children',
+            ]);
             $keyedItems = $order->items->keyBy('uuid') ?? new Collection();
             $this->syncOrderItems($calculatedItemsData, $order, $keyedItems);
             //nếu bán thành công
