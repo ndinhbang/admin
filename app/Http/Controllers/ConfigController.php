@@ -82,7 +82,7 @@ class ConfigController extends Controller
     {
         $place   = getBindVal('__currentPlace');
         $default = config('default.print.info');
-        dump(array_replace_recursive($default, $request->configInfo));
+        
         $place->update([
             'print_info' => array_replace_recursive($default, $request->configInfo),
         ]);

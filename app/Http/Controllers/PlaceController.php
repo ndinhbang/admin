@@ -135,6 +135,7 @@ class PlaceController extends Controller
         $place->contact_email = $request->contact_email;
         // print templates
         $templates              = [
+            'pos80kitchen' => minifyHtml(view('print.templates.pos80kitchen')->render()),
             'pos80' => minifyHtml(view('print.templates.pos80')->render()),
             'pos58' => minifyHtml(view('print.templates.pos58')->render()),
         ];
