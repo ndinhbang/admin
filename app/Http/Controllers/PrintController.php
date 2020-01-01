@@ -10,39 +10,20 @@ class PrintController extends Controller
 {
     public function preview(PrintRequest $request, Order $order)
     {
-        $itemId = $request->item_id ?? null;
-        $stt = $request->stt ?? '';
-        
-        $template = $request->template ?? ($itemId ? 'pos58' : 'pos80');
+        $template = $request->template ?? 'pos80';
         $order->load([
+            'place',
+            'creator',
+            'customer',
             'table',
-            'items' => function ($query) use ($itemId) {
-                if ($itemId) {
-                    $query->where('order_items.id', $itemId);
-                }
-            },
+            'items',
+            'items.product',
         ]);
-
-        if (!$itemId) {
-            $order->load([
-                'place',
-                'creator',
-                'customer',
-            ]);
-        }
 
         $data = [
             'order' => $order,
             'print_info'  => $order->place->print_info ?? null,
         ];
-
-        if ($itemId) {
-            $data = array_merge($data, [
-                'item'  => $order->items->first() ?? null,
-                'print_info'  => $order->place->print_info ?? null,
-                'stt'   => $stt
-            ]);
-        }
 
         return view('print.' . $template, $data);
     }

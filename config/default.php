@@ -481,6 +481,7 @@ return [
         'templates' => [
             'pos80',
             'pos58',
+            'pos80kitchen',
         ],
         'info' => [
             'logo' => null,
