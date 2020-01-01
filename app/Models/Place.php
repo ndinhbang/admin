@@ -75,6 +75,26 @@ class Place extends Model
         return $this->hasMany('App\Models\Order', 'place_id');
     }
 
+    public function areas()
+    {
+        return $this->hasMany('App\Models\Area', 'place_id');
+    }
+
+    public function tables()
+    {
+        return $this->hasMany('App\Models\Table', 'place_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany('App\Models\Product', 'place_id');
+    }
+
+    public function categories()
+    {
+        return $this->hasMany('App\Models\Category', 'place_id');
+    }
+
     /**
      * Get the route key for the model.
      * @return string

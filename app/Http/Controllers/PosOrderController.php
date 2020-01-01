@@ -24,6 +24,7 @@ class PosOrderController extends Controller
     public function index(PosOrderRequest $request)
     {
         $orders = Order::with([
+            'place',
             'creator',
             'customer',
             'table',
@@ -98,6 +99,7 @@ class PosOrderController extends Controller
         }, 5);
         unset($products);
         $order->load([
+            'place',
             'table',
             'customer',
             'items' => function ($query) {
@@ -486,6 +488,7 @@ class PosOrderController extends Controller
         }, 5);
         unset($products);
         $order->load([
+            'place',
             'table',
             'customer',
             'items' => function ($query) {
@@ -506,6 +509,7 @@ class PosOrderController extends Controller
     public function show(Order $order)
     {
         $order->load([
+            'place',
             'customer',
             'table',
             'items' => function ($query) {
@@ -539,6 +543,7 @@ class PosOrderController extends Controller
             $order->save();
         }
         $order->load([
+            'place',
             'table',
             'customer',
             'items' => function ($query) {
