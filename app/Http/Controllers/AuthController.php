@@ -109,7 +109,7 @@ class AuthController extends Controller
         // issue the access token
         return $this->issueToken($psr7Request->withParsedBody([
             'grant_type'    => 'password',
-            'username'      => $request->input($this->username()),
+            'username'      => strtolower($request->input($this->username())),
             'password'      => $request->input('password'),
             'client_id'     => config('passport.password_client_id'),
             'client_secret' => config('passport.password_client_secret'),

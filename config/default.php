@@ -475,7 +475,8 @@ return [
             'offlineMode'    => true,
             'allowOverstock' => true, // bán khi tồn kho không đủ
             'costingMethod'  => false, // Tính giá vốn: 0: giá nhập gần nhất, 1: giá nhập trung bình
-            'kitchenMode'  => false, // Tính giá vốn: 0: giá nhập gần nhất, 1: giá nhập trung bình
+            'kitchenMode'  => false, // Chế độ báo bếp khi thêm hàng/món
+            'autoPrintkitchen'  => false, // Tự động in báo bếp
         ]
     ],
     'print'       => [

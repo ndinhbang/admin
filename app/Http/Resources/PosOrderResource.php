@@ -62,12 +62,26 @@ class PosOrderResource extends JsonResource
             'created_at'      => $this->created_at,
             'is_remote'       => true,
             '$isDirty'        => false,
-            'items' => OrderItemResource::collection($this->whenLoaded('items')),
+            'items'           => OrderItemResource::collection($this->whenLoaded('items')),
             'place_uuid' => $this->whenLoaded('place', $this->place->uuid),
             $this->mergeWhen($this->whenLoaded('table'), [
                 'table_uuid' => $this->table->uuid ?? '',
                 'table'      => new TableResource($this->table),
             ]),
+            $this->mergeWhen($this->whenLoaded('items'), function () {
+                    $has_added_qty = 0;
+                    $items_added_qty = [];
+                    foreach ($this->items as $key => $item) {
+                        if($item->added_qty) {
+                            $has_added_qty += $item->added_qty;
+                            $items_added_qty[] = $item;
+                        }
+                    }
+                    return [
+                        'has_added_qty' => $has_added_qty,
+                        'items_added_qty' => $items_added_qty ?? [],
+                    ];
+            }),
             $this->mergeWhen($this->whenLoaded('customer'), [
                 'customer_uuid' => $this->customer->uuid ?? '',
                 'customer'      => $this->customer,

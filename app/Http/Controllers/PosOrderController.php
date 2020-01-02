@@ -162,7 +162,7 @@ class PosOrderController extends Controller
             'discount_items_amount' => 0,
             'paid'                  => 0,
             'debt'                  => 0,
-            'is_paid'               => false,
+            'is_paid'               => $requestData['is_paid'] ?? false,
             'is_completed'          => false,
         ];
     }
@@ -262,7 +262,7 @@ class PosOrderController extends Controller
             }
         }
         // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
-        $orderData['is_paid']      = $orderData['paid'] > 0;
+        // $orderData['is_paid']      = $orderData['paid'] > 0;
         $orderData['is_completed'] = $orderData['paid'] > 0 && ( $orderData['paid'] == $orderData['amount'] );
         return $orderData;
     }

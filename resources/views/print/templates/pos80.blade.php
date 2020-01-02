@@ -22,10 +22,8 @@
                 <p class="my-1">Liên hệ: @{{ contact_phone }}</p>
                 @{{/place}}
                 @{{#order}}
-                    <p class="text-center my-1 mt-3"><strong>Hóa đơn thanh toán</strong></p>
-                    @{{#if code}}
-                        <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
-                    @{{/if}}
+                    <p class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></p>
+                    <p class="text-center my-1 mb-3"><strong>(TẠM TÍNH)</strong></p>
                     @{{#table}}
                     <p class="my-1"><strong>Bàn: </strong>
                         <span id="computer">@{{ name }}</span>
