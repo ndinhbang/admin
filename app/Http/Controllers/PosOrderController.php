@@ -310,24 +310,25 @@ class PosOrderController extends Controller
                 continue;
             }
             $parentIdOfChild = 0;
-            $originItem = null;
+            $originItem      = null;
             if ( isset($changes['updated'][ $itemUuid ]) ) {
                 // todo: cap nhat added_qty (khong su dung so lieu duoi local) ?
-                $originItem     = $keyedItems->get($itemUuid); // instance of OrderItem
-                OrderItem::where('id',$originItem->id)
+                $originItem = $keyedItems->get($itemUuid); // instance of OrderItem
+                OrderItem::where('id', $originItem->id)
                     ->update(array_merge($pareparedArr, [
+                        'added_qty' => $originItem->added_qty + (int) $pareparedArr['added_qty'],
                         'parent_id' => $parentItemId,
                     ]));
             }
             if ( isset($changes['attached'][ $itemUuid ]) ) {
-                $originItem       = OrderItem::create(array_merge($pareparedArr, [
+                $originItem = OrderItem::create(array_merge($pareparedArr, [
                     'uuid'      => nanoId(),
                     'parent_id' => $parentItemId,
                 ]));
             }
             if ( !empty($calculatedItemData['child_data']) ) {
                 $keyedChildItems = new Collection();
-                if ($originItem) {
+                if ( $originItem ) {
                     $keyedChildItems = $originItem->children->keyBy('uuid');
                 }
                 $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems,
@@ -524,6 +525,52 @@ class PosOrderController extends Controller
             'place',
             'customer',
             'table',
+            'items' => function ($query) {
+                $query->where('parent_id', 0);
+            },
+            'items.children.product',
+            'items.product',
+        ]);
+        return new PosOrderResource($order);
+    }
+
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @param  \App\Models\Order                   $order
+     * @return \App\Http\Resources\PosOrderResource
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public function printed(PosOrderRequest $request, Order $order)
+    {
+        $order->load([
+            'items' => function ($query) {
+                $query->where('parent_id', 0);
+            },
+            'items.children.product',
+            'items.product',
+        ]);
+
+        DB::transaction(function () use ($order) {
+            if (!$order->items->isEmpty()) {
+                foreach ($order->items as $item) {
+                    $item->added_qty = 0;
+                    $item->save();
+                    if (!$item->children->isEmpty()) {
+                        foreach ($item->children as $child) {
+                            $child->added_qty = 0;
+                            $child->save();
+                        }
+                    }
+                }
+            }
+        }, 5);
+
+
+        $order->load([
+            'place',
+            'table',
+            'customer',
             'items' => function ($query) {
                 $query->where('parent_id', 0);
             },

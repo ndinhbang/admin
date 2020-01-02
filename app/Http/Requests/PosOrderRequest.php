@@ -63,12 +63,15 @@ class PosOrderRequest extends FormRequest
                     'bail', 'numeric', 'min:1', 'max:255',
                     Rule::requiredIf($countItems),
                 ],
+                'items.*.added_qty'   => [ 'bail', 'sometimes', 'numeric', 'min:0', 'max:255'],
                 'items.*.note'     => [ 'bail', 'sometimes', 'string', 'max:191'],
                 // child items
                 'items.*.children'                      => [ 'bail', 'sometimes', 'array', 'max:10'],
                 'items.*.children.*.uuid'               => [ 'bail', 'sometimes', 'alpha_dash', 'size:21'],
                 'items.*.children.*.product_uuid'       => [ 'bail', 'sometimes', 'alpha_dash', 'size:21'],
                 'items.*.children.*.quantity'           => [ 'bail', 'sometimes', 'numeric', 'min:1', 'max:255'],
+                'items.*.children.*.added_qty'          => [ 'bail', 'sometimes', 'numeric', 'min:0', 'max:255'],
+                'items.*.children.*.note'               => [ 'bail', 'sometimes', 'string', 'max:191'],
                 'customer_uuid'    => [
                     'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21',
                     new ExistsThenBindVal(
