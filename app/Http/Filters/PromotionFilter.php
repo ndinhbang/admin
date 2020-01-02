@@ -1,16 +1,15 @@
 <?php
 
+
 namespace App\Http\Filters;
+
 
 use App\Concerns\QueryFilter;
 use Illuminate\Database\Eloquent\Builder;
 
-/**
- * @method static \App\Models\Segment filter(SegmentFilter $filter)
- */
-class SegmentFilter extends QueryFilter
-{
 
+class PromotionFilter extends QueryFilter
+{
     /**
      * @param string $search
      *
@@ -22,7 +21,7 @@ class SegmentFilter extends QueryFilter
             return $this->builder;
         }
         return $this->builder
-            ->where('segments.title', 'like', "%{$search}%")
-            ->where('segments.description', 'like', "%{$search}%");
+            ->where('promotions.title', 'like', "%{$search}%")
+            ->where('promotions.description', 'like', "%{$search}%");
     }
 }

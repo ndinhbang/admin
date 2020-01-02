@@ -22,8 +22,6 @@ class Segment extends Eloquent
 {
     use Filterable;
 
-    protected $with = ['customers', 'criteria'];
-
     protected $fillable = [
         'title',
         'description',

@@ -20,6 +20,7 @@ class SegmentController extends Controller
      * Display a listing of the resource.
      *
      * @param SegmentRequest $request
+     *
      * @return AnonymousResourceCollection
      */
     public function index(SegmentRequest $request)
@@ -36,6 +37,7 @@ class SegmentController extends Controller
      * Store a newly created resource in storage.
      *
      * @param SegmentRequest $request
+     *
      * @return SegmentResource
      * @throws Throwable
      */
@@ -48,14 +50,14 @@ class SegmentController extends Controller
                 array_merge(
                     $request->only('title', 'description'),
                     [
-                        'uuid' => nanoId(),
+                        'uuid'     => nanoId(),
                         'place_id' => $place_id,
                     ]
                 )
             );
             //SYNC CUSTOMERS
-            $customer_uuid_array = array_column($request->get('customers',[]),'uuid');
-            if ($customer_uuid_array){
+            $customer_uuid_array = array_column($request->get('customers', []), 'uuid');
+            if ($customer_uuid_array) {
                 $customer_ids = Account::whereIn('uuid', $customer_uuid_array)->pluck('id');
                 $segment->customers()->sync($customer_ids);
             }
@@ -78,11 +80,12 @@ class SegmentController extends Controller
      * Display the specified resource.
      *
      * @param Segment $segment
+     *
      * @return SegmentResource
      */
     public function show(Segment $segment)
     {
-        return SegmentResource::make($segment);
+        return SegmentResource::make($segment - with(['customers', 'criteria']));
     }
 
     /**
@@ -90,6 +93,7 @@ class SegmentController extends Controller
      *
      * @param Request $request
      * @param Segment $segment
+     *
      * @return SegmentResource
      * @throws Throwable
      */
@@ -105,8 +109,8 @@ class SegmentController extends Controller
             $segment->save();
 
             //SYNC CUSTOMERS
-            $customer_uuid_array = array_column($request->get('customers',[]),'uuid');
-            if ($customer_uuid_array){
+            $customer_uuid_array = array_column($request->get('customers', []), 'uuid');
+            if ($customer_uuid_array) {
                 $customer_ids = Account::whereIn('uuid', $customer_uuid_array)->pluck('id');
                 $segment->customers()->sync($customer_ids);
             }
@@ -122,13 +126,14 @@ class SegmentController extends Controller
         });
 
         return SegmentResource::make($segment->load(['customers', 'criteria']))
-            ->additional(['message' => 'Cập nhật thành công nhóm '.$segment->title ]);
+            ->additional(['message' => 'Cập nhật thành công nhóm ' . $segment->title]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param Segment $segment
+     *
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
      * @throws Throwable
@@ -140,6 +145,6 @@ class SegmentController extends Controller
             $segment->customers()->detach();
             $segment->delete();
         }, 5);
-        return response()->json([ 'message' => 'Đã xoá nhóm khách hàng' ]);
+        return response()->json(['message' => 'Đã xoá nhóm khách hàng']);
     }
 }

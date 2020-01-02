@@ -14,6 +14,7 @@ class RequirePlace
         'api/admin*',
         'api/profile*',
         'print/preview*',
+        '_debugbar/*',
     ];
 
     /**
