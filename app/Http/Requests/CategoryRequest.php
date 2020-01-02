@@ -13,14 +13,14 @@ class CategoryRequest extends FormRequest
      */
     public function authorize()
     {
-        if ( $this->user()
-                ->hasAnyRole([
-                    'admin',
-                    'superadmin',
-                ]) || $this->user()
-                ->can('manage.categories') ) {
+        // if ( $this->user()
+        //         ->hasAnyRole([
+        //             'admin',
+        //             'superadmin',
+        //         ]) || $this->user()
+        //         ->can('manage.categories') ) {
             return true;
-        }
+        // }
     }
 
     /**
