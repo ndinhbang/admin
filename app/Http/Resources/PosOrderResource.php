@@ -60,7 +60,7 @@ class PosOrderResource extends JsonResource
             'total_dish'      => $this->total_dish,
             'total_eater'     => $this->total_eater,
             'created_at'      => $this->created_at,
-            'is_remote'       => true,
+            'stage'           => 'remote',
             '$isDirty'        => false,
             'items'           => OrderItemResource::collection($this->whenLoaded('items')),
             'place_uuid' => $this->whenLoaded('place', $this->place->uuid),

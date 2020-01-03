@@ -36,6 +36,7 @@ class OrderItemResource extends JsonResource
             'children_discount_amount' => $this->children_discount_amount,
             'discount_order_amount'    => $this->discount_order_amount,
             '$isDirty'                 => false,
+            'is_remote'                => true,
             $this->mergeWhen($this->whenLoaded('product'), [
                 'product_uuid' => $this->product->uuid,
                 'product'      => new PosProductResource($this->product),
