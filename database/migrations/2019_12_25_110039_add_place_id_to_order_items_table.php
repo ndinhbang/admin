@@ -15,7 +15,7 @@ class AddPlaceIdToOrderItemsTable extends Migration
     {
         Schema::table('order_items', function (Blueprint $table) {
             $table->unsignedInteger('place_id')->after('id')->index();
-            $table->char('uuid', 21)->after('id')->unique();
+            $table->char('uuid', 21)->after('id');
         });
     }
 
