@@ -72,8 +72,8 @@ class PosOrderResource extends JsonResource
                     $has_printed_qty = 0;
                     $items_printed_qty = [];
                     foreach ($this->items as $key => $item) {
-                        if($item->added_qty) {
-                            $has_printed_qty += $item->added_qty;
+                        if($item->printed_qty) {
+                            $has_printed_qty += $item->printed_qty;
                             $items_printed_qty[] = $item;
                         }
                     }
