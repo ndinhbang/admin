@@ -29,6 +29,7 @@ class OrderItem extends Pivot
         'product_id'             => 'integer',
         'quantity'               => 'integer',
         'added_qty'              => 'integer',
+        'printed_qty'            => 'integer',
         'total_price'            => 'integer',
         'simple_price'           => 'integer',
         'children_price'         => 'integer',

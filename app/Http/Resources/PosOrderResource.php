@@ -69,17 +69,17 @@ class PosOrderResource extends JsonResource
                 'table'      => new TableResource($this->table),
             ]),
             $this->mergeWhen($this->whenLoaded('items'), function () {
-                    $has_added_qty = 0;
-                    $items_added_qty = [];
+                    $has_printed_qty = 0;
+                    $items_printed_qty = [];
                     foreach ($this->items as $key => $item) {
                         if($item->added_qty) {
-                            $has_added_qty += $item->added_qty;
-                            $items_added_qty[] = $item;
+                            $has_printed_qty += $item->added_qty;
+                            $items_printed_qty[] = $item;
                         }
                     }
                     return [
-                        'has_added_qty' => $has_added_qty,
-                        'items_added_qty' => $items_added_qty ?? [],
+                        'has_printed_qty' => $has_printed_qty,
+                        'items_printed_qty' => $items_printed_qty ?? [],
                     ];
             }),
             $this->mergeWhen($this->whenLoaded('customer'), [
