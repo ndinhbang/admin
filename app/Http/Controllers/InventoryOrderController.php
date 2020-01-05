@@ -190,7 +190,7 @@ class InventoryOrderController extends Controller {
 			$supplier = $inventoryOrder->supplier;
 
 			// xóa nguyên liệu nhập của đơn nhập
-			$inventoryOrder->supplies()->detach();
+			// $inventoryOrder->supplies()->detach();
 
 			// xóa phiếu chi/thu
 			if ($inventoryOrder->status) {

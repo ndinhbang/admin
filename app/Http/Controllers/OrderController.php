@@ -7,6 +7,7 @@ use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -81,8 +82,28 @@ class OrderController extends Controller
      * @param    int    $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy( $id )
+    public function destroy( Order $order )
     {
-        //
+        $deleted = DB::transaction(function () use ($order) {
+            // thông tin nhà cung cấp
+            $customer = $order->customer;
+
+            // xóa phiếu chi/thu
+            if ($order->is_paid) {
+                $vouchers = $order->vouchers()->delete();
+            }
+
+            $order->delete();
+
+            // Cập nhật thông tin tổng quan cho account
+            if(!is_null($customer))
+                $customer->updateOrdersStats();
+
+            return true;
+        }, 5);
+
+        return response()->json([
+            'message' => $deleted ? 'Xóa đơn hàng thành công!' : 'Có lỗi xảy ra!',
+        ]);
     }
 }

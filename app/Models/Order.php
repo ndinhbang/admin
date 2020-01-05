@@ -204,4 +204,7 @@ class Order extends Model
             ->withTimestamps();
     }
 
+    public function vouchers() {
+        return $this->hasMany('App\Models\Voucher');
+    }
 }
