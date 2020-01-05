@@ -53,7 +53,7 @@ class ConfigRequest extends FormRequest
         }
         if ($this->routeIs(['config.print'])) {
             return [
-                'config'   => 'bail|required|array|size:4',
+                'config'   => 'bail|required|array',
                 'config.*.title' => 'bail|sometimes|nullable|string|max:25',
                 'config.*.printer' => 'bail|sometimes|nullable|string|max:191',
                 'config.*.menu' => 'bail|array',
