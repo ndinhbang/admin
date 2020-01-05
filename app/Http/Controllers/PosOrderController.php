@@ -314,7 +314,6 @@ class PosOrderController extends Controller
             if ( isset($changes['updated'][ $itemUuid ]) ) {
                 // todo: cap nhat added_qty (khong su dung so lieu duoi local) ?
                 $originItem = $keyedItems->get($itemUuid); // instance of OrderItem
-                dump($originItem);
                 OrderItem::where('id', $originItem->id)
                     ->update(array_merge($pareparedArr, [
                         // số lượng in = số lượng cũ chưa in + số lượng thêm mới
