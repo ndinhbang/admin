@@ -15,10 +15,13 @@
 
             <div class="print-header">
 
-                <p class="text-center my-1 mt-3"><strong>ĐƠN HÀNG BÁO BẾP</strong></p>
-                <p class="my-1"><strong>Bàn:</strong>
-                    <span id="computer">{{ $order->table->name ?? '' }}</span>
+                <p class="text-center my-1 mt-3">
+                    <strong>ĐƠN HÀNG BÁO BẾP</strong><br />
+                    {{ $order->code }}
                 </p>
+                <div align="center" class="my-3">
+                    <h1 align="center" class="my-1">{{ $order->table->name ?? 'Mang về' }}</h1>
+                </div>
                 <p class="my-1"><strong>Thời gian:</strong>
                     <span id="time">{{ $order->updated_at }}</span>
                 </p>
@@ -26,7 +29,7 @@
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>
                 </p>
             </div>
-            <div class="order-info">
+            <div class="order-info" style="margin-bottom: 60px;">
                 <table>
                     <thead>
                         <tr>
@@ -38,22 +41,22 @@
                     <tbody>
                         @if ($items = $order->items ?? [])
                         @foreach ($items as $key => $item)
-                            @if($item->added_qty > 0)
+                            @if($item->printed_qty > 0)
                                 <tr>
-                                    <td class="text-left top-border">{{ $key +1 }}</td>
+                                    <td class="text-left top-border"><h4 class="py-1 my-1">{{ $key +1 }}</h4></td>
                                     <td class="text-left top-border">
-                                        {{ $item->product->name }}
+                                        <h2 class="py-1 my-1">{{ $item->product->name }}</h2>
                                         @if($item->note)
-                                        <div><em>{{ $item->note }}</em></div>
+                                            <div><em>Ghi chú:</em> <strong>{{ $item->note }}</strong></div>
                                         @endif
                                     </td>
-                                    <td class="text-right top-border">{{ $item->added_qty }}</td>
+                                    <td class="text-right top-border"><h1 class="py-1 my-1">{{ $item->printed_qty }}</h1></td>
                                 </tr>
                             @endif
                         @endforeach
                         @endif
                         <tr>
-                            <th class="text-right py-1" colspan="5"></th>
+                            <th class="text-right py-1" colspan="3"></th>
                         </tr>
                     </tbody>
                 </table>

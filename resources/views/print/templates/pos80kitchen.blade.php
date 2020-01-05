@@ -19,13 +19,20 @@
                 @{{#order}}
                     <p class="text-center my-1 mt-3"><strong>ĐƠN HÀNG BÁO BẾP</strong></p>
                     @{{#if code}}
-                        <p class="text-center my-1 mb-3"><strong>@{{ code }}</strong></p>
+                        <p class="text-center my-1 mb-1">@{{ code }}</p>
                     @{{/if}}
-                    @{{#table}}
-                    <p class="my-1"><strong>Bàn: </strong>
-                        <span id="computer">@{{ name }}</span>
-                    </p>
-                    @{{/table}}
+
+                    @{{#if table}}
+                        @{{#table}}
+                        <div align="center" class="my-3">
+                            <h1 align="center" class="my-1">@{{ name }}</h1>
+                        </div>
+                        @{{/table}}
+                    @{{else}}
+                        <div align="center" class="my-3">
+                            <h1 align="center" class="my-1">Mang về</h1>
+                        </div>
+                    @{{/if}}
                     <p class="my-1"><strong>Thời gian: </strong>
                         <span id="time">@{{ created_at }}</span>
                     </p>
@@ -37,39 +44,50 @@
                 @{{/creator}}
             </div>
             @{{#order}}
-            <div class="order-info">
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="text-left">TT</th>
-                            <th class="text-left">Tên hàng</th>
-                            <th class="text-right">SL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{{#each items}}
-                        <tr>
-                            @{{#product}}
-                            <td class="text-left"><strong>@{{incremented @index}}</strong></td>
-                            <td class="text-left">@{{ name }}</td>
-                            <td class="text-left">@{{ quantity }}</td>
-                            @{{/product}}
-                        </tr>
-                        @{{/each}}
-                        <tr>
-                            <th class="text-right p-0" colspan="4"></th>
-                        </tr>
-                        <tr>
-                            <td class="text-left py-0 pb-1" colspan="4">Ghi chú:</td>
-                        </tr>
-                        <tr>
-                            <td class="text-left py-0 pb-1" colspan="4">@{{ note }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <div class="order-info" style="margin-bottom: 60px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-left">TT</th>
+                                <th class="text-left">Tên hàng</th>
+                                <th class="text-right">SL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{{#each items}}
+                                @{{#if printed_qty}}
+                                <tr>
+                                    <td class="text-left top-border"><h4 class="py-1 my-1">@{{incremented @index}}</h4></td>
+                                    <td class="text-left top-border">
+                                        @{{#product}}
+                                            <h2 class="py-1 my-1">@{{ name }}</h2>
+                                        @{{/product}}
+
+                                        @{{#if note}}
+                                            <div><em>Ghi chú:</em> <strong>@{{ note }}</strong></div>
+                                        @{{/if}}
+                                    </td>
+                                    <td class="text-left top-border"><h1 class="py-1 my-1">@{{ printed_qty }}</h1></td>
+                                </tr>
+                                @{{/if}}
+                            @{{/each}}
+                            <tr>
+                                <th class="text-right p-0" colspan="3"></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                @{{#if note}}
+                    <p><strong>Ghi chú đơn hàng:</strong><br />@{{ note }}</p>
+                @{{/if}}
+
             @{{/order}}
-            <span class="mark">@Goido.NET</span>
+            <span class="mark">
+                @{{#printer}}
+                    <span>@{{ title }}</span>
+                @{{/printer}}
+            - @Goido.NET</span>
         </div>
     </section>
 

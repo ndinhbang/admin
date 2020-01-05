@@ -291,8 +291,8 @@ class PosOrderController extends Controller
             $changes['detached'] = array_flip(array_diff($existed, $current));
             $changes['updated']  = array_flip(array_intersect($current, $existed));
         }
-        dump($changes);
-        dump($parentItemId);
+        // dump($changes);
+        // dump($parentItemId);
         // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         foreach ( $data as $itemUuid => $calculatedItemData ) {
