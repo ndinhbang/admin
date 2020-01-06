@@ -31,10 +31,16 @@ class AreaRequest extends FormRequest
             return [
                 'name'            => ['bail', 'required', 'string', 'max:50'],
                 'alsoCreateTable' => ['bail', 'boolean'],
-                'table_quantity'  => ['bail', 'integer',
+                'table_quantity'  => ['bail', 'integer', 'max:30',
                     Rule::requiredIf($this->input('alsoCreateTable', false))
                 ],
 
+            ];
+        }
+
+        if ($this->routeIs(['areas.add-table'])) {
+            return [
+                'name'            => ['bail', 'required', 'string', 'max:50'],
             ];
         }
 

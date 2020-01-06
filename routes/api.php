@@ -118,6 +118,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::get('report/net-profits', 'ReportController@netProfits');
 
 	/** =============== Areas & Tables ================= **/
+    Route::put('areas/{area}/add-table', 'AreaController@addTable')->name('areas.add-table');
+    Route::delete('areas/{area}/delete-table/{table}', 'AreaController@deleteTable')->name('areas.delete-table');
 	Route::apiResource('areas', 'AreaController');
     Route::apiResource('tables', 'TableController');
 

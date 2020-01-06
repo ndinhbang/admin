@@ -80,10 +80,42 @@ class AreaController extends Controller
      * @param    Area                        $area
      * @return AreaResource
      */
-    public function update( Request $request, Area $area )
+    public function update( AreaRequest $request, Area $area )
     {
         $area->name = $request->input('name');
         $area->save();
+        $area->load('tables');
+        return new AreaResource($area);
+    }
+
+    /**
+     * @param  \App\Http\Requests\AreaRequest  $request
+     * @param  Area                            $area
+     * @return AreaResource
+     */
+    public function addTable( AreaRequest $request, Area $area )
+    {
+        $table = new Table();
+        $table->place_id = $area->place_id;
+        $table->area_id = $area->id;
+        $table->uuid = nanoId();
+        $table->name = $request->input('name');
+        $table->save();
+
+        $area->load('tables');
+        return new AreaResource($area);
+    }
+
+    /**
+     * @param  \App\Http\Requests\AreaRequest  $request
+     * @param  Area                            $area
+     * @param  \App\Models\Table               $table
+     * @return AreaResource
+     * @throws \Exception
+     */
+    public function deleteTable( AreaRequest $request, Area $area, Table $table )
+    {
+        $table->delete();
         $area->load('tables');
         return new AreaResource($area);
     }
