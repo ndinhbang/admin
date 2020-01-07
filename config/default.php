@@ -477,6 +477,7 @@ return [
             'costingMethod'  => false, // Tính giá vốn: 0: giá nhập gần nhất, 1: giá nhập trung bình
             'kitchenMode'  => false, // Chế độ báo bếp khi thêm hàng/món
             'autoPrintkitchen'  => false, // Tự động in báo bếp
+            'useTopping'  => true, // Sử dụng topping
         ]
     ],
     'print'       => [
