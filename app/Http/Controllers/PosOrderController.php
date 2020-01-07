@@ -261,7 +261,7 @@ class PosOrderController extends Controller
         }
         // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
         // $orderData['is_paid']      = $orderData['paid'] > 0;
-        $orderData['is_completed'] = $orderData['paid'] > 0 && ( $orderData['paid'] == $orderData['amount'] );
+        $orderData['is_completed'] = $orderData['is_paid'] && $orderData['paid'] > 0 && ( $orderData['paid'] == $orderData['amount'] );
         return $orderData;
     }
 
