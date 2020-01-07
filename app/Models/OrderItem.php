@@ -54,6 +54,14 @@ class OrderItem extends Pivot
         static::addGlobalScope(new PlaceScope);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
+
     public function place()
     {
         return $this->belongsTo('App\Models\Place', 'place_id');

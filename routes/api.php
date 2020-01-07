@@ -142,6 +142,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::put('orders/{order}/printed', 'PosOrderController@printed')->name('pos.orders.printed');
 		Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
 
+        Route::delete('orders/{order}/remove-item/{orderItem}', 'PosOrderController@removeItem')->name('pos.orders.remove-item');
+
 		/** =============== Pos Product ================= **/
 		Route::get('products', 'PosProductController@index')->name('pos.products.index');
 		Route::get('categories', 'PosCategoryController@index')->name('pos.categories.index');

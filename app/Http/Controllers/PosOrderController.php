@@ -590,6 +590,12 @@ class PosOrderController extends Controller
         return new PosOrderResource($order);
     }
 
+    public function removeItem(Order $order, OrderItem $orderItem) {
+        $orderItem->delete();
+        OrderItem::where('parent_id', $orderItem->id)->delete();
+        return response()->json(['msg' => 'OK']);
+    }
+
     /**
      * @param  \App\Http\Requests\PosOrderRequest  $request
      * @param  \App\Models\Order                   $order
