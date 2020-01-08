@@ -4,8 +4,8 @@ Content-Type: application/json
 Cookie: XDEBUG_SESSION=PHPSTORM
 
 {
-    "phone": "admin",
-    "password": "password"
+  "phone": "admin",
+  "password": "password"
 }
 
 > {% client.global.set('access_token',response.body.access_token); print(response.body.access_token); %}
@@ -20,7 +20,7 @@ Authorization: Bearer {{access_token}}
 
 ###
 
-GET {{hosts}}/api/promotions?page=1&per_page=8
+GET {{hosts}}/api/promotion?page=1&per_page=8
 Accept: application/json
 Authorization: Bearer {{access_token}}
 X-Place-Id: {{place_id}}
@@ -29,7 +29,7 @@ X-Place-Id: {{place_id}}
 
 ###
 
-GET {{hosts}}/api/promotions/sBQkNpFwsa_8FALoVg80G
+GET {{hosts}}/api/promotion/ZLWVuMtSWEkxHOyE095uP
 Accept: application/json
 Authorization: Bearer {{access_token}}
 X-Place-Id: {{place_id}}
@@ -37,7 +37,7 @@ X-Place-Id: {{place_id}}
 ###
 
 
-POST {{hosts}}/api/promotions
+POST {{hosts}}/api/promotion
 Accept: application/json
 Authorization: Bearer {{access_token}}
 X-Place-Id: {{place_id}}
@@ -45,51 +45,76 @@ Content-Type: application/json
 Cookie: XDEBUG_SESSION=PHPSTORM
 
 {
-    "title": "Tết 2020 - 2",
-    "description": "Thông tết - 2",
-    "code": "VTM2021TET",
-    "start_date": "2020-01-01 23:57:37",
-    "end_date": "2020-03-01 23:57:40",
-    "quantity": 50,
-    "require_coupon": 0,
-    "type": "order",
-    "customers": [
-        {
-            "uuid": "T_5GBXlz0d4UStHXfrsXU",
-            "name": "A Hoàng"
-        },
-        {
-            "uuid": "gpL7btfyKQsoo7jntTFRU",
-            "name": "TLC"
-        }
-    ],
-    "segments": [
-        {
-            "uuid": "vcz2X4tXUnEQDsfgdODH9",
-            "title": "Nam"
-        }
-    ],
-    "applied_all": [
-        {
-            "quantity": 100000,
-            "discount": 1,
-            "unit": "percent"
-        }
-    ],
-    "applied_products": [
-        {
-            "uuid": "GAN7ta8aUN2zoBH-ZyG5Y",
-            "quantity": 100000,
-            "discount": 1,
-            "unit": "percent"
-        },
-        {
-            "uuid": "Bz6Y4TGXs3E4Swa0QU9We",
-            "quantity": 100000,
-            "discount": 1,
-            "unit": "percent"
-        }
-    ]
+  "title": "Tết 2020 - 2",
+  "description": "Thông tết - 2",
+  "code": "VTM2021TET",
+  "start_date": "2020-01-01 23:57:37",
+  "end_date": "2020-03-01 23:57:40",
+  "quantity": 50,
+  "require_coupon": 0,
+  "type": "order",
+  "customers": [
+    {
+      "uuid": "T_5GBXlz0d4UStHXfrsXU",
+      "name": "A Hoàng"
+    },
+    {
+      "uuid": "gpL7btfyKQsoo7jntTFRU",
+      "name": "TLC"
+    }
+  ],
+  "segments": [
+    {
+      "uuid": "X240_9v8AaHaKPNTaTcFS",
+      "title": "Nam"
+    }
+  ],
+  "applied_all": [
+    {
+      "quantity": 100000,
+      "discount": 1,
+      "unit": "percent"
+    }
+  ],
+  "applied_products": [
+    {
+      "uuid": "N9EniaIwicv3gmfG8X0ox",
+      "quantity": 1,
+      "discount": 1,
+      "unit": "percent"
+    },
+    {
+      "uuid": "Hc5u-xTGaMnrKKsvuBf19",
+      "quantity": 1,
+      "discount": 1,
+      "unit": "percent"
+    }
+  ],
+  "applied_categories": [
+    {
+      "uuid": "MFwiYSeahEkkUGgCmPxpY",
+      "quantity": 1,
+      "discount": 1,
+      "unit": "percent"
+    }
+  ],
+  "applied_orders": [
+    {
+      "quantity": 1,
+      "discount": 1,
+      "unit": "percent"
+    },
+    {
+      "quantity": 10,
+      "discount": 10,
+      "unit": "percent"
+    },
+    {
+      "quantity": 50,
+      "discount": 50,
+      "unit": "percent"
+    }
+  ]
 }
 
 ###

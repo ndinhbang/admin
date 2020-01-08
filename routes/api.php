@@ -116,7 +116,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     /** =============== Promotion ================= **/
 
-    Route::apiResource('promotions', 'PromotionController');
+    Route::apiResource('promotion', 'PromotionController');
+    Route::put('promotion/{promotion}/status', 'PromotionController@setStatus')->name('promotion.status');
 
     /** =============== Report ================= **/
     Route::get('report/revenues', 'ReportController@revenues');

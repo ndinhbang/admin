@@ -25,6 +25,7 @@ class CreatePromotionsTable extends Migration
             $t->integer('quantity');
             $t->boolean('require_coupon');
             $t->enum('type', ['product', 'order']);
+            $t->enum('status', ['draft', 'activated', 'deactivated'])->default('draft');
             $t->timestamps();
         });
 

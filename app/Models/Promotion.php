@@ -35,7 +35,7 @@ class Promotion extends Model
     protected $primaryKey = 'id';
 
 
-    protected $fillable = ['uuid', 'place_id', 'title', 'description', 'code', 'quantity', 'require_coupon', 'type', 'start_date', 'end_date',];
+    protected $fillable = ['uuid', 'place_id', 'title', 'description', 'code', 'quantity', 'require_coupon', 'type', 'start_date', 'end_date', 'status'];
 
     protected $hidden = [
         'id',
@@ -68,6 +68,8 @@ class Promotion extends Model
     public function appliedProducts()
     {
         return $this->belongsToMany(Product::class, 'promotion_applieds', 'promotion_id', 'product_id')
+            ->wherePivot('product_id', ">", 0)
+            ->withPivot(['quantity', 'discount', 'unit'])
             ->where('promotion_applieds.type', '=', 'product');
 
     }
@@ -75,6 +77,8 @@ class Promotion extends Model
     public function appliedCategories()
     {
         return $this->belongsToMany(Category::class, 'promotion_applieds', 'promotion_id', 'category_id')
+            ->wherePivot('category_id', ">", 0)
+            ->withPivot(['quantity', 'discount', 'unit'])
             ->where('promotion_applieds.type', '=', 'product');
 
     }
