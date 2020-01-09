@@ -51,7 +51,7 @@ class AreaController extends Controller
                         'area_id'  => $area->id,
                         'place_id' => $area->place_id,
                         'uuid'     => nanoId(),
-                        'name'     => $area->name . '-' . ( $i + 1 ),
+                        'name'     => ( $i + 1 ),
                     ]);
                 }
             }
