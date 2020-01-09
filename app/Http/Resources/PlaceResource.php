@@ -47,10 +47,10 @@ class PlaceResource extends JsonResource
             'config_print_info'=> $this->print_info ?? config('default.print.info'),
             'config_print'     => $this->config_print ?? config('default.print.config'),
             'config_screen2nd' => [
-                'useImage' => $this->config_screen2nd['useImage'] ?? false,
-                'image'    => $this->config_screen2nd['image']
-                    ? config('app.media_url') . '/screen2nd/' . $this->config_screen2nd['image']
-                    : '',
+//                'useImage' => $this->config_screen2nd['useImage'] ?? false,
+//                'image'    => $this->config_screen2nd['image']
+//                    ? config('app.media_url') . '/screen2nd/' . $this->config_screen2nd['image']
+//                    : '',
             ],
         ];
     }

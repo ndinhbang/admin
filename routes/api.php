@@ -90,6 +90,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	/** =============== Account: customer, supplier, shipper, employee ==== **/
 	Route::resource('account', 'AccountController');
 
+    Route::resource('segment', 'SegmentController');
+
 	/** =============== Role ================= **/
 	Route::apiResource('roles', 'RoleController');
 
@@ -111,6 +113,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	/** =============== Orders ================= **/
 	Route::apiResource('orders', 'OrderController');
+
+    /** =============== Promotion ================= **/
+
+    Route::apiResource('promotion', 'PromotionController');
+    Route::put('promotion/{promotion}/status', 'PromotionController@setStatus')->name('promotion.status');
 
 	/** =============== Report ================= **/
 	Route::get('report/revenues', 'ReportController@revenues');
