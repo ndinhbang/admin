@@ -26,6 +26,9 @@
                                 <td class="text-left"><strong>@{{ item_name }}</strong></td>
                                 <td class="text-right">@{{money item_price }}</td>
                             </tr>
+                            <tr>
+                                <td class="text-left" colspan="2"><em>@{{ order_note }}</em> / <em>@{{ item_note }}</em></td>
+                            </tr>
                         </thead>
                     </table>
                 </div>
