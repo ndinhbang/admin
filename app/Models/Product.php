@@ -22,7 +22,6 @@ class Product extends Model {
 		'created_at',
 	];
 
-    protected $guarded = ['id'];
 
 	// ======================= Attribute Casting ================= //
 	protected $casts = [
@@ -65,12 +64,6 @@ class Product extends Model {
         static::addGlobalScope(new PlaceScope);
     }
 
-    // ======================= Local Scopes ================= //
-    public function scopeActive( $query )
-    {
-        return $query->where('state', 1);
-	}
-
 	// ======================= Accessors ================= //
 	// ======================= Mutators ================= //
 	public function setCodeAttribute($value) {
@@ -110,10 +103,4 @@ class Product extends Model {
 		return $this->belongsToMany('App\Models\Order', 'order_items', 'product_id', 'order_id');
 	}
 
-	public function supplies() {
-		return $this->belongsToMany('App\Models\Supply', 'product_supply', 'product_id', 'supply_id')
-			->withPivot('quantity')
-			->with('unit')
-			->with('stocks');
-	}
 }
