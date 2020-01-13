@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Filters\OrderFilter;
 use App\Http\Requests\PosOrderRequest;
 use App\Http\Resources\PosOrderResource;
+use App\Http\Resources\PosOrdersCollection;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -18,12 +19,12 @@ class PosOrderController extends Controller
     /**
      * Display a listing of the resource.
      * @param  PosOrderRequest  $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return \App\Http\Resources\PosOrdersCollection
+     * @throws \Exception
      */
     public function index( PosOrderRequest $request )
     {
         $orders = Order::with([
-            'place',
             'creator',
             'customer',
             'table',
@@ -36,7 +37,9 @@ class PosOrderController extends Controller
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
             ->get();
-        return PosOrderResource::collection($orders);
+        return ( new PosOrdersCollection($orders) )->additional([
+            'place_uuid' => currentPlace()->uuid,
+        ]);
     }
 
     /**
@@ -48,13 +51,13 @@ class PosOrderController extends Controller
      */
     public function store( PosOrderRequest $request )
     {
+        $customer     = getBindVal('__customer');
+        $table        = getBindVal('__table');
         $data         = $request->all();
         $items        = $data['items'] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
-        $products     = Product::whereIn('uuid', $productUuids)
-            ->get();
-        if ( $products->isEmpty()
-            || $products->count() != count($productUuids) ) {
+        $products     = Product::whereIn('uuid', $productUuids)->get();
+        if ( $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
         $user  = $request->user();
@@ -73,13 +76,16 @@ class PosOrderController extends Controller
                 'day'        => $now->day,
             ]);
             // calculate items price
-            $products->load('supplies');
-            $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
+            $calculatedItemsData = [];
+            if ( !$products->isEmpty() ) {
+                $products->load('supplies');
+                $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
+            }
             $calculatedOrderData = $this->calculateOrderData($orderData, $calculatedItemsData);
             // save new order
             $order = Order::create($calculatedOrderData);
             // save new items
-            $this->syncOrderItems($calculatedItemsData, $order);
+            $this->syncOrderItems($order, $calculatedItemsData);
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
@@ -97,26 +103,33 @@ class PosOrderController extends Controller
         }, 5);
         unset($products);
         $order->load([
-            'place',
-            'table',
-            'customer',
+//            'place',
+//            'table',
+//            'customer',
             'items' => function ( $query ) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
             'items.product',
         ]);
-        return new PosOrderResource($order);
+        return ( new PosOrderResource($order) )->using([
+            'place_uuid' => currentPlace()->uuid,
+            'table_uuid' => $table->uuid ?? null,
+            'table_name' => $table->name ?? '',
+            'customer_uuid' => $customer->uuid ?? null,
+            'customer_name' => $customer->name ?? '',
+            'customer_code' => $customer->code ?? '',
+        ]);
     }
 
     /**
      * @param  array  $items
      * @return   array
      */
-    private function getProductUuidOfAllOrderItems( array $items )
+    private function getProductUuidOfAllOrderItems( array $items = [] )
     {
         if ( empty($items) ) {
-            throw new \InvalidArgumentException('Order require items');
+            return [];
         }
         $uuids = [];
         foreach ( $items as $item ) {
@@ -173,6 +186,9 @@ class PosOrderController extends Controller
     private function calculateItemsData( array $items, Collection $keyedProducts )
     {
         $result = [];
+        if ( empty($items) ) {
+            return $result;
+        }
         foreach ( $items as $item ) {
             $itemProduct = $keyedProducts[ $item['product_uuid'] ];
             // tiền vốn
@@ -243,12 +259,21 @@ class PosOrderController extends Controller
      * @param  array  $calculatedItemsData
      * @return array
      */
-    private function calculateOrderData( array $orderData, array $calculatedItemsData )
+    private function calculateOrderData( array $orderData, array $calculatedItemsData = [] )
     {
         $orderBaseAmount = 0;
-        foreach ( $calculatedItemsData as $item ) {
-            $orderData['discount_items_amount'] += $item['total_discount_amount'];
-            $orderBaseAmount                    += $item['total_price'];
+        if ( !empty($calculatedItemsData) ) {
+            foreach ( $calculatedItemsData as $item ) {
+                $orderData['discount_items_amount'] += $item['total_discount_amount'];
+                $orderBaseAmount                    += $item['total_price'];
+            }
+        }
+        if ( $orderData['discount_amount'] < 0 ) {
+            $orderData['discount_amount'] = 0;
+        }
+        // giảm giá tối đa bằng tổng giá hàng bán
+        if ( $orderBaseAmount < $orderData['discount_amount'] ) {
+            $orderData['discount_amount'] = $orderBaseAmount;
         }
         $orderData['amount'] = $orderBaseAmount - $orderData['discount_amount'];
         if ( $orderData['received_amount'] > 0 ) {
@@ -271,8 +296,12 @@ class PosOrderController extends Controller
      * @param  \Illuminate\Support\Collection  $keyedItems    mảng các items cũ
      * @param  int                             $parentItemId  id của item cha
      */
-    private function syncOrderItems( array $keyedData, Order $order, Collection $keyedItems = null, $parentItemId = 0 )
-    {
+    private function syncOrderItems(
+        Order $order,
+        array $keyedData = [],
+        Collection $keyedItems = null,
+        $parentItemId = 0
+    ) {
         $changes = [
             // mảng các item uuid tạo mới
             'attached' => [],
@@ -281,22 +310,22 @@ class PosOrderController extends Controller
             // mảng các item uuid cập nhật
             'updated'  => [],
         ];
-        $current = array_keys($keyedData);
-        $existed = is_null($keyedItems) ? [] : $keyedItems->keys()
-            ->all();
-        if ( empty($existed) ) {
-            $changes['attached'] = array_flip($current);
-        } else {
-            $changes['attached'] = array_flip(array_diff($current, $existed)); // => [uuid] => index
-            $changes['detached'] = array_flip(array_diff($existed, $current));
-            $changes['updated']  = array_flip(array_intersect($current, $existed));
+        $current = empty($keyedData) ? [] : array_keys($keyedData);
+        $existed = is_null($keyedItems) || $keyedItems->isEmpty() ? [] : $keyedItems->keys()->all();
+        if ( empty($current) && empty($existed) ) {
+            return; // skip
         }
-
+        $changes['attached'] = array_flip(array_diff($current, $existed)); // => [uuid] => index
+        $changes['detached'] = array_flip(array_diff($existed, $current));
+        $changes['updated']  = array_flip(array_intersect($current, $existed));
         // phần trăm giảm giá trên từng sản phẩm
-        $discountOrderPercent = $order->amount ? ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount ) : 0;
+        $discountOrderPercent = 0;
+        if ( !empty($keyedData) ) {
+            $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
+        }
         // Thêm mới item
         if ( !empty($changes['attached']) ) {
-            foreach ( $changes['attached'] as $attachedUuids => $uselessValue) {
+            foreach ( $changes['attached'] as $attachedUuids => $uselessValue ) {
                 $calculatedData      = $keyedData[ $attachedUuids ];
                 $discountOrderAmount = round(( $calculatedData['total_price'] * $discountOrderPercent ) / 100);
                 $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedData), [
@@ -310,8 +339,8 @@ class PosOrderController extends Controller
                 ]));
                 if ( !empty($calculatedData['child_data']) ) {
                     $this->syncOrderItems(
-                        $calculatedData['child_data'],
                         $order,
+                        $calculatedData['child_data'],
                         null,
                         $newOrder->id
                     );
@@ -320,7 +349,7 @@ class PosOrderController extends Controller
         }
         // Xóa item cũ không có trong mảng item mới
         if ( !empty($changes['detached']) ) {
-            foreach ( $changes['detached'] as $detachedUuids => $uselessValue) {
+            foreach ( $changes['detached'] as $detachedUuids => $uselessValue ) {
                 $deletedItem = $keyedItems->get($detachedUuids);
                 OrderItem::where('id', $deletedItem->id)
                     ->orWhere('parent_id', $deletedItem->id)
@@ -329,7 +358,7 @@ class PosOrderController extends Controller
         }
         // Cập nhật items
         if ( !empty($changes['updated']) ) {
-            foreach ( $changes['updated'] as $updatedUuids => $uselessValue) {
+            foreach ( $changes['updated'] as $updatedUuids => $uselessValue ) {
                 $originItem          = $keyedItems->get($updatedUuids);
                 $calculatedData      = $keyedData[ $updatedUuids ];
                 $discountOrderAmount = round(( $calculatedData['total_price'] * $discountOrderPercent ) / 100);
@@ -344,8 +373,8 @@ class PosOrderController extends Controller
                     ]));
                 if ( !empty($calculatedData['child_data']) ) {
                     $this->syncOrderItems(
-                        $calculatedData['child_data'],
                         $order,
+                        $calculatedData['child_data'],
                         $originItem->children->keyBy('uuid'),
                         $originItem->id
                     );
@@ -474,16 +503,18 @@ class PosOrderController extends Controller
     {
         if ( isOrderClosed($order) ) {
             return response()->json([
-                'message' => 'Order đã đóng không thể cập nhật',
+                'message' => 'Order đã thanh toán hoặc hủy không thể cập nhật',
             ], 403);
         }
+        $customer     = getBindVal('__customer');
+        $table        = getBindVal('__table');
         $data         = $request->all();
         $items        = $data['items'] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
         $products     = Product::whereIn('uuid', $productUuids)
             ->get();
         if ( $products->isEmpty()
-            || $products->count() != count($productUuids) ) {
+            && $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
         $order = DB::transaction(function () use ( $products, $data, $order ) {
@@ -502,7 +533,7 @@ class PosOrderController extends Controller
                 'items.children',
             ]);
             $keyedItems = $order->items->keyBy('uuid') ?? new Collection();
-            $this->syncOrderItems($calculatedItemsData, $order, $keyedItems);
+            $this->syncOrderItems($order, $calculatedItemsData, $keyedItems);
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
@@ -517,16 +548,23 @@ class PosOrderController extends Controller
         }, 5);
         unset($products);
         $order->load([
-            'place',
-            'table',
-            'customer',
+//            'place',
+//            'table',
+//            'customer',
             'items' => function ( $query ) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
             'items.product',
         ]);
-        return new PosOrderResource($order);
+        return ( new PosOrderResource($order) )->using([
+            'place_uuid' => currentPlace()->uuid,
+            'table_uuid' => $table->uuid ?? null,
+            'table_name' => $table->name ?? '',
+            'customer_uuid' => $customer->uuid ?? null,
+            'customer_name' => $customer->name ?? '',
+            'customer_code' => $customer->code ?? '',
+        ]);
     }
 
     /**

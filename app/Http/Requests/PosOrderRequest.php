@@ -49,7 +49,7 @@ class PosOrderRequest extends FormRequest
                 'is_completed'     => [ 'bail', 'required', 'boolean'],
                 'card_name'        => [ 'bail', 'sometimes', 'nullable', 'string', 'max:10'],
                 'note'             => [ 'bail', 'sometimes', 'nullable', 'string', 'max:191'],
-                'items'            => [ 'bail', 'required', 'array', 'max:100'],
+                'items'            => [ 'bail', 'sometimes', 'array', 'max:100'],
                 'items.*.uuid'     => [
                     'bail', 'alpha_dash', 'size:21',
                     Rule::requiredIf($countItems),

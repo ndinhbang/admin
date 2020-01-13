@@ -65,7 +65,7 @@ class AreaController extends Controller
 
     /**
      * Display the specified resource.
-     * @param    \App\Area    $area
+     * @param  \App\Models\Area  $area
      * @return AreaResource
      */
     public function show( Area $area )
@@ -76,8 +76,8 @@ class AreaController extends Controller
 
     /**
      * Update the specified resource in storage.
-     * @param    \Illuminate\Http\Request    $request
-     * @param    Area                        $area
+     * @param  \App\Http\Requests\AreaRequest  $request
+     * @param  Area                            $area
      * @return AreaResource
      */
     public function update( AreaRequest $request, Area $area )
