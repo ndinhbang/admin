@@ -16,6 +16,15 @@ class InventoryController extends Controller {
 	 */
 	public function index(Request $request) {
 
+        $summary = Inventory::selectRaw('
+        	SUM(inventory.remain) as remain_total, 
+        	SUM(inventory.quantity) as quantity_total, 
+        	SUM(inventory.remain*inventory.price_pu) as price_remain_total')
+        	->join('inventory_orders', 'inventory_orders.id', '=', 'inventory.inventory_order_id')
+        	->where('inventory.remain', '>', 0)
+        	->where('inventory_orders.place_id', currentPlace()->id)
+            ->first();
+
 		$stock_range = [-999, 9999999];
 		switch ($request->type) {
 		case 'all': // Tất cả
@@ -54,7 +63,8 @@ class InventoryController extends Controller {
 		}
 
 		// return $supplyInventory->toJson();
-		return SupplyResource::collection($supplyInventory);
+		return SupplyResource::collection($supplyInventory)
+            ->additional([ 'summary' => $summary ]);
 	}
 	
 	/**

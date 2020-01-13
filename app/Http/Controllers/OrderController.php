@@ -34,7 +34,7 @@ class OrderController extends Controller
             'customer',
             'table',
             'items' => function ( $query ) {
-                $query->where('parent_id', 0);
+                // $query->where('parent_id', 0);
             },
             'items.children',
             'items.product.category',

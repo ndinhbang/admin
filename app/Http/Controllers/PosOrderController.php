@@ -266,12 +266,12 @@ class PosOrderController extends Controller
     }
 
     /**
-     * @param  array                           $data
-     * @param  \App\Models\Order               $order
-     * @param  \Illuminate\Support\Collection  $keyedItems
-     * @param  int                             $parentItemId
+     * @param  array                           $keyedData     mảng các items mới, với key là item uuid
+     * @param  \App\Models\Order               $order         order instance
+     * @param  \Illuminate\Support\Collection  $keyedItems    mảng các items cũ
+     * @param  int                             $parentItemId  id của item cha
      */
-    private function syncOrderItems( array $data, Order $order, Collection $keyedItems = null, $parentItemId = 0 )
+    private function syncOrderItems( array $keyedData, Order $order, Collection $keyedItems = null, $parentItemId = 0 )
     {
         $changes = [
             // mảng các item uuid tạo mới
@@ -281,7 +281,7 @@ class PosOrderController extends Controller
             // mảng các item uuid cập nhật
             'updated'  => [],
         ];
-        $current = array_keys($data);
+        $current = array_keys($keyedData);
         $existed = is_null($keyedItems) ? [] : $keyedItems->keys()
             ->all();
         if ( empty($existed) ) {
@@ -291,50 +291,65 @@ class PosOrderController extends Controller
             $changes['detached'] = array_flip(array_diff($existed, $current));
             $changes['updated']  = array_flip(array_intersect($current, $existed));
         }
-        // dump($changes);
-        // dump($parentItemId);
-        // phần trăm giảm giá trên từng sản phẩm
-        $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
-        foreach ( $data as $itemUuid => $calculatedItemData ) {
-            $discountOrderAmount = round(( $calculatedItemData['total_price'] * $discountOrderPercent ) / 100);
-            $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedItemData), [
-                'place_id'              => $order->place_id,
-                'order_id'              => $order->id,
-                'discount_order_amount' => $discountOrderAmount,
-            ]);
-            if ( isset($changes['detached'][ $itemUuid ]) ) {
-                $deletedItem = $keyedItems->get($itemUuid);
-                OrderItem::where('id', $deletedItem->id)
-                    ->where('parent_id', $deletedItem->id)
-                    ->delete();
-                continue;
-            }
 
-            $originItem      = null;
-            if ( isset($changes['updated'][ $itemUuid ]) ) {
-                // todo: cap nhat added_qty (khong su dung so lieu duoi local) ?
-                $originItem = $keyedItems->get($itemUuid); // instance of OrderItem
+        // phần trăm giảm giá trên từng sản phẩm
+        $discountOrderPercent = $order->amount ? ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount ) : 0;
+        // Thêm mới item
+        if ( !empty($changes['attached']) ) {
+            foreach ( $changes['attached'] as $attachedUuids => $uselessValue) {
+                $calculatedData      = $keyedData[ $attachedUuids ];
+                $discountOrderAmount = round(( $calculatedData['total_price'] * $discountOrderPercent ) / 100);
+                $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedData), [
+                    'place_id'              => $order->place_id,
+                    'order_id'              => $order->id,
+                    'discount_order_amount' => $discountOrderAmount,
+                ]);
+                $newOrder            = OrderItem::create(array_merge($pareparedArr, [
+                    'uuid'      => nanoId(),
+                    'parent_id' => $parentItemId,
+                ]));
+                if ( !empty($calculatedData['child_data']) ) {
+                    $this->syncOrderItems(
+                        $calculatedData['child_data'],
+                        $order,
+                        null,
+                        $newOrder->id
+                    );
+                }
+            }
+        }
+        // Xóa item cũ không có trong mảng item mới
+        if ( !empty($changes['detached']) ) {
+            foreach ( $changes['detached'] as $detachedUuids => $uselessValue) {
+                $deletedItem = $keyedItems->get($detachedUuids);
+                OrderItem::where('id', $deletedItem->id)
+                    ->orWhere('parent_id', $deletedItem->id)
+                    ->delete();
+            }
+        }
+        // Cập nhật items
+        if ( !empty($changes['updated']) ) {
+            foreach ( $changes['updated'] as $updatedUuids => $uselessValue) {
+                $originItem          = $keyedItems->get($updatedUuids);
+                $calculatedData      = $keyedData[ $updatedUuids ];
+                $discountOrderAmount = round(( $calculatedData['total_price'] * $discountOrderPercent ) / 100);
+                $pareparedArr        = array_merge($this->prepareOrderItemData($calculatedData), [
+                    'discount_order_amount' => $discountOrderAmount,
+                ]);
                 OrderItem::where('id', $originItem->id)
                     ->update(array_merge($pareparedArr, [
                         // số lượng in = số lượng cũ chưa in + số lượng thêm mới
                         'printed_qty' => $originItem->printed_qty + (int) $pareparedArr['printed_qty'],
                         'parent_id'   => $parentItemId,
                     ]));
-            }
-            if ( isset($changes['attached'][ $itemUuid ]) ) {
-                $originItem = OrderItem::create(array_merge($pareparedArr, [
-                    'uuid'      => nanoId(),
-                    'parent_id' => $parentItemId,
-                ]));
-            }
-
-            if ( !empty($calculatedItemData['child_data']) ) {
-                $keyedChildItems = new Collection();
-                if ( $originItem ) {
-                    $keyedChildItems = $originItem->children->keyBy('uuid');
+                if ( !empty($calculatedData['child_data']) ) {
+                    $this->syncOrderItems(
+                        $calculatedData['child_data'],
+                        $order,
+                        $originItem->children->keyBy('uuid'),
+                        $originItem->id
+                    );
                 }
-                $this->syncOrderItems($calculatedItemData['child_data'], $order, $keyedChildItems,
-                    $originItem->id ?? 0);
             }
         }
     }
@@ -590,10 +605,15 @@ class PosOrderController extends Controller
         return new PosOrderResource($order);
     }
 
-    public function removeItem(Order $order, OrderItem $orderItem) {
-        $orderItem->delete();
-        OrderItem::where('parent_id', $orderItem->id)->delete();
-        return response()->json(['msg' => 'OK']);
+    public function removeItem( Order $order, OrderItem $orderItem )
+    {
+        DB::transaction(function () use ( $order, $orderItem ) {
+            $orderItem->delete();
+            // delete child items
+            OrderItem::where('parent_id', $orderItem->id)
+                ->delete();
+        }, 5);
+        return response()->json([ 'msg' => 'OK' ]);
     }
 
     /**
