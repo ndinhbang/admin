@@ -113,9 +113,9 @@ class PosOrderController extends Controller
             'items.product',
         ]);
         return ( new PosOrderResource($order) )->using([
-            'place_uuid' => currentPlace()->uuid,
-            'table_uuid' => $table->uuid ?? null,
-            'table_name' => $table->name ?? '',
+            'place_uuid'    => currentPlace()->uuid,
+            'table_uuid'    => $table->uuid ?? null,
+            'table_name'    => $table->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
@@ -337,14 +337,12 @@ class PosOrderController extends Controller
                     'uuid'      => nanoId(),
                     'parent_id' => $parentItemId,
                 ]));
-                if ( !empty($calculatedData['child_data']) ) {
-                    $this->syncOrderItems(
-                        $order,
-                        $calculatedData['child_data'],
-                        null,
-                        $newOrder->id
-                    );
-                }
+                $this->syncOrderItems(
+                    $order,
+                    $calculatedData['child_data'],
+                    null,
+                    $newOrder->id
+                );
             }
         }
         // Xóa item cũ không có trong mảng item mới
@@ -371,14 +369,12 @@ class PosOrderController extends Controller
                         'printed_qty' => $originItem->printed_qty + (int) $pareparedArr['printed_qty'],
                         'parent_id'   => $parentItemId,
                     ]));
-                if ( !empty($calculatedData['child_data']) ) {
-                    $this->syncOrderItems(
-                        $order,
-                        $calculatedData['child_data'],
-                        $originItem->children->keyBy('uuid'),
-                        $originItem->id
-                    );
-                }
+                $this->syncOrderItems(
+                    $order,
+                    $calculatedData['child_data'],
+                    $originItem->children->keyBy('uuid'),
+                    $originItem->id
+                );
             }
         }
     }
@@ -558,9 +554,9 @@ class PosOrderController extends Controller
             'items.product',
         ]);
         return ( new PosOrderResource($order) )->using([
-            'place_uuid' => currentPlace()->uuid,
-            'table_uuid' => $table->uuid ?? null,
-            'table_name' => $table->name ?? '',
+            'place_uuid'    => currentPlace()->uuid,
+            'table_uuid'    => $table->uuid ?? null,
+            'table_name'    => $table->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
