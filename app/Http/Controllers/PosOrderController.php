@@ -293,7 +293,7 @@ class PosOrderController extends Controller
         }
 
         // phần trăm giảm giá trên từng sản phẩm
-        $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
+        $discountOrderPercent = $order->amount ? ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount ) : 0;
         // Thêm mới item
         if ( !empty($changes['attached']) ) {
             foreach ( $changes['attached'] as $attachedUuids => $uselessValue) {
