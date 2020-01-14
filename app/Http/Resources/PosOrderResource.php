@@ -49,9 +49,9 @@ class PosOrderResource extends JsonResource
             'items'           => ( new OrderItemsCollection($this->whenLoaded('items')) )->using([
                 'parent_uuid' => null,
             ]),
-            'place_uuid'      => $this->whenLoaded('place', function () {
-                return $this->place->uuid;
-            }),
+//            'place_uuid'      => $this->whenLoaded('place', function () {
+//                return $this->place->uuid;
+//            }),
             $this->mergeWhen($this->resource->relationLoaded('table'), function () {
                 return [
                     'table_uuid' => $this->table->uuid ?? null,
