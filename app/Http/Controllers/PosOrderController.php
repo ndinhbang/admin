@@ -323,6 +323,15 @@ class PosOrderController extends Controller
         if ( !empty($keyedData) ) {
             $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         }
+        // Xóa item cũ không có trong mảng item mới
+        if ( !empty($changes['detached']) ) {
+            foreach ( $changes['detached'] as $detachedUuids => $uselessValue ) {
+                $deletedItem = $keyedItems->get($detachedUuids);
+                OrderItem::where('id', $deletedItem->id)
+                    ->orWhere('parent_id', $deletedItem->id)
+                    ->delete();
+            }
+        }
         // Thêm mới item
         if ( !empty($changes['attached']) ) {
             foreach ( $changes['attached'] as $attachedUuids => $uselessValue ) {
@@ -333,7 +342,7 @@ class PosOrderController extends Controller
                     'order_id'              => $order->id,
                     'discount_order_amount' => $discountOrderAmount,
                 ]);
-                $newOrder            = OrderItem::create(array_merge($pareparedArr, [
+                $newOrder = OrderItem::create(array_merge($pareparedArr, [
                     'uuid'      => nanoId(),
                     'parent_id' => $parentItemId,
                 ]));
@@ -343,15 +352,6 @@ class PosOrderController extends Controller
                     null,
                     $newOrder->id
                 );
-            }
-        }
-        // Xóa item cũ không có trong mảng item mới
-        if ( !empty($changes['detached']) ) {
-            foreach ( $changes['detached'] as $detachedUuids => $uselessValue ) {
-                $deletedItem = $keyedItems->get($detachedUuids);
-                OrderItem::where('id', $deletedItem->id)
-                    ->orWhere('parent_id', $deletedItem->id)
-                    ->delete();
             }
         }
         // Cập nhật items
@@ -611,7 +611,7 @@ class PosOrderController extends Controller
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
             ->get();
-        return (new PosOrdersCollection($orders))->using([
+        return ( new PosOrdersCollection($orders) )->using([
             'place_uuid' => currentPlace()->uuid,
         ]);
     }
@@ -663,7 +663,6 @@ class PosOrderController extends Controller
         if ( isOrderClosed($order) ) {
             throw new \Exception('ERROR: Order đã đóng không thể hủy');
         }
-
         DB::transaction(function () use ( $order, $request ) {
             $order->is_canceled = 1;
             $order->reason      = $request->reason;
@@ -671,7 +670,6 @@ class PosOrderController extends Controller
             // soft delete
             $order->delete();
         }, 5);
-
-        return response()->json(['message' => 'OK']);
+        return response()->json([ 'message' => 'OK' ]);
     }
 }
