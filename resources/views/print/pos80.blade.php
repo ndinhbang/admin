@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link href="/css/print.css?v=2" rel="stylesheet">
+    <link href="/css/print.css?v=4" rel="stylesheet">
 </head>
 
 <body class="receipt w74mm">
@@ -26,8 +26,8 @@
                         <p class="my-1 text-center">{{ $print_info['phone'] }}</p>
                     @endif
                 @endif
-
-                <p class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></p>
+                <br />
+                <h2 class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></h2>
                 <p class="text-center my-1 mb-3">Số HĐ: <strong>{{ $order->code }}</strong></p>
                 <p class="my-1"><strong>Bàn:</strong>
                     <span id="computer">{{ $order->table->name ?? '' }}</span>
@@ -43,8 +43,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left">TT</th>
-                            <th class="text-left">Tên hàng</th>
+                            <th class="text-left">Đơn giá</th>
                             <th class="text-right">SL</th>
                             <th class="text-right">Giảm giá</th>
                             <th class="text-right">Thành tiền</th>
@@ -54,17 +53,21 @@
                         @if ($items = $order->items ?? [])
                         @foreach ($items as $key => $item)
                         <tr>
-                            <td class="text-left top-border">{{ $key +1 }}</td>
-                            <td class="text-left top-border">
+                            <td class="text-left top-border pb-1 pt-2 fs12" colspan="4">
                                 {{ $item->product->name }}
                                 @if($item->note)
                                 <div><em>{{ $item->note }}</em></div>
                                 @endif
                             </td>
-                            <td class="text-right top-border">{{ $item->quantity }}</td>
-                            <td class="text-right top-border">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }}
+                        </tr>
+                        <tr>
+                            <td class="text-left pt-1 fs12">
+                                {{ number_format($item->product->price ?? 0, 0, ',', '.') }}
                             </td>
-                            <td class="text-right top-border">
+                            <td class="text-right pt-1 fs12">{{ $item->quantity }}</td>
+                            <td class="text-right pt-1 fs12">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="text-right pt-1 fs12">
                                 <strong>{{ number_format($item->total_price, 0, ',', '.') }}</strong></td>
                         </tr>
                         @endforeach
@@ -73,18 +76,18 @@
                             <th class="text-right py-1" colspan="5"></th>
                         </tr>
                         <tr>
-                            <td class="text-left pb-1" colspan="3"><strong>Tổng tiền hàng: </strong></td>
-                            <td class="text-right py-0 pb-1" colspan="2">
+                            <td class="text-right pb-1 fs13" colspan="3"><strong>Tổng tiền hàng: </strong></td>
+                            <td class="text-right py-0 pb-1 fs13" colspan="2">
                                 <strong>{{ number_format($order->amount, 0, ',', '.') }}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-1" colspan="3"><strong>Khách trả: </strong></td>
+                            <td class="text-right py-1" colspan="3"><strong>Khách trả: </strong></td>
                             <td class="text-right py-1" colspan="2">
                                 <strong>{{ number_format($order->received_amount ?? 0, 0, ',', '.') }}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-1" colspan="3"><strong>Đã thanh toán: </strong></td>
-                            <td class="text-right py-1" colspan="2">
+                            <td class="text-right py-1 fs13" colspan="3"><strong>Tổng thanh toán: </strong></td>
+                            <td class="text-right py-1 fs13" colspan="2">
                                 <strong>{{ number_format($order->paid ?? 0, 0, ',', '.') }}</strong></td>
                         </tr>
                     </tbody>

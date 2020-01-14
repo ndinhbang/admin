@@ -44,6 +44,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th class="text-left">STT</th>
                             <th class="text-left">Đơn giá</th>
                             <th class="text-right">SL</th>
                             <th class="text-right">Giảm giá</th>
@@ -53,53 +54,55 @@
                     <tbody>
                         @{{#each items}}
                         <tr>
+                            <td class="text-left pb-1">@{{incremented @index}}</td>
                             @{{#product}}
-                            <td class="text-left" colspan="4"><strong>@{{incremented @index}}.</strong> @{{ name }}</td>
+                            <td class="text-left pb-1" colspan="4"><strong>@{{ name }}</strong></td>
                             @{{/product}}
                         </tr>
                         <tr>
+                            <td class="text-left"></td>
                             @{{#product}}
                             <td class="text-left">@{{money price}}</td>
                             @{{/product}}
                             <td class="text-right">@{{ quantity }}</td>
-                            <td class="text-right">@{{money discount_amount}}</td>
+                            <td class="text-right">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
                             <td class="text-right">
                                 <strong>@{{money simple_price}}</strong>
                             </td>
                         </tr>
                         @{{/each}}
                         <tr>
-                            <th class="text-right p-0" colspan="4"></th>
+                            <th class="text-right py-1" colspan="5"> </th>
                         </tr>
                         <tr>
-                            <td class="text-left pb-1" colspan="2"><strong>Tổng tiền hàng: </strong></td>
-                            <td class="text-right py-0 pb-1" colspan="2">
+                            <td class="text-left py-1" colspan="3"><strong>Tổng tiền hàng: </strong></td>
+                            <td class="text-right py-1" colspan="2">
                                 <strong>@{{total amount discount_amount }}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left pb-1" colspan="2"><strong>Khuyến mãi: </strong></td>
-                            <td class="text-right py-0 pb-1" colspan="2">@{{money discount_amount}}</td>
+                            <td class="text-left pb-1" colspan="3"><strong>Giảm giá theo đơn: </strong></td>
+                            <td class="text-right py-0 pb-1" colspan="2">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.amount+this.discount_amount)) * 100)"}}%)</td>
                         </tr>
                         <tr>
-                            <td class="text-left pb-1" colspan="2"><strong>Tổng thanh toán: </strong></td>
+                            <td class="text-left pb-1" colspan="3"><strong>Tổng thanh toán: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{money amount}}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="2"><strong>Nhận của khách: </strong></td>
+                            <td class="text-left py-0 pb-1" colspan="3"><strong>Tiền khách đưa: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{money received_amount}}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="2"><strong>Trả lại khách: </strong></td>
+                            <td class="text-left py-0 pb-1" colspan="3"><strong>Tiền thừa: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{payback received_amount amount}}</strong></td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="4">Ghi chú:</td>
+                            <td class="text-left py-0 pb-1" colspan="5">Ghi chú:</td>
                         </tr>
                         <tr>
-                            <td class="text-left py-0 pb-1" colspan="4">@{{ note }}</td>
+                            <td class="text-left py-0 pb-1" colspan="5">@{{ note }}</td>
                         </tr>
                     </tbody>
                 </table>

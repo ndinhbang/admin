@@ -528,6 +528,10 @@ return [
                 'menu'                => [],
                 'copies'              => 1,
             ],
+            'report' => [
+                'title'               => 'Máy In báo cáo',
+                'printer'             => null,
+            ],
         ],
     ],
 ];
