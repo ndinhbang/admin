@@ -51,13 +51,16 @@ class PrintController extends Controller
         // Báo cáo theo Đơn hàng
         $orderStats = Order::selectRaw("
                 COUNT(orders.id) as total_order,
+                SUM(orders.total_dish) as total_dish,
                 SUM(if(orders.discount_amount > 0,1,0)) as total_discount,
                 SUM(if(orders.discount_items_amount > 0,1,0)) as total_discount_items,
                 SUM(if(orders.debt > 0,1,0)) as total_debt,
                 SUM(orders.amount) as total_amount,
                 SUM(orders.discount_amount) as total_discount_amount,
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
-                SUM(orders.debt) as total_debt_amount
+                SUM(orders.debt) as total_debt_amount,
+                SUM(if(orders.kind=0,orders.amount,0)) as takeaway_amount,
+                SUM(if(orders.kind=1,orders.amount,0)) as inplace_amount
             ")
             ->join('users', 'users.id', '=', 'orders.creator_id')
             ->where(function ($query) use ($request) {
