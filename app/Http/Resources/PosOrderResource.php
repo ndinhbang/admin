@@ -2,36 +2,16 @@
 
 namespace App\Http\Resources;
 
+use App\Traits\UsingAdditionalData;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @property mixed customer
- * @property mixed table
- * @property mixed created_at
- * @property mixed total_dish
- * @property mixed note
- * @property mixed is_completed
- * @property mixed is_paid
- * @property mixed is_served
- * @property mixed is_canceled
- * @property mixed is_returned
- * @property mixed received_amount
- * @property mixed paid
- * @property mixed debt
- * @property mixed amount
- * @property mixed state
- * @property mixed code
- * @property mixed uuid
- * @property mixed reason
- * @property mixed total_eater
- * @property mixed card_name
- * @property mixed kind
- */
 class PosOrderResource extends JsonResource
 {
+    use UsingAdditionalData;
+
     /**
      * Transform the resource into an array.
-     * @param    \Illuminate\Http\Request    $request
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      * @throws \Exception
      */
@@ -49,6 +29,8 @@ class PosOrderResource extends JsonResource
             'debt'            => $this->debt,
             'paid'            => $this->paid,
             'discount_amount' => $this->discount_amount,
+            'discount_value'  => $this->discount_amount,
+            'discount_type'   => 'đ',
             'received_amount' => $this->received_amount,
             'is_returned'     => $this->is_returned,
             'is_canceled'     => $this->is_canceled,
@@ -60,32 +42,32 @@ class PosOrderResource extends JsonResource
             'total_dish'      => $this->total_dish,
             'total_eater'     => $this->total_eater,
             'created_at'      => $this->created_at,
+            'updated_at'      => $this->updated_at,
             'stage'           => 'remote',
             '$isDirty'        => false,
-            'items'           => OrderItemResource::collection($this->whenLoaded('items')),
-            'place_uuid' => $this->whenLoaded('place', $this->place->uuid),
-            $this->mergeWhen($this->whenLoaded('table'), [
-                'table_uuid' => $this->table->uuid ?? '',
-                'table'      => new TableResource($this->table),
+            '$isNew'          => false,
+            'items'           => ( new OrderItemsCollection($this->whenLoaded('items')) )->using([
+                'parent_uuid' => null,
             ]),
-            $this->mergeWhen($this->whenLoaded('items'), function () {
-                    $has_printed_qty = 0;
-                    $items_printed_qty = [];
-                    foreach ($this->items as $key => $item) {
-                        if($item->printed_qty) {
-                            $has_printed_qty += $item->printed_qty;
-                            $items_printed_qty[] = $item;
-                        }
-                    }
-                    return [
-                        'has_printed_qty' => $has_printed_qty,
-                        'items_printed_qty' => $items_printed_qty ?? [],
-                    ];
+            'place_uuid'      => $this->whenLoaded('place', function () {
+                return $this->place->uuid;
             }),
-            $this->mergeWhen($this->whenLoaded('customer'), [
-                'customer_uuid' => $this->customer->uuid ?? '',
-                'customer'      => $this->customer,
-            ]),
+            $this->mergeWhen($this->resource->relationLoaded('table'), function () {
+                return [
+                    'table_uuid' => $this->table->uuid ?? null,
+                    'table_name' => $this->table->name ?? '',
+                    'table'      => new TableResource($this->table),
+                ];
+            }),
+            $this->mergeWhen($this->resource->relationLoaded('customer'), function () {
+                return [
+                    'customer_uuid' => $this->customer->uuid ?? null,
+                    'customer_name' => $this->customer->name ?? '',
+                    'customer_code' => $this->customer->code ?? '',
+                    'customer'      => $this->customer,
+                ];
+            }),
+            $this->merge($this->using),
         ];
     }
 }
