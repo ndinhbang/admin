@@ -567,11 +567,12 @@ class PosOrderController extends Controller
      * Display the specified resource.
      * @param  Order  $order
      * @return PosOrderResource
+     * @throws \Exception
      */
     public function show( Order $order )
     {
         $order->load([
-            'place',
+//            'place',
             'customer',
             'table',
             'items' => function ( $query ) {
@@ -580,13 +581,20 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product',
         ]);
-        return new PosOrderResource($order);
+        return ( new PosOrderResource($order) )->using([
+            'place_uuid' => currentPlace()->uuid,
+        ]);
     }
 
+    /**
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @return \App\Http\Resources\PosOrdersCollection
+     * @throws \Exception
+     */
     public function prints( PosOrderRequest $request )
     {
         $orders = Order::with([
-            'place',
+//            'place',
             'creator',
             'customer',
             'table',
@@ -603,7 +611,9 @@ class PosOrderController extends Controller
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
             ->get();
-        return PosOrderResource::collection($orders);
+        return (new PosOrdersCollection($orders))->using([
+            'place_uuid' => currentPlace()->uuid,
+        ]);
     }
 
     /**
@@ -627,7 +637,7 @@ class PosOrderController extends Controller
             }
         }, 5);
         $order->load([
-            'place',
+//            'place',
             'table',
             'customer',
             'items' => function ( $query ) {
@@ -636,18 +646,9 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product',
         ]);
-        return new PosOrderResource($order);
-    }
-
-    public function removeItem( Order $order, OrderItem $orderItem )
-    {
-        DB::transaction(function () use ( $order, $orderItem ) {
-            $orderItem->delete();
-            // delete child items
-            OrderItem::where('parent_id', $orderItem->id)
-                ->delete();
-        }, 5);
-        return response()->json([ 'msg' => 'OK' ]);
+        return ( new PosOrderResource($order) )->using([
+            'place_uuid' => currentPlace()->uuid,
+        ]);
     }
 
     /**
@@ -655,32 +656,22 @@ class PosOrderController extends Controller
      * @param  \App\Models\Order                   $order
      * @return \App\Http\Resources\PosOrderResource
      * @throws \Exception
+     * @throws \Throwable
      */
     public function canceled( PosOrderRequest $request, Order $order )
     {
-        $isCanceled = $request->is_canceled ?? false;
-        $reason     = $request->reason ?? '';
-        if ( $isCanceled ) {
-            if ( !$reason ) {
-                throw new \Exception('ERROR: Chưa nhập lý do hủy');
-            }
-            if ( isOrderClosed($order) ) {
-                throw new \Exception('ERROR: Order đã đóng không thể hủy');
-            }
-            $order->is_canceled = 1;
-            $order->reason      = $reason;
-            $order->save();
+        if ( isOrderClosed($order) ) {
+            throw new \Exception('ERROR: Order đã đóng không thể hủy');
         }
-        $order->load([
-            'place',
-            'table',
-            'customer',
-            'items' => function ( $query ) {
-                $query->where('parent_id', 0);
-            },
-            'items.children.product',
-            'items.product',
-        ]);
-        return new PosOrderResource($order);
+
+        DB::transaction(function () use ( $order, $request ) {
+            $order->is_canceled = 1;
+            $order->reason      = $request->reason;
+            $order->save();
+            // soft delete
+            $order->delete();
+        }, 5);
+
+        return response()->json(['message' => 'OK']);
     }
 }

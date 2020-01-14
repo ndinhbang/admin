@@ -92,17 +92,13 @@ class PosOrderRequest extends FormRequest
         }
         if ( $this->routeIs([ 'pos.orders.canceled' ]) ) {
             return [
-                'is_canceled' => [ 'bail', 'required', 'boolean'],
-                'reason'      => [
-                    'bail', 'string', 'max:191',
-                    Rule::requiredIf($this->is_canceled ?? false),
-                ],
+                'reason' => [ 'bail', 'required', 'string', 'max:191' ],
             ];
         }
 
         if ( $this->routeIs([ 'pos.orders.index' ]) ) {
             return [
-                'day'          => [ 'bail', 'required'],
+                'day' => [ 'bail', 'required'],
             ];
         }
 
