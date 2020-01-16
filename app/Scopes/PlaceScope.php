@@ -16,7 +16,7 @@ class PlaceScope implements Scope {
 	 * @throws \Exception
 	 */
 	public function apply(Builder $builder, Model $model) {
-		if(!request()->is('print/*')) {
+		if(!request()->is('print/*') && !app()->runningInConsole()) {
             $builder->where($model->getTable() . '.place_id', currentPlace()->id);
 			if ($model->getTable() == 'categories') {
 				$builder->orWhere($model->getTable() . '.place_id', 0);

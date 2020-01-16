@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderCanceled;
+use App\Events\OrderUpdated;
 use App\Http\Filters\OrderFilter;
 use App\Http\Requests\PosOrderRequest;
 use App\Http\Resources\PosOrderResource;
@@ -44,8 +46,9 @@ class PosOrderController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
      * @param  PosOrderRequest  $request
-     * @return PosOrderResource
+     * @return false|string
      * @throws \Exception
      * @throws \Throwable
      */
@@ -112,14 +115,22 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product',
         ]);
-        return ( new PosOrderResource($order) )->using([
+
+        $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
-        ]);
+        ];
+
+        $resource = ( new PosOrderResource($order) )->using($usingArr);
+        $response = $resource->toResponse($request);
+        // broadcast event
+        broadcast(new OrderUpdated($response->getData()))->toOthers();
+        // return json string
+        return $response->getContent();
     }
 
     /**
@@ -489,9 +500,10 @@ class PosOrderController extends Controller
 
     /**
      * Update the specified resource in storage.
+     *
      * @param  PosOrderRequest  $request
      * @param  Order            $order
-     * @return PosOrderResource
+     * @return false|string
      * @throws \Exception
      * @throws \Throwable
      */
@@ -553,14 +565,22 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product',
         ]);
-        return ( new PosOrderResource($order) )->using([
+
+        $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
-        ]);
+        ];
+
+        $resource = ( new PosOrderResource($order) )->using($usingArr);
+        $response = $resource->toResponse($request);
+        // broadcast event
+        broadcast(new OrderUpdated($response->getData()))->toOthers();
+        // return json string
+        return $response->getContent();
     }
 
     /**
@@ -646,9 +666,12 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product',
         ]);
-        return ( new PosOrderResource($order) )->using([
+
+        $usingArr = [
             'place_uuid' => currentPlace()->uuid,
-        ]);
+        ];
+
+        return ( new PosOrderResource($order) )->using($usingArr);
     }
 
     /**
@@ -670,6 +693,12 @@ class PosOrderController extends Controller
             // soft delete
             $order->delete();
         }, 5);
-        return response()->json([ 'message' => 'OK' ]);
+
+        broadcast(new OrderCanceled($order, currentPlace()))->toOthers();
+
+        return response()->json([
+            'order_uuid' => $order->uuid,
+            'message' => 'OK'
+        ]);
     }
 }
