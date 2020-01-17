@@ -13,7 +13,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <td class="text-left py-0"><strong>Bàn:</strong> @{{ table_name }}</td>
+                                <td class="text-left py-0"><strong>Bàn:</strong> @{{ area_name }}-@{{ table_name }} | @{{ card_name }}</td>
                                 <td class="text-right py-0">@{{ stt }}</td>
                             </tr>
                         </thead>

@@ -22,15 +22,13 @@
                         <p class="text-center my-1 mb-1">@{{ code }}</p>
                     @{{/if}}
 
-                    @{{#if table}}
-                        @{{#table}}
+                    @{{#if table_name}}
                         <div align="center" class="my-3">
-                            <h1 align="center" class="my-1">@{{ name }}</h1>
+                            <h1 align="center" class="my-1">@{{ area_name }}-@{{ table_name }} | @{{ card_name }}</h1>
                         </div>
-                        @{{/table}}
                     @{{else}}
                         <div align="center" class="my-3">
-                            <h1 align="center" class="my-1">Mang về</h1>
+                            <h1 align="center" class="my-1">Mang về | @{{ card_name }}</h1>
                         </div>
                     @{{/if}}
                     <p class="my-1"><strong>Thời gian: </strong>
@@ -59,9 +57,7 @@
                                 <tr>
                                     <td class="text-left top-border"><h4 class="py-1 my-1">@{{incremented @index}}</h4></td>
                                     <td class="text-left top-border">
-                                        @{{#product}}
-                                            <h2 class="py-1 my-1">@{{ name }}</h2>
-                                        @{{/product}}
+                                        <h2 class="py-1 my-1">@{{ product_name }}</h2>
 
                                         @{{#if note}}
                                             <div><em>Ghi chú:</em> <strong>@{{ note }}</strong></div>

@@ -27,8 +27,10 @@ class OrderController extends Controller
                 SUM(orders.discount_amount) as total_discount_amount,
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
                 SUM(orders.debt) as total_debt_amount')
+            ->where('orders.is_paid', true)
             ->filter(new OrderFilter($request))
             ->first();
+
         $orders  = Order::with([
             'creator',
             'customer',
@@ -41,6 +43,7 @@ class OrderController extends Controller
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
+            ->withTrashed()
             ->paginate($request->per_page);
         return OrderResource::collection($orders)
             ->additional([ 'summary' => $summary ]);

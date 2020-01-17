@@ -16,7 +16,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <td class="text-left p-0"><strong>Bàn:</strong> {{ $order->table->name ?? '' }}</td>
+                            <td class="text-left p-0"><strong>Bàn:</strong> {{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? '' }} | {{ $order->card_name }}</td>
                             <td class="text-right p-0">{{ $stt }}/{{ $item->pivot->quantity ?? 0 }}</td>
                         </tr>
                     </thead>

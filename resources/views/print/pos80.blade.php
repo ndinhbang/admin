@@ -30,7 +30,7 @@
                 <h2 class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></h2>
                 <p class="text-center my-1 mb-3">Số HĐ: <strong>{{ $order->code }}</strong></p>
                 <p class="my-1"><strong>Bàn:</strong>
-                    <span id="computer">{{ $order->table->name ?? '' }}</span>
+                    <span id="computer">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</span>
                 </p>
                 <p class="my-1"><strong>Thời gian:</strong>
                     <span id="time">{{ $order->created_at }}</span>

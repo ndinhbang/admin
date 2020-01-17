@@ -24,11 +24,8 @@
                 @{{#order}}
                     <p class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></p>
                     <p class="text-center my-1 mb-3"><strong>(TẠM TÍNH)</strong></p>
-                    @{{#table}}
-                    <p class="my-1"><strong>Bàn: </strong>
-                        <span id="computer">@{{ name }}</span>
+                    <p class="my-1"><strong>Bàn:</strong> @{{ area_name }}-@{{ table_name }} | @{{ card_name }}
                     </p>
-                    @{{/table}}
                     <p class="my-1"><strong>Thời gian: </strong>
                         <span id="time">@{{ created_at }}</span>
                     </p>
@@ -55,15 +52,11 @@
                         @{{#each items}}
                         <tr>
                             <td class="text-left pb-1">@{{incremented @index}}</td>
-                            @{{#product}}
-                            <td class="text-left pb-1" colspan="4"><strong>@{{ name }}</strong></td>
-                            @{{/product}}
+                            <td class="text-left pb-1" colspan="4"><strong>@{{ product_name }}</strong></td>
                         </tr>
                         <tr>
                             <td class="text-left"></td>
-                            @{{#product}}
-                            <td class="text-left">@{{money price}}</td>
-                            @{{/product}}
+                            <td class="text-left">@{{money product_price}}</td>
                             <td class="text-right">@{{ quantity }}</td>
                             <td class="text-right">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
                             <td class="text-right">

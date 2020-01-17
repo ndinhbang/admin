@@ -47,6 +47,7 @@ class OrderItemResource extends JsonResource
             'is_remote'                => true,
             $this->mergeWhen($this->resource->relationLoaded('product'), function () {
                 return [
+                    'category_uuid'  => $this->product->category->uuid ?? null,
                     'product_uuid'  => $this->product->uuid ?? null,
                     'product_name'  => $this->product->name ?? '',
                     'product_price' => $this->product->price ?? 0,

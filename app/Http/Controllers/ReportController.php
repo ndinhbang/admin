@@ -144,11 +144,19 @@ class ReportController extends Controller
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
+            ->where('orders.is_paid', true)
             ->orderBy('orders.id', 'desc')
             ->first();
 
         // items Orders
         $items = Order::select('orders.*', 'users.display_name')->join('users', 'users.id', '=', 'orders.creator_id')
+            ->with([
+                'items' => function ( $query ) {
+                    // $query->where('parent_id', 0);
+                },
+                'items.children',
+                'items.product.category',
+            ])
             ->where(function ($query) use ($request) {
                 if (count($this->employee_uuid)) {
                     $query->whereIn('users.uuid', $this->employee_uuid);
@@ -156,6 +164,7 @@ class ReportController extends Controller
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
             ->orderBy('orders.id', 'desc')
+            ->withTrashed()
             ->paginate($request->per_page);
 
         return response()->json(compact('items', 'stats'));

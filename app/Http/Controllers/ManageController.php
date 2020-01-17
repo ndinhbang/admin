@@ -45,6 +45,7 @@ class ManageController extends Controller {
                 SUM(if(orders.is_returned='1',1,0)) as returned
             "))
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
+            ->where('orders.is_paid', true)
 			->orderBy('orders.id', 'desc')
 			->first();
 
@@ -61,6 +62,7 @@ class ManageController extends Controller {
                 SUM(orders.amount) as total_amount
             ")
             ->whereBetween('orders.created_at', [$startDate, $this->end_date])
+            ->where('orders.is_paid', true)
             ->groupBy(DB::raw('DATE(orders.created_at)'))
             ->get();
 

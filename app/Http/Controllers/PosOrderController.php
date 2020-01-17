@@ -116,6 +116,7 @@ class PosOrderController extends Controller
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
+            'area_name'    => $table->area->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
@@ -276,14 +277,14 @@ class PosOrderController extends Controller
             $orderData['discount_amount'] = $orderBaseAmount;
         }
         $orderData['amount'] = $orderBaseAmount - $orderData['discount_amount'];
-        if ( $orderData['received_amount'] > 0 ) {
-            if ( $orderData['received_amount'] >= $orderData['amount'] ) {
-                $orderData['paid'] = $orderData['amount'];
-            } else {
-                $orderData['paid'] = $orderData['received_amount'];
-                $orderData['debt'] = $orderData['amount'] - $orderData['received_amount'];
-            }
+
+        if ( $orderData['received_amount'] >= $orderData['amount'] ) {
+            $orderData['paid'] = $orderData['amount'];
+        } else {
+            $orderData['paid'] = $orderData['received_amount'];
+            $orderData['debt'] = $orderData['amount'] - $orderData['received_amount'];
         }
+        
         // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
         // $orderData['is_paid']      = $orderData['paid'] > 0;
         $orderData['is_completed'] = $orderData['is_paid'] && $orderData['paid'] > 0 && ( $orderData['paid'] == $orderData['amount'] );
@@ -557,6 +558,7 @@ class PosOrderController extends Controller
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
+            'area_name'    => $table->area->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
