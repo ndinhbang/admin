@@ -12,4 +12,4 @@ use App\Broadcasting\PlaceBroadcastChannel;
 |
 */
 
-Broadcast::channel('place.{place}', PlaceBroadcastChannel::class);
+Broadcast::channel('place.{place}', PlaceBroadcastChannel::class, ['guards' => ['api']]);

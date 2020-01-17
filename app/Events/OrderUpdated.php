@@ -2,24 +2,18 @@
 
 namespace App\Events;
 
-use App\Http\Resources\PosOrderResource;
-use App\Models\Order;
-use App\Models\Place;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-//use Illuminate\Broadcasting\Channel;
-//use Illuminate\Broadcasting\PresenceChannel;
 class OrderUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $order;
-//    private $place;
-//    private $usingArr;
+
     /**
      * Create a new event instance.
      *
@@ -27,10 +21,7 @@ class OrderUpdated implements ShouldBroadcast
      */
     public function __construct($order)
     {
-        $this->order    = $order;
-//        $this->place    = $place;
-//        $this->usingArr = $usingArr;
-        // load missing relations
+        $this->order = $order;
     }
 
     /**
