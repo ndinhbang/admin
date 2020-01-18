@@ -27,10 +27,10 @@
                 <h1 class="text-center my-1 mt-3 mb-3"><strong>BÁO CÁO DOANH THU</strong></h1>
 
                 <p class="text-center my-1 fs12"><strong>Từ ngày:</strong>
-                    <span id="time">{{ Carbon\Carbon::parse($start_date)->format('d/m/Y H:i A') }}</span>
+                    <span id="time">{{ Carbon\Carbon::parse($start_date)->format('d/m/Y H:i:s A') }}</span>
                 </p>
                 <p class="text-center my-1 mb-3 fs12"><strong>Đến ngày:</strong>
-                    <span id="time">{{ Carbon\Carbon::parse($end_date)->format('d/m/Y H:i A') }}</span>
+                    <span id="time">{{ Carbon\Carbon::parse($end_date)->format('d/m/Y H:i:s A') }}</span>
                 </p>
 
                 <div class="order-info">

@@ -32,8 +32,11 @@
                 <p class="my-1"><strong>Bàn:</strong>
                     <span id="computer">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</span>
                 </p>
-                <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">{{ $order->created_at }}</span>
+                <p class="my-1"><strong>Giờ vào:</strong>
+                    <span id="time">{{ Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i:s A') }}</span>
+                </p>
+                <p class="my-1"><strong>Giờ ra:</strong>
+                    <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s A') }}</span>
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>

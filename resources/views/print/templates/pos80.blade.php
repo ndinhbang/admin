@@ -26,8 +26,11 @@
                     <p class="text-center my-1 mb-3"><strong>(TẠM TÍNH)</strong></p>
                     <p class="my-1"><strong>Bàn:</strong> @{{ area_name }}-@{{ table_name }} | @{{ card_name }}
                     </p>
-                    <p class="my-1"><strong>Thời gian: </strong>
+                    <p class="my-1"><strong>Giờ vào: </strong>
                         <span id="time">@{{ created_at }}</span>
+                    </p>
+                    <p class="my-1"><strong>Giờ ra: </strong>
+                        <span id="time">@{{ updated_at }}</span>
                     </p>
                 @{{/order}}
                 @{{#creator}}

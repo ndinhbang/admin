@@ -32,7 +32,7 @@
                         </div>
                     @{{/if}}
                     <p class="my-1"><strong>Thời gian: </strong>
-                        <span id="time">@{{ created_at }}</span>
+                        <span id="time">@{{ updated_at }}</span>
                     </p>
                 @{{/order}}
                 @{{#creator}}
