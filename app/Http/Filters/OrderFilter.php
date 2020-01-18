@@ -110,6 +110,20 @@ class OrderFilter extends QueryFilter
             });
     }
 
+    public function inactive($isNotActive)
+    {
+        if ( !$isNotActive ) {
+            return $this->builder;
+        }
+        return $this->builder
+            ->where(function ($query) {
+                $query->where('is_paid', 1)
+                    ->orWhere('is_returned', 1)
+                    ->orWhere('is_completed', 1)
+                    ->orWhere('is_canceled', 1);
+            });
+    }
+
     public function day($start)
     {
         if ( !$start || $start == 'today' ) {

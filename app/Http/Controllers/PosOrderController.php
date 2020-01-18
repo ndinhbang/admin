@@ -44,6 +44,26 @@ class PosOrderController extends Controller
     }
 
     /**
+     * List uuid of inactive orders
+     *
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @return array
+     */
+    public function inactive(PosOrderRequest $request)
+    {
+        $orders = Order::withTrashed()
+            ->where('is_paid', 1)
+            ->orWhere('is_returned', 1)
+            ->orWhere('is_completed', 1)
+            ->orWhere('is_canceled', 1)
+            ->filter(new OrderFilter($request))
+            ->orderBy('orders.id', 'desc')
+        ->get(['uuid']);
+
+        return $orders->toArray();
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  PosOrderRequest  $request
@@ -501,11 +521,11 @@ class PosOrderController extends Controller
      */
     public function update(PosOrderRequest $request, Order $order)
     {
-        if ( isOrderClosed($order) ) {
-            return response()->json([
-                'message' => 'Order đã thanh toán hoặc hủy không thể cập nhật',
-            ], 403);
-        }
+//        if ( isOrderClosed($order) ) {
+//            return response()->json([
+//                'message' => 'Order đã thanh toán hoặc hủy không thể cập nhật',
+//            ], 403);
+//        }
         $customer     = getBindVal('__customer');
         $table        = getBindVal('__table');
         $data         = $request->all();

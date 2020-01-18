@@ -139,8 +139,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::group(['prefix' => 'pos'], function () {
 		/** =============== Pos Order ================= **/
 		Route::get('orders', 'PosOrderController@index')->name('pos.orders.index');
-		Route::get('orders/prints', 'PosOrderController@prints')->name('pos.orders.prints'); // lấy những order có item cần in | added_qty > 0
 		Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
+        Route::get('orders/inactive', 'PosOrderController@inactive')->name('pos.orders.inactive');
 		Route::get('orders/{order}', 'PosOrderController@show')->name('pos.orders.show');
 		Route::put('orders/{order}', 'PosOrderController@update')->name('pos.orders.update');
 //		Route::delete('orders/{order}', 'PosOrderController@destroy')->name('pos.orders.destroy');
@@ -148,6 +148,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 //		Route::put('orders/{order}/added', 'PosOrderController@added')->name('pos.orders.added');
 		Route::put('orders/{order}/printed', 'PosOrderController@printed')->name('pos.orders.printed');
 		Route::put('orders/{order}/canceled', 'PosOrderController@canceled')->name('pos.orders.canceled');
+
 
 		/** =============== Pos Product ================= **/
 		Route::get('products', 'PosProductController@index')->name('pos.products.index');
