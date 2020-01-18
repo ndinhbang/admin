@@ -137,6 +137,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put('config/sale', 'ConfigController@configSale')->name('config.sale');
 
 	Route::group(['prefix' => 'pos'], function () {
+		/** =============== Pos Report ================= **/
+		Route::get('report', 'PosReportController@index')->name('pos.report.index');
+		
 		/** =============== Pos Order ================= **/
 		Route::get('orders', 'PosOrderController@index')->name('pos.orders.index');
 		Route::post('orders', 'PosOrderController@store')->name('pos.orders.store');
