@@ -33,3 +33,5 @@ public/precache-manifest.*.js
 .phpintel/
 
 public/medias/
+
+*.log
