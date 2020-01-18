@@ -23,7 +23,7 @@
                     <h1 align="center" class="my-1">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</h1>
                 </div>
                 <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">{{ $order->updated_at }}</span>
+                    <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s A') }}</span>
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>

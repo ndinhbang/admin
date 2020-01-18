@@ -83,6 +83,8 @@ class ReportController extends Controller
                 SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.is_paid', true)
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
             ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
@@ -108,6 +110,8 @@ class ReportController extends Controller
                 SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.is_paid', true)
             ->whereBetween('order_items.created_at', [$startPrevDate, $endPrevDate])
             ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
@@ -184,6 +188,8 @@ class ReportController extends Controller
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.is_paid', true)
             ->where(function ($query) use ($request) {
                 if (count($this->category_uuid)) {
                     $query->whereIn('categories.uuid', $this->category_uuid);
@@ -202,6 +208,7 @@ class ReportController extends Controller
             ->join('order_items', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->where('orders.is_paid', true)
             ->where(function ($query) use ($request) {
                 if (count($this->category_uuid)) {
                     $query->whereIn('categories.uuid', $this->category_uuid);
@@ -230,6 +237,7 @@ class ReportController extends Controller
             ")
             ->join('users', 'users.id', '=', 'orders.creator_id')
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
+            ->where('orders.is_paid', true)
             ->orderBy('total_amount', 'desc')
             ->groupBy('users.id')
             ->paginate($request->per_page);
@@ -258,6 +266,7 @@ class ReportController extends Controller
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where(function ($query) use ($request) {
                 if (count($this->category_uuid)) {
                     $query->whereIn('categories.uuid', $this->category_uuid);
@@ -265,6 +274,7 @@ class ReportController extends Controller
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
             ->where('products.place_id', getBindVal('__currentPlace')->id)
+            ->where('orders.is_paid', 1)
             ->groupBy(DB::raw('DATE(order_items.created_at)'))
             ->orderBy('days', 'desc')
             ->get();
@@ -287,6 +297,7 @@ class ReportController extends Controller
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where(function ($query) use ($request) {
                 if (count($this->category_uuid)) {
                     $query->whereIn('categories.uuid', $this->category_uuid);
@@ -294,6 +305,7 @@ class ReportController extends Controller
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
             ->where('products.place_id', getBindVal('__currentPlace')->id)
+            ->where('orders.is_paid', 1)
             ->groupBy('products.id')
             ->orderBy('total_amount', 'desc')
             ->get();

@@ -32,8 +32,11 @@
                 <p class="my-1"><strong>Bàn:</strong>
                     <span id="computer">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</span>
                 </p>
-                <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">{{ $order->created_at }}</span>
+                <p class="my-1"><strong>Giờ vào:</strong>
+                    <span id="time">{{ Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i:s A') }}</span>
+                </p>
+                <p class="my-1"><strong>Giờ ra:</strong>
+                    <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s A') }}</span>
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>
@@ -65,7 +68,7 @@
                                 {{ number_format($item->product->price ?? 0, 0, ',', '.') }}
                             </td>
                             <td class="text-right pt-1 fs12">{{ $item->quantity }}</td>
-                            <td class="text-right pt-1 fs12">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ ($item->discount_amount/$item->total_price)*100 }}%)</small>
+                            <td class="text-right pt-1 fs12">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
                             </td>
                             <td class="text-right pt-1 fs12">
                                 <strong>{{ number_format($item->total_price, 0, ',', '.') }}</strong>
