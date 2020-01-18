@@ -29,6 +29,7 @@ class PrintController extends Controller
     public function preview(PrintRequest $request, Order $order)
     {
         $template = $request->template ?? 'pos80';
+        $template = $request->local ? 'templates.'.$template : $template;
         $order->load([
             'place',
             'creator',
@@ -69,6 +70,7 @@ class PrintController extends Controller
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
+            ->where('orders.is_paid', 1)
             ->where('orders.place_id', $place->id)
             ->first();
 
@@ -91,6 +93,7 @@ class PrintController extends Controller
             })
             ->whereBetween('order_items.created_at', [$this->start_date, $this->end_date])
             ->where('products.place_id', $place->id)
+            ->where('orders.is_paid', 1)
             ->groupBy('categories.id')
             ->get();
 
@@ -110,6 +113,7 @@ class PrintController extends Controller
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
             ->orderBy('total_amount', 'desc')
             ->where('orders.place_id', $place->id)
+            ->where('orders.is_paid', 1)
             ->groupBy('users.id')
             ->get();
 

@@ -23,6 +23,7 @@ th,td{padding:6px 0}
 th{border-top:1px solid #000;}
 td.top-border{border-top:1px dashed #000}
 td.bottom-border{border-bottom:1px dashed #000}
+.no-wrap{ display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 .print-header { padding-bottom: 8px; }
 .quantity{font-size:14px}
 .print{padding-bottom:5px}
