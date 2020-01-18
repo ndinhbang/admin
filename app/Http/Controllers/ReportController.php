@@ -167,7 +167,6 @@ class ReportController extends Controller
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
-            ->where('orders.is_paid', true)
             ->orderBy('orders.id', 'desc')
             ->withTrashed()
             ->paginate($request->per_page);
