@@ -56,7 +56,7 @@ class PosOrderResource extends JsonResource
                 return [
                     'table_uuid' => $this->table->uuid ?? null,
                     'table_name' => $this->table->name ?? '',
-                    'area_name'  => $this->table->area->name,
+                    'area_name'  => $this->table->area->name ?? '',
 //                    'table'      => new TableResource($this->table),
                 ];
             }),
