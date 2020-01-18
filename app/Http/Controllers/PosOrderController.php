@@ -39,7 +39,7 @@ class PosOrderController extends Controller
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
             ->get();
-        return ( new PosOrdersCollection($orders) )->additional([
+        return ( new PosOrdersCollection($orders) )->using([
             'place_uuid' => currentPlace()->uuid,
         ]);
     }
@@ -578,7 +578,8 @@ class PosOrderController extends Controller
         $resource = ( new PosOrderResource($order) )->using($usingArr);
         $response = $resource->toResponse($request);
         // broadcast event
-        broadcast(new OrderUpdated($response->getData()))->toOthers();
+//        broadcast(new OrderUpdated($response->getData()))->toOthers();
+        broadcast(new OrderUpdated($response->getData()));
         // return json string
         return $response->getContent();
     }
