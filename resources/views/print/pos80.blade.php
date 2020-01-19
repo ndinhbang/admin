@@ -15,7 +15,7 @@
 
             <div class="print-header">
                 @if($order->place->logo)
-                    <p class="print-logo"><img src="{{ env('APP_MEDIA_URL').'/places/'.$order->place->logo }}" /></p>
+                    <p class="print-logo my-0"><img src="{{ env('APP_MEDIA_URL').'/places/'.$order->place->logo }}" /></p>
                 @endif
                 @if (!is_null($print_info))
                     <h1 class="text-center mb-0"><strong>{{ $print_info['title'] }}</strong></h1>
@@ -32,11 +32,23 @@
                 <p class="my-1"><strong>Bàn:</strong>
                     <span id="computer">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</span>
                 </p>
-                <p class="my-1"><strong>Giờ vào:</strong>
-                    <span id="time">{{ Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i:s A') }}</span>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td class="text-left pb-1">
+                                <strong>Giờ vào:</strong><br />
+                                <span id="time">{{ Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i:s') }}</span>
+                            </td>
+                            <td class="text-left pb-1">
+                                <strong>Giờ ra:</strong><br />
+                                <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s') }}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="my-1">
                 </p>
-                <p class="my-1"><strong>Giờ ra:</strong>
-                    <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s A') }}</span>
+                <p class="my-1">
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>
@@ -64,13 +76,13 @@
                             </td>
                         </tr>
                         <tr>
-                            <td class="text-left pt-1 fs12">
+                            <td class="text-left pt-1">
                                 {{ number_format($item->product->price ?? 0, 0, ',', '.') }}
                             </td>
-                            <td class="text-right pt-1 fs12">{{ $item->quantity }}</td>
-                            <td class="text-right pt-1 fs12">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
+                            <td class="text-right pt-1">{{ $item->quantity }}</td>
+                            <td class="text-right pt-1">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
                             </td>
-                            <td class="text-right pt-1 fs12">
+                            <td class="text-right pt-1">
                                 <strong>{{ number_format($item->total_price, 0, ',', '.') }}</strong>
                             </td>
                         </tr>
@@ -79,32 +91,20 @@
                         <tr>
                             <th class="text-right py-1" colspan="5"></th>
                         </tr>
+                        @php($total_amount = number_format(round($order->amount+$order->discount_amount, -2), 0, ',', '.'))
+                        @if($order->discount_amount)
                         <tr>
-                            <td class="text-right pb-1 fs13" colspan="3"><strong>Tiền hàng: </strong></td>
-                            <td class="text-right pb-1 fs13" colspan="2">
-                                <strong>{{ $total_amount = number_format(round($order->amount+$order->discount_amount, -2), 0, ',', '.') }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-right pb-1 fs13" colspan="3"><strong>Giảm giá theo đơn: </strong></td>
-                            <td class="text-right pb-1 fs13" colspan="2">
-                                <strong>-{{ $discount_amount = number_format(round($order->discount_amount, -2), 0, ',', '.') }}</strong><br />
+                            <td class="text-right pb-1" colspan="3"><strong>Giảm giá theo đơn: </strong></td>
+                            <td class="text-right pb-1" colspan="2">
+                                <strong>-{{ $discount_amount = number_format(round($order->discount_amount, -2), 0, ',', '.') }}</strong>
                                 <small>({{ round(($discount_amount/$total_amount)*100, 2) }}%)</small>
                             </td>
                         </tr>
+                        @endif
                         <tr>
-                            <td class="text-right pb-1 fs16" colspan="3"><strong>Thành tiền: </strong></td>
-                            <td class="text-right pb-1 fs16" colspan="2">
+                            <td class="text-right pb-1 fs12" colspan="3"><strong>Thành tiền: </strong></td>
+                            <td class="text-right pb-1 fs12" colspan="2">
                                 <strong>{{ number_format(round($order->amount, -2), 0, ',', '.') }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-right pt-3 py-1 fs13 top-border" colspan="3"><strong>Tiền khách đưa: </strong></td>
-                            <td class="text-right pt-3 py-1 fs13 top-border" colspan="2">
-                                <strong>{{ number_format($order->received_amount ?? 0, 0, ',', '.') }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-right py-1 fs13" colspan="3"><strong>Tiền thừa: </strong></td>
-                            <td class="text-right py-1 fs13" colspan="2">
-                                <strong>{{ number_format(round($order->received_amount-$order->amount, -2) ?? 0, 0, ',', '.') }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
