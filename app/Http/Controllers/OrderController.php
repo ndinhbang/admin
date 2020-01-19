@@ -96,6 +96,11 @@ class OrderController extends Controller
                 $vouchers = $order->vouchers()->delete();
             }
 
+            $order->is_canceled = 1;
+            $order->is_paid = 0;
+            $order->is_completed = 0;
+            $order->save();
+            
             $order->delete();
 
             // Cập nhật thông tin tổng quan cho account
