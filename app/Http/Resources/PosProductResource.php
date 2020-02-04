@@ -23,6 +23,8 @@ class PosProductResource extends JsonResource
             'is_hot'     => $this->is_hot,
             'state'      => $this->state,
             'opened'     => $this->opened,
+            'can_stock'     => $this->can_stock,
+            'price_by_time' => $this->price_by_time,
             'thumbnail'  => ( $this->thumbnail ? config('app.media_url') . '/products/' . $this->thumbnail : '' ),
             'supplies'   => SupplyResource::collection($this->whenLoaded('supplies')),
             'items'      => OrderItemResource::collection($this->whenLoaded('items')),

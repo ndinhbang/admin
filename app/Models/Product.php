@@ -36,6 +36,7 @@ class Product extends Model {
 		'discount_amount' => 'double',
 		'opened' => 'boolean',
 		'can_stock' => 'boolean',
+        'price_by_time' => 'boolean',
 		'thumbnail' => 'string',
 	];
 

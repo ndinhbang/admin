@@ -24,6 +24,7 @@ class ProductResource extends JsonResource
             'code'          => $this->code,
             'opened'        => $this->opened,
             'can_stock'     => $this->can_stock,
+            'price_by_time' => $this->price_by_time,
             'position'      => $this->position,
             'state'         => $this->state,
             'updated_at'    => $this->updated_at,

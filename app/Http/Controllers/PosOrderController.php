@@ -225,7 +225,7 @@ class PosOrderController extends Controller
                 }
             }
             // tinh gia
-            $itemQuantity       = (int) $item['quantity'];
+            $itemQuantity       = (float) $item['quantity'];
             $itemDiscountAmount = $item['discount_amount'] ?? 0;
             $itemBasePrice      = $itemQuantity * $itemProduct->price;
             // giá sản phẩm (sau khi giảm giá)
@@ -259,6 +259,7 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
+                'product_price'            => $item['product_price'],
                 'printed_qty'              => $item['added_qty'] ?? 0,
                 'note'                     => $item['note'] ?? '',
                 'canceled'                 => $item['canceled'],
@@ -269,6 +270,11 @@ class PosOrderController extends Controller
                 'accepted'                 => $item['accepted'],
                 'pending'                  => $item['pending'],
                 'discount_id'              => $item['discount_id'] ?? 0,
+
+                'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($item['time_in'])),
+                'time_in'                  => $item['time_in'],
+                'time_out'                 => Carbon::now(),
+                'price_by_time'            => $item['price_by_time'],
                 // need to remove when create or update item
                 'base_price'               => $itemBasePrice,
                 'total_discount_amount'    => $itemTotalDiscountAmount,
@@ -343,7 +349,7 @@ class PosOrderController extends Controller
         $changes['updated']  = array_flip(array_intersect($current, $existed));
         // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = 0;
-        if ( !empty($keyedData) ) {
+        if ( !empty($keyedData) && $order->amount) {
             $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         }
         // Xóa item cũ không có trong mảng item mới
@@ -414,6 +420,7 @@ class PosOrderController extends Controller
             'children_discount_amount',
             'simple_price',
             'children_price',
+            'product_price',
             'total_price',
             'total_buying_price',
             'total_buying_avg_price',
@@ -429,6 +436,10 @@ class PosOrderController extends Controller
             'pending',
             'discount_id',
             'printed_qty',
+            'time_used',
+            'time_in',
+            'time_out',
+            'price_by_time',
         ]);
     }
 

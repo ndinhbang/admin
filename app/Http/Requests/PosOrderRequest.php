@@ -60,7 +60,7 @@ class PosOrderRequest extends FormRequest
                     Rule::requiredIf($countItems),
                 ],
                 'items.*.quantity' => [
-                    'bail', 'numeric', 'min:1', 'max:255',
+                    'bail', 'numeric',
                     Rule::requiredIf($countItems),
                 ],
                 'items.*.added_qty'   => [ 'bail', 'sometimes', 'numeric', 'min:0', 'max:255'],
