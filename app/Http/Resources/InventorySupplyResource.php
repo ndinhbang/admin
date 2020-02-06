@@ -17,8 +17,11 @@ class InventorySupplyResource extends JsonResource
         return [
             'uuid'     => $this->uuid,
             'name'     => $this->name,
-            'quantity' => $this->whenPivotLoaded('inventory', function () {
-                return $this->pivot->quantity;
+            'qty_export' => $this->whenPivotLoaded('inventory', function () {
+                return $this->pivot->qty_export;
+            }),
+            'qty_import' => $this->whenPivotLoaded('inventory', function () {
+                return $this->pivot->qty_import;
             }),
             'price_pu' => $this->whenPivotLoaded('inventory', function () {
                 return $this->pivot->price_pu;

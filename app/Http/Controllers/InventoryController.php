@@ -16,13 +16,12 @@ class InventoryController extends Controller {
 	 */
 	public function index(Request $request) {
 
-        $summary = Inventory::selectRaw('
-        	SUM(inventory.remain) as remain_total, 
-        	SUM(inventory.quantity) as quantity_total, 
-        	SUM(inventory.remain*inventory.price_pu) as price_remain_total')
-        	->join('inventory_orders', 'inventory_orders.id', '=', 'inventory.inventory_order_id')
-        	->where('inventory.remain', '>', 0)
-        	->where('inventory_orders.place_id', currentPlace()->id)
+        $summary = Supply::selectRaw('
+        	SUM(remain) as remain_total, 
+        	SUM(remain*price_avg_in) as price_avg_total, 
+        	SUM(remain*price_in) as price_total')
+        	->where('remain', '>', 0)
+        	->where('place_id', currentPlace()->id)
             ->first();
 
 		$stock_range = [-999, 9999999];
@@ -44,23 +43,21 @@ class InventoryController extends Controller {
 			break;
 		}
 
-		$supplyInventory = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
+		$supplyInventory = Supply::select('supplies.*')
 			->where(function ($query) use ($request, $stock_range) {
 				if ($request->keyword) {
 					$query->where('supplies.name', 'like', '%' . $request->keyword . '%');
 				}
-			})
-			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
-			->groupBy('supplies.id')
-			->with(['unit']);
 
-		if($request->type == 'almost') {
-			$supplyInventory = $supplyInventory->havingRaw('SUM(inventory.remain) < supplies.min_stock')
-				->get();
-		} else {
-			$supplyInventory = $supplyInventory->havingRaw('SUM(inventory.remain) > ? AND SUM(inventory.remain) < ?', $stock_range)
-				->paginate($request->per_page);
-		}
+				if($request->type == 'almost') {
+					$query->whereRaw('supplies.remain < supplies.min_stock');
+				} else {
+					$query->where('supplies.remain', '>', $stock_range[0])
+						->where('supplies.remain', '<', $stock_range[1]);
+				}
+			})
+			->with(['unit'])
+			->paginate($request->per_page);
 
 		// return $supplyInventory->toJson();
 		return SupplyResource::collection($supplyInventory)
@@ -73,19 +70,21 @@ class InventoryController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function almostOos() {
-		$supplies = Supply::select('supplies.*', DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total'))
+		$supplies = Supply::select('supplies.*', DB::raw('SUM(inventory.qty_remain) as remain_total, SUM(inventory.qty_import) as quantity_total'))
 			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
+			->where('inventory.status', 1)
 			->groupBy('supplies.id')
 			->with(['unit'])
-			->havingRaw('SUM(inventory.remain) < supplies.min_stock')
+			->havingRaw('SUM(inventory.qty_remain) < supplies.min_stock')
 			->get();
 
 		return response()->json($supplies);
 	}
 
 	public function statistic(Request $request) {
-		$statistic = Supply::select(DB::raw('SUM(inventory.remain) as remain_total, SUM(inventory.quantity) as quantity_total, supplies.min_stock'))
+		$statistic = Supply::select(DB::raw('SUM(inventory.qty_remain) as remain_total, SUM(inventory.qty_import) as quantity_total, supplies.min_stock'))
 			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
+			->where('inventory.status', 1)
 			->groupBy('inventory.supply_id')
 			->get();
 
@@ -93,20 +92,11 @@ class InventoryController extends Controller {
 	}
 
 	public function show($supplyUuid) {
-		$inventoryOrders = Supply::select(
-			'inventory.*',
-			'inventory_orders.*',
-			'accounts.name as supplier_name',
-			'users.display_name as creator_name')
-			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
-			->join('inventory_orders', 'inventory_orders.id', '=', 'inventory.inventory_order_id')
-			->join('accounts', 'accounts.id', '=', 'inventory_orders.supplier_id')
-			->join('users', 'users.id', '=', 'inventory_orders.creator_id')
-			->where('inventory_orders.status', 1)
-			->where('supplies.uuid', $supplyUuid)
-			->orderBy('inventory_orders.created_at', 'desc')
-			->paginate(request()->per_page);
+		$supply = Supply::where('supplies.uuid', $supplyUuid)->with(['unit'])->first();
 
-		return InventoryResource::collection($inventoryOrders);
+		$inventory = $supply->inventory()->paginate(request()->per_page);
+
+		return InventoryResource::collection($inventory)
+            ->additional([ 'supply' => $supply ]);
 	}
 }

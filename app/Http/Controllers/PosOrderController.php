@@ -112,7 +112,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, $data['items']);
+                $this->subtractInventory($order, $products, $data['items']);
                 if ( $order->paid ) {
                     // tao phieu thu
                     $order->createVoucher($data['payment_method'] ?? 'cash');
@@ -448,76 +448,64 @@ class PosOrderController extends Controller
      * @param  array                           $items
      * @throws \Exception
      */
-    private function subtractInventory(Collection $products, array $items)
+    private function subtractInventory(Order $order, Collection $products, array $items)
     {
         $canStockProducts = $products
             ->where('can_stock', true)
-            ->pipe(function ($filtered) {
-                return $filtered->load([
-                    'supplies.availableStocks' => function ($query) {
-                        $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
-                        ->orderBy('inventory_orders.id', 'asc');
-                    },
-                ]);
-            })
             ->keyBy('uuid');
-//        dump($canStockProducts->toArray());
         foreach ( $items as $item ) {
             if ( is_null($product = $canStockProducts->get($item['product_uuid'])) ) {
                 continue;
             }
+
             $supplies = $product->supplies ?? new Collection();
             if ( $supplies->isEmpty() ) {
                 throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$product->name}.");
             };
+
             // tổng số lượng sản phẩm trong order
             $productQuantity = (int) $item['quantity'];
             $now             = Carbon::now()
                 ->format('Y-m-d H:i:s');
+
             foreach ( $supplies as $supply ) {
-                // dump($supply);
-                $stocks = $supply->availableStocks ?? new Collection();
-                // throw error if empty
-                if ( $stocks->isEmpty() ) {
-                    throw new \Exception("Không đủ nguyên liệu: \"{$supply->name}\" cho sản phẩm \"{$product->name}\" trong kho.");
-                };
+                // kiếm tra thiết lập cho phép bán khi tồn kho không đủ?
+                $configSale = currentPlace()->config_sale;
+                // $printInfo = currentPlace()->print_info;
+                // dd($printInfo);
                 // số lượng nguyên liệu / 1 sản phẩm
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
                 $outQuantity = $supplyQuantity * $productQuantity;
-                // lặp các lần nhập kho
-                foreach ( $stocks as $stock ) {
-                    if ( $outQuantity <= 0 ) {
-                        break;
-                    }
-                    // nếu tồn kho nhiều hơn tổng trừ kho
-                    if ( $stock->pivot->remain >= $outQuantity ) {
-                        // ... thực hiện trừ kho
-                        $supply->stocks()
-                            ->updateExistingPivot($stock->id, [
-                                'remain'     => $stock->pivot->remain - $outQuantity,
-                                'updated_at' => $now,
-                            ]);
-                        $outQuantity = 0;
-                        break;
-                    }
-                    // nếu tổng trừ kho nhiều hơn tồn kho trong lần nhập kho hiện tại
-                    // số lượng trừ kho còn lại
-                    $outQuantity = $outQuantity - $stock->pivot->remain;
-                    // ... trừ hết số lượng tồn
-                    $supply->stocks()
-                        ->updateExistingPivot($stock->id, [
-                            'remain'     => 0,
-                            'updated_at' => $now,
-                        ]);
-                } // end of stocks
-                // nếu tống trừ kho lớn hơn tổng tồn kho
-                if ( $outQuantity > 0 ) {
-                    throw new \Exception("\"{$supply->name}\" tồn kho không đủ số lượng bán của sản phẩm \"{$product->name}\" ");
+
+                if((!is_null($configSale) && !$configSale['allowOverstock']) && $outQuantity > $supply->remain) {
+                    // throw error if empty
+                    throw new \Exception("\"{$supply->name}\" trong kho chỉ còn: {$supply->remain} - không đủ để bán cho sản phẩm \"{$product->name}\".");
                 }
+
+                // thông tin phiếu xuất kho
+                $inventoryArr = [
+                    'ref_code' => $order->code,
+                    'order_id' => $order->id,
+                    'supply_id' => $supply->id,
+                    'qty_export' => $outQuantity,
+                    'qty_remain' => $supply->remain - $outQuantity,
+                    'total_price' => $item['total_price'],
+                    'price_pu' => $item['product_price'],
+                    'status' => 1,
+                    'note' => 'Xuất kho cho đơn hàng '.$order->code
+                ];
+
+                // thêm phiếu xuất kho
+                $order->inventory()->create($inventoryArr);
+
+                $supply->remain = $supply->remain - $outQuantity;
+                $supply->save();
             } // end of supplies
+
+
             // unload redundant relations
-            $product->unsetRelation('supplies');
+            // $product->unsetRelation('supplies');
         }
     }
 
@@ -568,7 +556,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, $data['items']);
+                $this->subtractInventory($order, $products, $data['items']);
                 if ( $order->paid
                     && $order->paid > $oldPaid ) {
                     // tao phieu thu

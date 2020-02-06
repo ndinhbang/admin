@@ -86,7 +86,7 @@ class InventoryOrder extends Model {
 
 	public function supplies() {
 		return $this->belongsToMany('App\Models\Supply', 'inventory', 'inventory_order_id', 'supply_id')
-			->withPivot('quantity', 'total_price', 'price_pu')
+			->withPivot('qty_import', 'qty_export', 'qty_remain', 'total_price', 'price_pu')
 			->withTimestamps();
 	}
 
