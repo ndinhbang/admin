@@ -20,21 +20,22 @@ class PosOrderController extends Controller
 {
     /**
      * Display a listing of the resource.
+     *
      * @param  PosOrderRequest  $request
      * @return \App\Http\Resources\PosOrdersCollection
      * @throws \Exception
      */
-    public function index( PosOrderRequest $request )
+    public function index(PosOrderRequest $request)
     {
         $orders = Order::with([
             'creator',
             'customer',
-            'table',
-            'items' => function ( $query ) {
+            'table.area',
+            'items' => function ($query) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
-            'items.product',
+            'items.product.category',
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
@@ -45,6 +46,26 @@ class PosOrderController extends Controller
     }
 
     /**
+     * List uuid of inactive orders
+     *
+     * @param  \App\Http\Requests\PosOrderRequest  $request
+     * @return array
+     */
+    public function inactive(PosOrderRequest $request)
+    {
+        $orders = Order::withTrashed()
+            ->where('is_paid', 1)
+            ->orWhere('is_returned', 1)
+            ->orWhere('is_completed', 1)
+            ->orWhere('is_canceled', 1)
+            ->filter(new OrderFilter($request))
+            ->orderBy('orders.id', 'desc')
+        ->get(['uuid']);
+
+        return $orders->toArray();
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
      * @param  PosOrderRequest  $request
@@ -52,19 +73,20 @@ class PosOrderController extends Controller
      * @throws \Exception
      * @throws \Throwable
      */
-    public function store( PosOrderRequest $request )
+    public function store(PosOrderRequest $request)
     {
         $customer     = getBindVal('__customer');
         $table        = getBindVal('__table');
         $data         = $request->all();
         $items        = $data['items'] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
-        $products     = Product::whereIn('uuid', $productUuids)->get();
+        $products     = Product::whereIn('uuid', $productUuids)
+            ->get();
         if ( $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
         $user  = $request->user();
-        $order = DB::transaction(function () use ( $products, $data, $user ) {
+        $order = DB::transaction(function () use ($products, $data, $user) {
             // tao order
             $now       = Carbon::now();
             $customer  = getBindVal('__customer');
@@ -92,7 +114,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, $data['items']);
+                $this->subtractInventory($order, $products, $data['items']);
                 if ( $order->paid ) {
                     // tao phieu thu
                     $order->createVoucher($data['payment_method'] ?? 'cash');
@@ -109,17 +131,18 @@ class PosOrderController extends Controller
 //            'place',
 //            'table',
 //            'customer',
-            'items' => function ( $query ) {
+            'items' => function ($query) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
-            'items.product',
+            'items.product.category',
         ]);
 
         $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
+            'area_name'     => $table->area->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
@@ -137,7 +160,7 @@ class PosOrderController extends Controller
      * @param  array  $items
      * @return   array
      */
-    private function getProductUuidOfAllOrderItems( array $items = [] )
+    private function getProductUuidOfAllOrderItems(array $items = [])
     {
         if ( empty($items) ) {
             return [];
@@ -162,7 +185,7 @@ class PosOrderController extends Controller
      * @param  array  $requestData
      * @return array
      */
-    private function prepareOrderData( array $requestData )
+    private function prepareOrderData(array $requestData)
     {
         $table    = getBindVal('__table');
         $customer = getBindVal('__customer');
@@ -194,7 +217,7 @@ class PosOrderController extends Controller
      * @param  \Illuminate\Support\Collection  $keyedProducts
      * @return array
      */
-    private function calculateItemsData( array $items, Collection $keyedProducts )
+    private function calculateItemsData(array $items, Collection $keyedProducts)
     {
         $result = [];
         if ( empty($items) ) {
@@ -212,7 +235,7 @@ class PosOrderController extends Controller
                 }
             }
             // tinh gia
-            $itemQuantity       = (int) $item['quantity'];
+            $itemQuantity       = (float) $item['quantity'];
             $itemDiscountAmount = $item['discount_amount'] ?? 0;
             $itemBasePrice      = $itemQuantity * $itemProduct->price;
             // giá sản phẩm (sau khi giảm giá)
@@ -246,6 +269,7 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
+                'product_price'            => $item['product_price'],
                 'printed_qty'              => $item['added_qty'] ?? 0,
                 'note'                     => $item['note'] ?? '',
                 'canceled'                 => $item['canceled'],
@@ -256,6 +280,11 @@ class PosOrderController extends Controller
                 'accepted'                 => $item['accepted'],
                 'pending'                  => $item['pending'],
                 'discount_id'              => $item['discount_id'] ?? 0,
+
+                'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($item['time_in'])),
+                'time_in'                  => $item['time_in'],
+                'time_out'                 => Carbon::now(),
+                'price_by_time'            => $item['price_by_time'],
                 // need to remove when create or update item
                 'base_price'               => $itemBasePrice,
                 'total_discount_amount'    => $itemTotalDiscountAmount,
@@ -270,7 +299,7 @@ class PosOrderController extends Controller
      * @param  array  $calculatedItemsData
      * @return array
      */
-    private function calculateOrderData( array $orderData, array $calculatedItemsData = [] )
+    private function calculateOrderData(array $orderData, array $calculatedItemsData = [])
     {
         $orderBaseAmount = 0;
         if ( !empty($calculatedItemsData) ) {
@@ -287,13 +316,11 @@ class PosOrderController extends Controller
             $orderData['discount_amount'] = $orderBaseAmount;
         }
         $orderData['amount'] = $orderBaseAmount - $orderData['discount_amount'];
-        if ( $orderData['received_amount'] > 0 ) {
-            if ( $orderData['received_amount'] >= $orderData['amount'] ) {
-                $orderData['paid'] = $orderData['amount'];
-            } else {
-                $orderData['paid'] = $orderData['received_amount'];
-                $orderData['debt'] = $orderData['amount'] - $orderData['received_amount'];
-            }
+        if ( $orderData['received_amount'] >= $orderData['amount'] ) {
+            $orderData['paid'] = $orderData['amount'];
+        } else {
+            $orderData['paid'] = $orderData['received_amount'];
+            $orderData['debt'] = $orderData['amount'] - $orderData['received_amount'];
         }
         // Trả 1 phần cũng là đã trả, nhưng chưa hoàn thành đơn hàng
         // $orderData['is_paid']      = $orderData['paid'] > 0;
@@ -322,7 +349,8 @@ class PosOrderController extends Controller
             'updated'  => [],
         ];
         $current = empty($keyedData) ? [] : array_keys($keyedData);
-        $existed = is_null($keyedItems) || $keyedItems->isEmpty() ? [] : $keyedItems->keys()->all();
+        $existed = is_null($keyedItems) || $keyedItems->isEmpty() ? [] : $keyedItems->keys()
+            ->all();
         if ( empty($current) && empty($existed) ) {
             return; // skip
         }
@@ -331,7 +359,7 @@ class PosOrderController extends Controller
         $changes['updated']  = array_flip(array_intersect($current, $existed));
         // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = 0;
-        if ( !empty($keyedData) ) {
+        if ( !empty($keyedData) && $order->amount) {
             $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         }
         // Xóa item cũ không có trong mảng item mới
@@ -353,7 +381,7 @@ class PosOrderController extends Controller
                     'order_id'              => $order->id,
                     'discount_order_amount' => $discountOrderAmount,
                 ]);
-                $newOrder = OrderItem::create(array_merge($pareparedArr, [
+                $newOrder            = OrderItem::create(array_merge($pareparedArr, [
                     'uuid'      => nanoId(),
                     'parent_id' => $parentItemId,
                 ]));
@@ -394,7 +422,7 @@ class PosOrderController extends Controller
      * @param  array  $calculatedItemData
      * @return array
      */
-    private function prepareOrderItemData( array $calculatedItemData )
+    private function prepareOrderItemData(array $calculatedItemData)
     {
         return Arr::only($calculatedItemData, [
             'quantity',
@@ -402,6 +430,7 @@ class PosOrderController extends Controller
             'children_discount_amount',
             'simple_price',
             'children_price',
+            'product_price',
             'total_price',
             'total_buying_price',
             'total_buying_avg_price',
@@ -417,6 +446,10 @@ class PosOrderController extends Controller
             'pending',
             'discount_id',
             'printed_qty',
+            'time_used',
+            'time_in',
+            'time_out',
+            'price_by_time',
         ]);
     }
 
@@ -425,76 +458,64 @@ class PosOrderController extends Controller
      * @param  array                           $items
      * @throws \Exception
      */
-    private function subtractInventory( Collection $products, array $items )
+    private function subtractInventory(Order $order, Collection $products, array $items)
     {
         $canStockProducts = $products
             ->where('can_stock', true)
-            ->pipe(function ( $filtered ) {
-                return $filtered->load([
-                    'supplies.availableStocks' => function ( $query ) {
-                        $query->where('inventory_orders.status', 1) // don nhap da hoan thanh
-                        ->orderBy('inventory_orders.id', 'asc');
-                    },
-                ]);
-            })
             ->keyBy('uuid');
-//        dump($canStockProducts->toArray());
         foreach ( $items as $item ) {
             if ( is_null($product = $canStockProducts->get($item['product_uuid'])) ) {
                 continue;
             }
+
             $supplies = $product->supplies ?? new Collection();
             if ( $supplies->isEmpty() ) {
                 throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$product->name}.");
             };
+
             // tổng số lượng sản phẩm trong order
             $productQuantity = (int) $item['quantity'];
             $now             = Carbon::now()
                 ->format('Y-m-d H:i:s');
+
             foreach ( $supplies as $supply ) {
-                // dump($supply);
-                $stocks = $supply->availableStocks ?? new Collection();
-                // throw error if empty
-                if ( $stocks->isEmpty() ) {
-                    throw new \Exception("Không đủ nguyên liệu: \"{$supply->name}\" cho sản phẩm \"{$product->name}\" trong kho.");
-                };
+                // kiếm tra thiết lập cho phép bán khi tồn kho không đủ?
+                $configSale = currentPlace()->config_sale;
+                // $printInfo = currentPlace()->print_info;
+                // dd($printInfo);
                 // số lượng nguyên liệu / 1 sản phẩm
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
                 $outQuantity = $supplyQuantity * $productQuantity;
-                // lặp các lần nhập kho
-                foreach ( $stocks as $stock ) {
-                    if ( $outQuantity <= 0 ) {
-                        break;
-                    }
-                    // nếu tồn kho nhiều hơn tổng trừ kho
-                    if ( $stock->pivot->remain >= $outQuantity ) {
-                        // ... thực hiện trừ kho
-                        $supply->stocks()
-                            ->updateExistingPivot($stock->id, [
-                                'remain'     => $stock->pivot->remain - $outQuantity,
-                                'updated_at' => $now,
-                            ]);
-                        $outQuantity = 0;
-                        break;
-                    }
-                    // nếu tổng trừ kho nhiều hơn tồn kho trong lần nhập kho hiện tại
-                    // số lượng trừ kho còn lại
-                    $outQuantity = $outQuantity - $stock->pivot->remain;
-                    // ... trừ hết số lượng tồn
-                    $supply->stocks()
-                        ->updateExistingPivot($stock->id, [
-                            'remain'     => 0,
-                            'updated_at' => $now,
-                        ]);
-                } // end of stocks
-                // nếu tống trừ kho lớn hơn tổng tồn kho
-                if ( $outQuantity > 0 ) {
-                    throw new \Exception("\"{$supply->name}\" tồn kho không đủ số lượng bán của sản phẩm \"{$product->name}\" ");
+
+                if((!is_null($configSale) && !$configSale['allowOverstock']) && $outQuantity > $supply->remain) {
+                    // throw error if empty
+                    throw new \Exception("\"{$supply->name}\" trong kho chỉ còn: {$supply->remain} - không đủ để bán cho sản phẩm \"{$product->name}\".");
                 }
+
+                // thông tin phiếu xuất kho
+                $inventoryArr = [
+                    'ref_code' => $order->code,
+                    'order_id' => $order->id,
+                    'supply_id' => $supply->id,
+                    'qty_export' => $outQuantity,
+                    'qty_remain' => $supply->remain - $outQuantity,
+                    'total_price' => $item['total_price'],
+                    'price_pu' => $item['product_price'],
+                    'status' => 1,
+                    'note' => 'Xuất kho cho đơn hàng '.$order->code
+                ];
+
+                // thêm phiếu xuất kho
+                $order->inventory()->create($inventoryArr);
+
+                $supply->remain = $supply->remain - $outQuantity;
+                $supply->save();
             } // end of supplies
+
+
             // unload redundant relations
-            $product->unsetRelation('supplies');
+            // $product->unsetRelation('supplies');
         }
     }
 
@@ -507,13 +528,13 @@ class PosOrderController extends Controller
      * @throws \Exception
      * @throws \Throwable
      */
-    public function update( PosOrderRequest $request, Order $order )
+    public function update(PosOrderRequest $request, Order $order)
     {
-        if ( isOrderClosed($order) ) {
-            return response()->json([
-                'message' => 'Order đã thanh toán hoặc hủy không thể cập nhật',
-            ], 403);
-        }
+//        if ( isOrderClosed($order) ) {
+//            return response()->json([
+//                'message' => 'Order đã thanh toán hoặc hủy không thể cập nhật',
+//            ], 403);
+//        }
         $customer     = getBindVal('__customer');
         $table        = getBindVal('__table');
         $data         = $request->all();
@@ -525,7 +546,7 @@ class PosOrderController extends Controller
             && $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
-        $order = DB::transaction(function () use ( $products, $data, $order ) {
+        $order = DB::transaction(function () use ($products, $data, $order) {
             $orderData = $this->prepareOrderData($data);
             $products->load([ 'supplies' ]);
             $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
@@ -535,7 +556,7 @@ class PosOrderController extends Controller
             $order->update($calculatedOrderData);
             // save items
             $order->load([
-                'items' => function ( $query ) {
+                'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
                 'items.children',
@@ -545,7 +566,7 @@ class PosOrderController extends Controller
             //nếu bán thành công
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
-                $this->subtractInventory($products, $data['items']);
+                $this->subtractInventory($order, $products, $data['items']);
                 if ( $order->paid
                     && $order->paid > $oldPaid ) {
                     // tao phieu thu
@@ -559,17 +580,18 @@ class PosOrderController extends Controller
 //            'place',
 //            'table',
 //            'customer',
-            'items' => function ( $query ) {
+            'items' => function ($query) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
-            'items.product',
+            'items.product.category',
         ]);
 
         $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
             'table_name'    => $table->name ?? '',
+            'area_name'     => $table->area->name ?? '',
             'customer_uuid' => $customer->uuid ?? null,
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
@@ -586,53 +608,24 @@ class PosOrderController extends Controller
 
     /**
      * Display the specified resource.
+     *
      * @param  Order  $order
      * @return PosOrderResource
      * @throws \Exception
      */
-    public function show( Order $order )
+    public function show(Order $order)
     {
         $order->load([
 //            'place',
             'customer',
-            'table',
-            'items' => function ( $query ) {
+            'table.area',
+            'items' => function ($query) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
-            'items.product',
+            'items.product.category',
         ]);
         return ( new PosOrderResource($order) )->using([
-            'place_uuid' => currentPlace()->uuid,
-        ]);
-    }
-
-    /**
-     * @param  \App\Http\Requests\PosOrderRequest  $request
-     * @return \App\Http\Resources\PosOrdersCollection
-     * @throws \Exception
-     */
-    public function prints( PosOrderRequest $request )
-    {
-        $orders = Order::with([
-//            'place',
-            'creator',
-            'customer',
-            'table',
-            'items' => function ( $query ) {
-                $query->where('parent_id', 0);
-            },
-            'items.children.product',
-            'items.product',
-        ])
-            ->whereHas('items', function ( $query ) {
-                $query->where('printed_qty', '>', 0);
-            })
-            ->where('is_paid', 0)
-            ->filter(new OrderFilter($request))
-            ->orderBy('orders.id', 'desc')
-            ->get();
-        return ( new PosOrdersCollection($orders) )->using([
             'place_uuid' => currentPlace()->uuid,
         ]);
     }
@@ -644,12 +637,12 @@ class PosOrderController extends Controller
      * @throws \Exception
      * @throws \Throwable
      */
-    public function printed( PosOrderRequest $request, Order $order )
+    public function printed(PosOrderRequest $request, Order $order)
     {
         $order->load([
             'items',
         ]);
-        DB::transaction(function () use ( $order ) {
+        DB::transaction(function () use ($order) {
             if ( !$order->items->isEmpty() ) {
                 foreach ( $order->items as $item ) {
                     $item->printed_qty = 0;
@@ -661,11 +654,11 @@ class PosOrderController extends Controller
 //            'place',
             'table',
             'customer',
-            'items' => function ( $query ) {
+            'items' => function ($query) {
                 $query->where('parent_id', 0);
             },
             'items.children.product',
-            'items.product',
+            'items.product.category',
         ]);
 
         $usingArr = [
@@ -682,12 +675,12 @@ class PosOrderController extends Controller
      * @throws \Exception
      * @throws \Throwable
      */
-    public function canceled( PosOrderRequest $request, Order $order )
+    public function canceled(PosOrderRequest $request, Order $order)
     {
         if ( isOrderClosed($order) ) {
             throw new \Exception('ERROR: Order đã đóng không thể hủy');
         }
-        DB::transaction(function () use ( $order, $request ) {
+        DB::transaction(function () use ($order, $request) {
             $order->is_canceled = 1;
             $order->reason      = $request->reason;
             $order->save();

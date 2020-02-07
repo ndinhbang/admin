@@ -7,7 +7,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 abstract class QueryFilter
 {
+    /**
+     * @var FormRequest
+     */
     protected $request;
+    /**
+     * @var Builder
+     */
     protected $builder;
 
     public function __construct(FormRequest $request)

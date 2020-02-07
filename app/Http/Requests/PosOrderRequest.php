@@ -60,7 +60,7 @@ class PosOrderRequest extends FormRequest
                     Rule::requiredIf($countItems),
                 ],
                 'items.*.quantity' => [
-                    'bail', 'numeric', 'min:1', 'max:255',
+                    'bail', 'numeric',
                     Rule::requiredIf($countItems),
                 ],
                 'items.*.added_qty'   => [ 'bail', 'sometimes', 'numeric', 'min:0', 'max:255'],
@@ -92,7 +92,7 @@ class PosOrderRequest extends FormRequest
         }
         if ( $this->routeIs([ 'pos.orders.canceled' ]) ) {
             return [
-                'reason' => [ 'bail', 'required', 'string', 'max:191' ],
+                'reason' => [ 'bail', 'max:191' ],
             ];
         }
 

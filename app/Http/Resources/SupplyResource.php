@@ -26,11 +26,10 @@ class SupplyResource extends JsonResource
             $this->mergeWhen($this->resource->relationLoaded('stocks'), function () {
                 return [
                     'stocks'       => $this->stocks,
-                    'remain_stock' => $this->stocks->sum('pivot.remain'),
+                    // 'remain_stock' => $this->stocks->sum('pivot.remain'),
                 ];
             }),
-            'quantity_total' => isset($this->quantity_total) ? $this->quantity_total : 0,
-            'remain_total'   => isset($this->remain_total) ? $this->remain_total : 0,
+            'remain'      => $this->remain,
             'min_stock'      => $this->min_stock,
             'quantity'       => $this->whenPivotLoaded('product_supply', function () {
                 return $this->pivot->quantity;

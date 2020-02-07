@@ -20,10 +20,10 @@
                     {{ $order->code }}
                 </p>
                 <div align="center" class="my-3">
-                    <h1 align="center" class="my-1">{{ $order->table->name ?? 'Mang về' }}</h1>
+                    <h1 align="center" class="my-1">{{ $order->table->area->name ?? '' }}-{{ $order->table->name ?? 'Mang về' }} | {{ $order->card_name }}</h1>
                 </div>
                 <p class="my-1"><strong>Thời gian:</strong>
-                    <span id="time">{{ $order->updated_at }}</span>
+                    <span id="time">{{ Carbon\Carbon::parse($order->updated_at)->format('d/m/Y H:i:s A') }}</span>
                 </p>
                 <p class="my-1"><strong>Nhân viên:</strong>
                     <span id="staff">{{ $order->creator->display_name ?? '' }}</span>
@@ -45,7 +45,7 @@
                                 <tr>
                                     <td class="text-left top-border"><h4 class="py-1 my-1">{{ $key +1 }}</h4></td>
                                     <td class="text-left top-border">
-                                        <h2 class="py-1 my-1">{{ $item->product->name }}</h2>
+                                        <h2 class="py-1 my-1">{{ $item->product_name }}</h2>
                                         @if($item->note)
                                             <div><em>Ghi chú:</em> <strong>{{ $item->note }}</strong></div>
                                         @endif

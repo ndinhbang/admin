@@ -15,6 +15,8 @@ class RequirePlace
         'api/profile*',
         'broadcasting/auth',
         'print/preview*',
+        'print/report*',
+        '_debugbar/*',
     ];
 
     /**

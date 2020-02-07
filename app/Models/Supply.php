@@ -25,6 +25,7 @@ class Supply extends Model {
 		'place_id' => 'integer',
 		'unit_id' => 'integer',
 		'name' => 'string',
+		'remain' => 'double',
 		'price_in' => 'double',
 		'min_stock' => 'integer',
 		'max_stock' => 'integer',
@@ -60,7 +61,7 @@ class Supply extends Model {
 	}
 
 	public function stocks() {
-	    return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')->withPivot(['quantity', 'remain', 'price_pu', 'total_price'])
+	    return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')->withPivot(['qty_import', 'qty_export', 'qty_remain', 'price_pu', 'total_price'])
             ->withTimestamps();
     }
 
@@ -73,14 +74,20 @@ class Supply extends Model {
     }
 
 	public function inventory() {
-		return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')
-			->select('inventory_orders.*', 'accounts.name as supplier_name', 'users.display_name as creator_name')
-			->join('accounts', 'accounts.id', '=', 'inventory_orders.supplier_id')
-			->join('users', 'users.id', '=', 'inventory_orders.creator_id')
-			->withPivot(['quantity', 'remain', 'price_pu', 'total_price'])
-			->where('inventory_orders.status', 1)
-			->withTimestamps();
+		return $this->hasMany('App\Models\Inventory', 'supply_id')
+			->where('status', 1)
+			->orderBy('updated_at', 'desc');
 	}
+
+	// public function inventory() {
+	// 	return $this->belongsToMany('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')
+	// 		->select('inventory_orders.*', 'accounts.name as supplier_name', 'users.display_name as creator_name')
+	// 		->join('accounts', 'accounts.id', '=', 'inventory_orders.supplier_id')
+	// 		->join('users', 'users.id', '=', 'inventory_orders.creator_id')
+	// 		->withPivot(['quantity', 'remain', 'price_pu', 'total_price'])
+	// 		->where('inventory_orders.status', 1)
+	// 		->withTimestamps();
+	// }
 
 	public function orders() {
 		return $this->belongsTo('App\Models\InventoryOrder', 'inventory', 'supply_id', 'inventory_order_id')

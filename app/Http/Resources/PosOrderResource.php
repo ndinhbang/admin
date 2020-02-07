@@ -56,7 +56,8 @@ class PosOrderResource extends JsonResource
                 return [
                     'table_uuid' => $this->table->uuid ?? null,
                     'table_name' => $this->table->name ?? '',
-                    'table'      => new TableResource($this->table),
+                    'area_name'  => $this->table->area->name ?? '',
+//                    'table'      => new TableResource($this->table),
                 ];
             }),
             $this->mergeWhen($this->resource->relationLoaded('customer'), function () {
@@ -64,7 +65,7 @@ class PosOrderResource extends JsonResource
                     'customer_uuid' => $this->customer->uuid ?? null,
                     'customer_name' => $this->customer->name ?? '',
                     'customer_code' => $this->customer->code ?? '',
-                    'customer'      => $this->customer,
+//                    'customer'      => $this->customer,
                 ];
             }),
             $this->merge($this->using),

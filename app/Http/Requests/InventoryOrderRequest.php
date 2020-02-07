@@ -41,7 +41,7 @@ class InventoryOrderRequest extends FormRequest
                     'size:21',
                     new ExistsThenBindVal(Account::class, 'uuid'),
                 ],
-                'supplies.*.quantity' => [
+                'supplies.*.qty_import' => [
                     'bail',
                     'numeric',
                     Rule::requiredIf(count($this->input('supplies')) > 0),
@@ -68,8 +68,8 @@ class InventoryOrderRequest extends FormRequest
             'amount.min'                    => 'Bạn chưa chọn nguyên liệu hoặc chưa nhập giá của nguyên liệu',
             'supplies.*.id.required'       => 'Bạn chưa chon nguyện liệu ',
             'supplies.*.id.integer'        => 'ID nguyên liệu phải là số ',
-            'supplies.*.quantity.required' => 'Bạn chưa nhập sô lượng nguyên liệu ',
-            'supplies.*.quantity.numeric'  => 'Số lượng nguyên liệu phải là số',
+            'supplies.*.qty_import.required' => 'Bạn chưa nhập sô lượng nguyên liệu ',
+            'supplies.*.qty_import.numeric'  => 'Số lượng nguyên liệu phải là số',
             'supplies.*.total_price.numeric'  => 'Giá nhập phải là số',
             'supplies.*.total_price.min'  => 'Bạn chưa nhập giá cho nguyên liệu',
         ];

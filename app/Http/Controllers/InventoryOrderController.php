@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Filters\InventoryOrderFilter;
 use App\Http\Requests\InventoryOrderRequest;
 use App\Http\Resources\InventoryOrderResource;
+use App\Models\Inventory;
 use App\Models\InventoryOrder;
 use App\Models\Supply;
 use Illuminate\Http\Request;
@@ -80,16 +81,16 @@ class InventoryOrderController extends Controller {
 			$keyedArr = $this->addSupplies($inventoryOrder, $request->input('supplies', []));
 			$inventoryOrder->supplies()->attach($keyedArr);
 
-			// cập nhật giá nhập trung bình cho nguyên liệu
-			foreach ($keyedArr as $supply_id => $inventory) {
-				$supply = Supply::find($supply_id);
-				// Lưu giá nhập trung bình trên mỗi đơn vị
-				$supply->price_avg_in = $supply->avgBuyingPrice();
-				$supply->save();
-			}
-
 			// tạo phiếu chi/thu tương ứng với giá nhập/trả
 			if ($inventoryOrder->status) {
+
+				// cập nhật giá nhập trung bình cho nguyên liệu
+				foreach ($keyedArr as $supply_id => $inventory) {
+					$supply = Supply::find($supply_id);
+					$supply->price_avg_in = $supply->avgBuyingPrice();
+					$supply->save();
+				}
+				
 				// Lưu
 				$voucher = $inventoryOrder->createVoucher($request->input('payment_method'), null, null, 'Thanh toán');
 			
@@ -124,15 +125,29 @@ class InventoryOrderController extends Controller {
 				$supply->save();
 			}
 
+			// lấy dữ liệu kho theo nguyên liệu gần nhất
+			$lastInventory = $supply->inventory()->first();
+
+			$qtyRemain = is_null($lastInventory) ? $item['qty_import'] : $lastInventory->qty_remain + $item['qty_import'];
+
 			$result[$supply->id] = [
-				'quantity' => $item['quantity'],
-				'remain' => $item['quantity'],
+				'ref_code' => $inventoryOrder->code,
+				'qty_import' => $item['qty_import'],
+				'qty_remain' => $qtyRemain,
 				'total_price' => $item['total_price'],
-				'price_pu' => round($item['total_price'] / $item['quantity']),
+				'price_pu' => round($item['total_price'] / $item['qty_import']),
+				'status' => $inventoryOrder->status,
+				'note' => 'Nhập kho cho đơn '.$inventoryOrder->code
 			];
 
 			// Lưu giá nhập trên mỗi đơn vị mới nhất
 			$supply->price_in = $result[$supply->id]['price_pu'];
+			$supply->save();
+
+			// cập nhật giá nhập trung bình cho nguyên liệu
+			if($inventoryOrder->status) {
+				$supply->remain = $qtyRemain;
+			}
 			$supply->save();
 		}
 		return $result;

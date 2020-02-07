@@ -27,8 +27,10 @@ class OrderController extends Controller
                 SUM(orders.discount_amount) as total_discount_amount,
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
                 SUM(orders.debt) as total_debt_amount')
+            ->where('orders.is_paid', true)
             ->filter(new OrderFilter($request))
             ->first();
+
         $orders  = Order::with([
             'creator',
             'customer',
@@ -41,6 +43,7 @@ class OrderController extends Controller
         ])
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
+            ->withTrashed()
             ->paginate($request->per_page);
         return OrderResource::collection($orders)
             ->additional([ 'summary' => $summary ]);
@@ -93,6 +96,11 @@ class OrderController extends Controller
                 $vouchers = $order->vouchers()->delete();
             }
 
+            $order->is_canceled = 1;
+            $order->is_paid = 0;
+            $order->is_completed = 0;
+            $order->save();
+            
             $order->delete();
 
             // Cập nhật thông tin tổng quan cho account

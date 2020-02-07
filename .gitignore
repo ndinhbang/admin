@@ -34,4 +34,4 @@ public/precache-manifest.*.js
 
 public/medias/
 
-queue.log
+*.log

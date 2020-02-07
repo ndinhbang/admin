@@ -204,6 +204,16 @@ class Order extends Model
             ->withTimestamps();
     }
 
+    public function supplies() {
+        return $this->belongsToMany('App\Models\Supply', 'inventory', 'order_id', 'supply_id')
+            ->withPivot('qty_import', 'qty_export', 'qty_remain', 'total_price', 'price_pu')
+            ->withTimestamps();
+    }
+
+    public function inventory() {
+        return $this->belongsTo('App\Models\Inventory');
+    }
+
     public function vouchers() {
         return $this->hasMany('App\Models\Voucher');
     }
