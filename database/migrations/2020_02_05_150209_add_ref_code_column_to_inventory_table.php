@@ -20,11 +20,6 @@ class AddRefCodeColumnToInventoryTable extends Migration
             $table->integer('order_id')->nullable()->default(0)->after('ref_code');
             $table->integer('inventory_take_id')->nullable()->default(0)->after('order_id');
             $table->integer('inventory_order_id')->nullable()->default(0)->change();
-
-            $table->dropUnique('inventories_supply_id_expense_id_unique');
-            $table->dropIndex('inventories_expense_id_index');
-
-            $table->unique(['supply_id', 'inventory_take_id', 'inventory_order_id', 'order_id'], 'inventory_compound_unique');
         });
 
         Schema::table('supplies', function (Blueprint $table) {

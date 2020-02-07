@@ -15,7 +15,7 @@ class AlterUniqueInventoryTable extends Migration
     {
         Schema::table('inventory', function (Blueprint $table) {
             $table->dropUnique('inventories_supply_id_expense_id_unique');
-            $table->dropUnique('inventories_expense_id_index');
+            $table->dropIndex('inventories_expense_id_index');
 
             $table->index(['supply_id', 'inventory_take_id', 'inventory_order_id', 'order_id'], 'supply_and_other_index');
         });
