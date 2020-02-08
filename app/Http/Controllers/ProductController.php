@@ -26,6 +26,7 @@ class ProductController extends Controller {
 		'remain',
 		'min_stock',
 		'unit_uuid',
+		'has_thumbnail',
 	];
 
 	/**
@@ -112,8 +113,8 @@ class ProductController extends Controller {
 				// generate uuid
 				$supply->uuid = nanoId();
 				$supply->unit_id = !is_null($unit) ? $unit->id : 0;
-				$supply->remain = $product->remain;
-				$supply->min_stock = $product->min_stock;
+				$supply->remain = $product->remain ? $product->remain : 0;
+				$supply->min_stock = $product->min_stock ? $product->min_stock : 0;
 				$supply->save();
 			}
 

@@ -20,6 +20,7 @@ class ProductResource extends JsonResource
             'price'         => $this->price,
             'is_hot'        => $this->is_hot,
             'thumbnail'     => config('app.media_url') . ( $this->thumbnail ? '/products/' . $this->thumbnail : '' ),
+            'has_thumbnail'     => $this->thumbnail ? true : false,
             'thumbnailFile' => null,
             'code'          => $this->code,
             'opened'        => $this->opened,

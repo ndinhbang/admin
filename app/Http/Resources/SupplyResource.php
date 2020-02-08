@@ -34,6 +34,9 @@ class SupplyResource extends JsonResource
             'quantity'       => $this->whenPivotLoaded('product_supply', function () {
                 return $this->pivot->quantity;
             }),
+            'remain_on_quantity'       => $this->whenPivotLoaded('product_supply', function () {
+                return $this->pivot->quantity ? round($this->remain / $this->pivot->quantity, 2) : 0;
+            }),
             'created_at'       => $this->created_at,
         ];
     }
