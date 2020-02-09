@@ -35,6 +35,7 @@ class OrderController extends Controller
             'creator',
             'customer',
             'table',
+            'table.area',
             'items' => function ( $query ) {
                 // $query->where('parent_id', 0);
             },

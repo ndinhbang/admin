@@ -49,8 +49,11 @@ class PosReportController extends Controller
             ->first();
 
         // items Orders
-        $items = Order::select('orders.*', 'users.display_name')->join('users', 'users.id', '=', 'orders.creator_id')
-            ->with([
+        $items = Order::with([
+                'creator',
+                'customer',
+                'table',
+                'table.area',
                 'items' => function ( $query ) {
                     // $query->where('parent_id', 0);
                 },
