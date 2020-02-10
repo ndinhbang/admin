@@ -6,6 +6,7 @@ use App\Events\ProductChanged;
 use App\Http\Filters\ProductFilter;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supply;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ class ProductController extends Controller {
 		'thumbnailFile',
 		'updated_at',
 		'created_at',
+		'remain',
+		'min_stock',
+		'unit_uuid',
+		'has_thumbnail',
 	];
 
 	/**
@@ -64,6 +69,10 @@ class ProductController extends Controller {
 
 			// tao supply neu san pham co quan ly ton kho
 			if ($product->can_stock) {
+				$product->remain = $request->input('remain');
+				$product->min_stock = $request->input('min_stock');
+				$product->unit_uuid = $request->input('unit_uuid');
+
 				$keyedArr = $this->addSupplies($product, $request->input('supplies', []));
 				$product->supplies()->attach($keyedArr);
 			}
@@ -99,8 +108,13 @@ class ProductController extends Controller {
 			]);
 
 			if (!$supply->id) {
+				$unit = $product->unit_uuid ? Category::findUuid($product->unit_uuid) : null;
+
 				// generate uuid
 				$supply->uuid = nanoId();
+				$supply->unit_id = !is_null($unit) ? $unit->id : 0;
+				$supply->remain = $product->remain ? $product->remain : 0;
+				$supply->min_stock = $product->min_stock ? $product->min_stock : 0;
 				$supply->save();
 			}
 
@@ -108,16 +122,25 @@ class ProductController extends Controller {
 			return $result;
 		}
 
+		// Định lượng nhiều nguyên liệu
 		foreach ($collection as $item) {
+
 			$supply = Supply::firstOrNew([
 				'place_id' => $product->place_id,
-				'name' => $item['name'],
+				'name' => $item['name']
 			]);
+
 			if (!$supply->id) {
 				// generate uuid
+				$unit = $item['unit_uuid'] ? Category::findUuid($item['unit_uuid']) : null;
+
 				$supply->uuid = $supply->uuid ?? nanoId();
+				$supply->unit_id = !is_null($unit) ? $unit->id : 0;
+				$supply->min_stock = $item['min_stock'];
+				$supply->remain = $item['remain'];
 				$supply->save();
 			}
+
 			$result[$supply->id] = ['quantity' => $item['quantity']];
 		}
 		return $result;
