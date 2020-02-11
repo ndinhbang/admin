@@ -13,6 +13,7 @@ class RequirePlace
         'api/roles*',
         'api/admin*',
         'api/profile*',
+        'broadcasting/auth',
         'print/preview*',
         'print/report*',
         '_debugbar/*',

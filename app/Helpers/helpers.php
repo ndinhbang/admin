@@ -45,6 +45,12 @@ if ( !function_exists('getClassShortName') ) {
     }
 }
 if ( !function_exists('uploadImage') ) {
+    /**
+     * @param  \Illuminate\Http\UploadedFile|null  $file
+     * @param  string                              $targetPath
+     * @param  bool                                $keepOriginalSize
+     * @return bool|string
+     */
     function uploadImage(\Illuminate\Http\UploadedFile $file = null, $targetPath = 'medias/', $keepOriginalSize = false)
     {
         if ( !is_null($file) ) {

@@ -16,18 +16,17 @@ class BindCurrentPlaceIfExists
      */
     public function handle($request, Closure $next)
     {
-        $uuid = $request->header('X-Place-Id');
-        $place = Place::where('uuid', $uuid)->first();
-
         // return error if place is not exists in case of requiring place uuid
-        if (getBindVal('__requirePlace') && is_null($place)) {
+        if (getBindVal('__requirePlace')
+            && (is_null($uuid = $request->header('X-Place-Id'))
+                || is_null($place = Place::where('uuid', $uuid)->first()))) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Bad request'], 400)
                 : response('Bad request', 400);
         }
 
         // make current place instance available as a global
-        app()->instance('__currentPlace', $place);
+        app()->instance('__currentPlace', $place ?? null);
 
         return $next($request);
     }
