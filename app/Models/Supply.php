@@ -42,6 +42,15 @@ class Supply extends Model {
 		static::addGlobalScope(new PlaceScope);
 	}
 
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return Supply::where('uuid', $uuid)->first();
+
+        return null;
+    }
+
 	// ======================= Overrided ================= //
 
 	/**

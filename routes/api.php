@@ -107,9 +107,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::apiResource('inventory', 'InventoryController');
 
 	/** =============== Inventory Orders ================= **/
-
 	Route::post('inventory_order/{uuid}/pay-debt', 'InventoryOrderController@payDebt')->name('inventory_order.pay_debt');
 	Route::apiResource('inventory_order', 'InventoryOrderController');
+
+	/** =============== Inventory Takes ================= **/
+	Route::apiResource('inventory_take', 'InventoryTakeController');
 
 	/** =============== Orders ================= **/
 	Route::apiResource('orders', 'OrderController');
