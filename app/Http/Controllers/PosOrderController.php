@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OrderCanceled;
+use App\Events\OrderPaid;
 use App\Events\OrderUpdated;
 use App\Http\Filters\OrderFilter;
 use App\Http\Requests\PosOrderRequest;
@@ -60,8 +61,7 @@ class PosOrderController extends Controller
             ->orWhere('is_canceled', 1)
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
-        ->get(['uuid']);
-
+            ->get([ 'uuid' ]);
         return $orders->toArray();
     }
 
@@ -80,8 +80,7 @@ class PosOrderController extends Controller
         $data         = $request->all();
         $items        = $data['items'] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
-        $products     = Product::whereIn('uuid', $productUuids)
-            ->get();
+        $products     = Product::whereIn('uuid', $productUuids)->get();
         if ( $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
@@ -137,7 +136,6 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product.category',
         ]);
-
         $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
@@ -147,11 +145,14 @@ class PosOrderController extends Controller
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
         ];
-
         $resource = ( new PosOrderResource($order) )->using($usingArr);
         $response = $resource->toResponse($request);
         // broadcast event
-        broadcast(new OrderUpdated($response->getData()))->toOthers();
+        if ($order->is_paid) {
+            broadcast(new OrderPaid($order, currentPlace()))->toOthers();
+        } else {
+            broadcast(new OrderUpdated($response->getData()))->toOthers();
+        }
         // return json string
         return $response->getContent();
     }
@@ -349,8 +350,7 @@ class PosOrderController extends Controller
             'updated'  => [],
         ];
         $current = empty($keyedData) ? [] : array_keys($keyedData);
-        $existed = is_null($keyedItems) || $keyedItems->isEmpty() ? [] : $keyedItems->keys()
-            ->all();
+        $existed = is_null($keyedItems) || $keyedItems->isEmpty() ? [] : $keyedItems->keys()->all();
         if ( empty($current) && empty($existed) ) {
             return; // skip
         }
@@ -359,7 +359,7 @@ class PosOrderController extends Controller
         $changes['updated']  = array_flip(array_intersect($current, $existed));
         // phần trăm giảm giá trên từng sản phẩm
         $discountOrderPercent = 0;
-        if ( !empty($keyedData) && $order->amount) {
+        if ( !empty($keyedData) && $order->amount ) {
             $discountOrderPercent = ( $order->discount_amount * 100 ) / ( $order->amount + $order->discount_amount );
         }
         // Xóa item cũ không có trong mảng item mới
@@ -454,6 +454,7 @@ class PosOrderController extends Controller
     }
 
     /**
+     * @param  \App\Models\Order               $order
      * @param  \Illuminate\Support\Collection  $products
      * @param  array                           $items
      * @throws \Exception
@@ -467,17 +468,13 @@ class PosOrderController extends Controller
             if ( is_null($product = $canStockProducts->get($item['product_uuid'])) ) {
                 continue;
             }
-
             $supplies = $product->supplies ?? new Collection();
             if ( $supplies->isEmpty() ) {
                 throw new \Exception("Chưa khai báo nguyên liệu cho sản phẩm {$product->name}.");
             };
-
             // tổng số lượng sản phẩm trong order
             $productQuantity = (int) $item['quantity'];
-            $now             = Carbon::now()
-                ->format('Y-m-d H:i:s');
-
+            $now             = Carbon::now()->format('Y-m-d H:i:s');
             foreach ( $supplies as $supply ) {
                 // kiếm tra thiết lập cho phép bán khi tồn kho không đủ?
                 $configSale = currentPlace()->config_sale;
@@ -487,33 +484,27 @@ class PosOrderController extends Controller
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
                 $outQuantity = $supplyQuantity * $productQuantity;
-
-                if((!is_null($configSale) && !$configSale['allowOverstock']) && $outQuantity > $supply->remain) {
+                if ( ( !is_null($configSale) && !$configSale['allowOverstock'] ) && $outQuantity > $supply->remain ) {
                     // throw error if empty
                     throw new \Exception("\"{$supply->name}\" trong kho chỉ còn: {$supply->remain} - không đủ để bán cho sản phẩm \"{$product->name}\".");
                 }
-
                 // thông tin phiếu xuất kho
                 $inventoryArr = [
-                    'ref_code' => $order->code,
-                    'order_id' => $order->id,
-                    'supply_id' => $supply->id,
-                    'qty_export' => $outQuantity,
-                    'qty_remain' => $supply->remain - $outQuantity,
+                    'ref_code'    => $order->code,
+                    'order_id'    => $order->id,
+                    'supply_id'   => $supply->id,
+                    'qty_export'  => $outQuantity,
+                    'qty_remain'  => $supply->remain - $outQuantity,
                     'total_price' => $item['total_price'],
-                    'price_pu' => $item['product_price'],
-                    'status' => 1,
-                    'note' => 'Xuất kho cho đơn hàng '.$order->code
+                    'price_pu'    => $item['product_price'],
+                    'status'      => 1,
+                    'note'        => 'Xuất kho cho đơn hàng ' . $order->code,
                 ];
-
                 // thêm phiếu xuất kho
                 $order->inventory()->create($inventoryArr);
-
                 $supply->remain = $supply->remain - $outQuantity;
                 $supply->save();
             } // end of supplies
-
-
             // unload redundant relations
             // $product->unsetRelation('supplies');
         }
@@ -586,7 +577,6 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product.category',
         ]);
-
         $usingArr = [
             'place_uuid'    => currentPlace()->uuid,
             'table_uuid'    => $table->uuid ?? null,
@@ -596,12 +586,14 @@ class PosOrderController extends Controller
             'customer_name' => $customer->name ?? '',
             'customer_code' => $customer->code ?? '',
         ];
-
         $resource = ( new PosOrderResource($order) )->using($usingArr);
         $response = $resource->toResponse($request);
         // broadcast event
-//        broadcast(new OrderUpdated($response->getData()))->toOthers();
-        broadcast(new OrderUpdated($response->getData()));
+        if ($order->is_paid) {
+            broadcast(new OrderPaid($order, currentPlace()))->toOthers();
+        } else {
+            broadcast(new OrderUpdated($response->getData()))->toOthers();
+        }
         // return json string
         return $response->getContent();
     }
@@ -660,11 +652,9 @@ class PosOrderController extends Controller
             'items.children.product',
             'items.product.category',
         ]);
-
         $usingArr = [
             'place_uuid' => currentPlace()->uuid,
         ];
-
         return ( new PosOrderResource($order) )->using($usingArr);
     }
 
@@ -680,6 +670,7 @@ class PosOrderController extends Controller
         if ( isOrderClosed($order) ) {
             throw new \Exception('ERROR: Order đã đóng không thể hủy');
         }
+
         DB::transaction(function () use ($order, $request) {
             $order->is_canceled = 1;
             $order->reason      = $request->reason;
@@ -692,7 +683,7 @@ class PosOrderController extends Controller
 
         return response()->json([
             'order_uuid' => $order->uuid,
-            'message' => 'OK'
+            'message'    => 'OK',
         ]);
     }
 }
