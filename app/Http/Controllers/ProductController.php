@@ -132,12 +132,12 @@ class ProductController extends Controller {
 
 			if (!$supply->id) {
 				// generate uuid
-				$unit = $item['unit_uuid'] ? Category::findUuid($item['unit_uuid']) : null;
+				$unit = isset($item['unit_uuid']) && $item['unit_uuid'] ? Category::findUuid($item['unit_uuid']) : null;
 
 				$supply->uuid = $supply->uuid ?? nanoId();
 				$supply->unit_id = !is_null($unit) ? $unit->id : 0;
-				$supply->min_stock = $item['min_stock'];
-				$supply->remain = $item['remain'];
+				$supply->min_stock = isset($item['min_stock']) && $item['min_stock'] ? $item['min_stock'] : 0;
+				$supply->remain = isset($item['remain']) && $item['remain'] ? $item['remain'] : 0;
 				$supply->save();
 			}
 

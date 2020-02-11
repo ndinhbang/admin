@@ -27,6 +27,7 @@ class ProductResource extends JsonResource
             'can_stock'     => $this->can_stock,
             'price_by_time' => $this->price_by_time,
             'position'      => $this->position,
+            'description'   => $this->description,
             'state'         => $this->state,
             'updated_at'    => $this->updated_at,
             'supplies'      => SupplyResource::collection($this->whenLoaded('supplies')),

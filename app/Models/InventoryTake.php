@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GenerateCode;
 use App\Traits\Filterable;
 use App\Scopes\PlaceScope;
 
 class InventoryTake extends Model
 {
-    use Filterable, GenerateCode;
+    use Filterable, SoftDeletes, GenerateCode;
 
     protected $table = 'inventory_takes';
     protected $codePrefix = 'PKK';
@@ -74,7 +75,7 @@ class InventoryTake extends Model
     }
 
     public function supplies() {
-        return $this->belongsToMany('App\Models\Supply', 'inventory', 'inventory_order_id', 'supply_id')
+        return $this->belongsToMany('App\Models\Supply', 'inventory', 'inventory_take_id', 'supply_id')
             ->withPivot('qty_import', 'qty_export', 'qty_remain', 'total_price', 'price_pu')
             ->withTimestamps();
     }

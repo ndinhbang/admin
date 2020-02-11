@@ -34,7 +34,7 @@ class InventoryTakeController extends Controller {
                 'supplies'
             ])
             ->filter(new InventoryTakeFilter($request))
-            ->orderBy('inventory_orders.id', 'desc')
+            ->orderBy('inventory_takes.id', 'desc')
             ->paginate($request->per_page);
 
         return InventoryTakeResource::collection($inventoryTakes);
@@ -61,25 +61,16 @@ class InventoryTakeController extends Controller {
 
             // add supplies
             $keyedArr = $this->addSupplies($inventoryTake, $request->input('supplies', []));
-            $inventoryTake->supplies()->attach($keyedArr);
-
-            // tạo phiếu chi/thu tương ứng với giá nhập/trả
-            if ($inventoryTake->status) {
-
-                // cập nhật giá nhập trung bình cho nguyên liệu
-                foreach ($keyedArr as $supply_id => $inventory) {
-                    $supply = Supply::find($supply_id);
-                    $supply->price_avg_in = $supply->avgBuyingPrice();
-                    $supply->save();
-                }
-                
-                // Lưu
-                $voucher = $inventoryTake->createVoucher($request->input('payment_method'), null, null, 'Thanh toán');
+            $inventoryTake->supplies()->attach($keyedArr['supplies']);
             
-                // Cập nhật thông tin tổng quan cho account
-                $supplier->updateInventoryOrdersStats();
-            }
-
+            // 
+            $inventoryTake->qty = $keyedArr['stats']['total'];
+            $inventoryTake->qty_diff = $keyedArr['stats']['diff'];
+            $inventoryTake->qty_excessing = $keyedArr['stats']['excessing'];
+            $inventoryTake->qty_missing = $keyedArr['stats']['missing'];
+            
+            $inventoryTake->save();
+            
             return $inventoryTake;
         }, 5);
     }
@@ -93,9 +84,11 @@ class InventoryTakeController extends Controller {
      */
     protected function addSupplies(InventoryTake $inventoryTake, array $arrSupplies) {
         $result = [];
+        $total = $diff = $missing = $excessing = 0;
+
         $collection = new Collection($arrSupplies);
 
-        foreach ($collection as $item) {
+        foreach ($collection as $key => $item) {
             $supply = Supply::findUuid($item['uuid']);
 
             if(is_null($supply)) {
@@ -109,22 +102,40 @@ class InventoryTakeController extends Controller {
 
             $qtyDiff = abs($item['qty_diff']);
 
-            $result[$supply->id] = [
+            $result['supplies'][$supply->id] = [
                 'ref_code' => $inventoryTake->code,
                 'qty_import' => $item['qty_diff'] < 0 ? $qtyDiff : 0,
                 'qty_export' => $item['qty_diff'] > 0 ? $qtyDiff : 0,
                 'qty_remain' => $qtyRemain,
-                'total_price' => round($lastInventory->price_pu * $qtyDiff),
-                'price_pu' => $lastInventory->price_pu,
+                'total_price' => round($supply->price_in * $qtyDiff),
+                'price_pu' => $supply->price_in,
                 'status' => $inventoryTake->status,
-                'note' => $item['note']
+                'note' => isset($item['note']) ? $item['note'] : ''
+            ];
+
+            $total++;
+
+            if($item['qty_diff'] != 0)
+                $diff++;
+
+            if($item['qty_diff'] > 0)
+                $excessing++;
+
+            if($item['qty_diff'] < 0)
+                $missing++;
+
+            $result['stats'] = [
+                'total' => $total,
+                'diff' => $diff,
+                'missing' => $missing,
+                'excessing' => $excessing,
             ];
 
             // cập nhật giá nhập trung bình cho nguyên liệu
             if($inventoryTake->status) {
                 $supply->remain = $qtyRemain;
+                $supply->save();
             }
-            $supply->save();
         }
         return $result;
     }
@@ -160,10 +171,8 @@ class InventoryTakeController extends Controller {
             ]));
 
             // sync supplies
-            $keyedArr = $this->addSupplies($inventoryTake, $request->input('supplies', []));
-            $inventoryTake->supplies()->sync($keyedArr);
-
-            // tạo phiếu chi/thu tương ứng với giá nhập/trả
+            $keyedArr['supplies'] = $this->addSupplies($inventoryTake, $request->input('supplies', []));
+            $inventoryTake->supplies()->sync($keyedArr['supplies']);
 
             return $inventoryTake;
         }, 5);

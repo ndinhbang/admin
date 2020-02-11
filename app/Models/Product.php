@@ -38,6 +38,7 @@ class Product extends Model {
 		'can_stock' => 'boolean',
         'price_by_time' => 'boolean',
 		'thumbnail' => 'string',
+        'description' => 'string',
 	];
 
     // ======================= Custom Properties ================= //

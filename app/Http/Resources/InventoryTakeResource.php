@@ -24,6 +24,10 @@ class InventoryTakeResource extends JsonResource
             'supplies' => InventorySupplyResource::collection($this->whenLoaded('supplies')),
 
             'on_date' => $this->on_date,
+            'qty' => $this->qty,
+            'qty_diff' => $this->qty_diff,
+            'qty_missing' => $this->qty_missing,
+            'qty_excessing' => $this->qty_excessing,
             'status' => $this->status,
             'note' => $this->note,
             'user_id' => $this->user_id,
