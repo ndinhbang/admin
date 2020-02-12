@@ -40,6 +40,7 @@ class InventoryOrder extends Model {
 		'debt' => 'double',
 		'paid' => 'double',
 		'attached_files' => 'string',
+		'payment_method' => 'string',
 		'note' => 'string',
 		'type' => 'integer',
 		'status' => 'integer',

@@ -32,7 +32,10 @@ class InventoryOrderFilter extends QueryFilter {
                 return $this->builder->where('debt', '>', 0)->whereNull('deleted_at');
                 break;
             case 'complete':
-                return $this->builder->whereNull('deleted_at');
+                return $this->builder->whereNull('deleted_at')->where('status', 1);
+                break;
+            case 'draft':
+                return $this->builder->whereNull('deleted_at')->where('status', 0);
                 break;
             case 'trashed':
                 return $this->builder->whereNotNull('deleted_at');

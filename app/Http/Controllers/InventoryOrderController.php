@@ -24,7 +24,6 @@ class InventoryOrderController extends Controller {
 		'creator_name',
 		'updated_at',
 		'created_at',
-		'payment_method',
 		'place',
 		'supplier',
 	];
@@ -173,8 +172,6 @@ class InventoryOrderController extends Controller {
 	public function update(InventoryOrderRequest $request, InventoryOrder $inventoryOrder) {
 		$inventoryOrder = DB::transaction(function () use ($request, $inventoryOrder) {
 
-			$inventoryOrder->createVoucher();
-
 			$supplier = getBindVal('account');
 
 			// update inventory order
@@ -182,13 +179,27 @@ class InventoryOrderController extends Controller {
 			$inventoryOrder->update(array_merge($request->except($this->exceptAttributes), [
 				'supplier_id' => $supplier->id,
 			]));
-
 			// sync supplies
 			$keyedArr = $this->addSupplies($inventoryOrder, $request->input('supplies', []));
 			$inventoryOrder->supplies()->sync($keyedArr);
 
 			// tạo phiếu chi/thu tương ứng với giá nhập/trả
 
+			if ($inventoryOrder->status) {
+				// cập nhật giá nhập trung bình cho nguyên liệu
+				foreach ($keyedArr as $supply_id => $inventory) {
+					$supply = Supply::find($supply_id);
+					$supply->price_avg_in = $supply->avgBuyingPrice();
+					$supply->save();
+				}
+				
+				// Lưu
+				$voucher = $inventoryOrder->createVoucher($request->input('payment_method'), null, null, 'Thanh toán');
+			
+				// Cập nhật thông tin tổng quan cho account
+		        $supplier->updateInventoryOrdersStats();
+			}
+			
 			return $inventoryOrder;
 		}, 5);
 	}

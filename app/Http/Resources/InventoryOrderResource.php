@@ -32,6 +32,7 @@ class InventoryOrderResource extends JsonResource {
 			'vouchers' => VoucherResource::collection($this->whenLoaded('vouchers')),
 
 			'on_date' => $this->on_date,
+			'payment_method' => $this->payment_method,
 			'amount' => $this->amount,
 			'debt' => $this->debt,
 			'paid' => $this->paid,

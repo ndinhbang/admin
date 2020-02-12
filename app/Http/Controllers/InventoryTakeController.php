@@ -73,6 +73,8 @@ class InventoryTakeController extends Controller {
             
             return $inventoryTake;
         }, 5);
+
+        return new InventoryTakeResource($inventoryTake->load(['creator','supplies']));;
     }
 
     /**
@@ -98,7 +100,7 @@ class InventoryTakeController extends Controller {
             // lấy dữ liệu kho theo nguyên liệu gần nhất
             $lastInventory = $supply->inventory()->first();
 
-            $qtyRemain = is_null($lastInventory) ? $item['qty_diff'] : $lastInventory->qty_remain + $item['qty_diff'];
+            $qtyRemain = is_null($lastInventory) ? $item['qty_diff'] : $lastInventory->qty_remain - $item['qty_diff'];
 
             $qtyDiff = abs($item['qty_diff']);
 
@@ -147,7 +149,7 @@ class InventoryTakeController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(InventoryTake $inventoryTake) {
-        return new InventoryTakeResource($inventoryTake->load(['creator', 'supplier', 'supplies']));
+        return new InventoryTakeResource($inventoryTake->load(['creator','supplies']));
     }
 
     /**
@@ -160,22 +162,31 @@ class InventoryTakeController extends Controller {
     public function update(InventoryTakeRequest $request, InventoryTake $inventoryTake) {
         $inventoryTake = DB::transaction(function () use ($request, $inventoryTake) {
 
-            $inventoryTake->createVoucher();
-
             $supplier = getBindVal('account');
 
             // update inventory order
             $inventoryTake->guard(['id', 'uuid', 'place_id', 'code']);
             $inventoryTake->update(array_merge($request->except($this->exceptAttributes), [
-                'supplier_id' => $supplier->id,
+                'creator_id' => $request->user()->id,
             ]));
 
             // sync supplies
-            $keyedArr['supplies'] = $this->addSupplies($inventoryTake, $request->input('supplies', []));
+            $keyedArr = $this->addSupplies($inventoryTake, $request->input('supplies', []));
+
             $inventoryTake->supplies()->sync($keyedArr['supplies']);
+
+            // 
+            $inventoryTake->qty = $keyedArr['stats']['total'];
+            $inventoryTake->qty_diff = $keyedArr['stats']['diff'];
+            $inventoryTake->qty_excessing = $keyedArr['stats']['excessing'];
+            $inventoryTake->qty_missing = $keyedArr['stats']['missing'];
+            
+            $inventoryTake->save();
 
             return $inventoryTake;
         }, 5);
+
+        return new InventoryTakeResource($inventoryTake->load(['creator','supplies']));;
     }
 
     /**
