@@ -14,7 +14,8 @@
             </div> --}}
 
             <div class="print-header">
-                @if($order->place->logo)
+                @php($isShowLogo = $config_print['receipt']['show_logo'] ?? true)
+                @if($isShowLogo && $order->place->logo)
                     <p class="print-logo my-0"><img src="{{ env('APP_MEDIA_URL').'/places/'.$order->place->logo }}" /></p>
                 @endif
                 @if (!is_null($print_info))

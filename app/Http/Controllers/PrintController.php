@@ -42,6 +42,7 @@ class PrintController extends Controller
         $data = [
             'order' => $order,
             'print_info'  => $order->place->print_info ?? null,
+            'config_print' => $order->place->config_print ?? null,
         ];
 
         return view('print.' . $template, $data);

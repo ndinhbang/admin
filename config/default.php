@@ -502,6 +502,7 @@ return [
                 'print_draft'         => false,
                 'print_when_paid'     => false,
                 'print_when_accepted' => false,
+                'show_logo'           => true,
                 'menu'                => [],
                 'copies'              => 1,
             ],
