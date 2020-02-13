@@ -58,7 +58,7 @@ class InventoryOrderFilter extends QueryFilter {
         $startDate = Carbon::parse($search)->format('Y-m-d 00:00:00');
         $endDate = Carbon::parse(request()->get('end', Carbon::now()))->format('Y-m-d 23:59:59');
 
-        return $this->builder->whereBetween('inventory_orders.created_at', [$startDate, $endDate]);
+        return $this->builder->whereBetween('inventory_orders.on_date', [$startDate, $endDate]);
     }
 
 }
