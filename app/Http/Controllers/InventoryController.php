@@ -16,30 +16,24 @@ class InventoryController extends Controller {
 	 */
 	public function index(Request $request) {
 
-        $summary = Supply::selectRaw('
-        	SUM(remain) as remain_total, 
-        	SUM(remain*price_avg_in) as price_avg_total, 
-        	SUM(remain*price_in) as price_total')
-        	->where('remain', '>', 0)
-        	->where('place_id', currentPlace()->id)
-            ->first();
+        $summary = $this->statistic();
 
-		$stock_range = [-999, 9999999];
+		$stock_range = [-9999999, 9999999];
 		switch ($request->type) {
-		case 'all': // Tất cả
+		case 'total': // Tất cả
 			$stock_range = [-999, 9999999];
 			break;
 		case 'in': // Đang tồn
 			$stock_range = [0, 9999999];
 			break;
-		case 'almost': // Đang tồn
+		case 'almost': // gần hết
 			$stock_range = 'min_stock';
 			break;
 		case 'out': // Đã hết
 			$stock_range = [-1, 1];
 			break;
 		case 'error': // Lỗi kho
-			$stock_range = [-999, 0];
+			$stock_range = [-9999999, 0];
 			break;
 		}
 
@@ -50,7 +44,7 @@ class InventoryController extends Controller {
 				}
 
 				if($request->type == 'almost') {
-					$query->whereRaw('supplies.remain < supplies.min_stock');
+					$query->whereRaw('supplies.remain < supplies.min_stock AND supplies.remain > 0');
 				} else {
 					$query->where('supplies.remain', '>', $stock_range[0])
 						->where('supplies.remain', '<', $stock_range[1]);
@@ -70,25 +64,27 @@ class InventoryController extends Controller {
 	 * @return \Illuminate\Http\Response
 	 */
 	public function almostOos() {
-		$supplies = Supply::select('supplies.*', DB::raw('SUM(inventory.qty_remain) as remain_total, SUM(inventory.qty_import) as quantity_total'))
-			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
-			->where('inventory.status', 1)
-			->groupBy('supplies.id')
+		$supplies = Supply::select('supplies.*')
+			->whereRaw('supplies.remain < supplies.min_stock AND supplies.remain > 0')
 			->with(['unit'])
-			->havingRaw('SUM(inventory.qty_remain) < supplies.min_stock')
 			->get();
 
 		return response()->json($supplies);
 	}
 
-	public function statistic(Request $request) {
-		$statistic = Supply::select(DB::raw('SUM(inventory.qty_remain) as remain_total, SUM(inventory.qty_import) as quantity_total, supplies.min_stock'))
-			->join('inventory', 'inventory.supply_id', '=', 'supplies.id')
-			->where('inventory.status', 1)
-			->groupBy('inventory.supply_id')
-			->get();
+	public function statistic() {
+        return Supply::selectRaw('
+        	COUNT(*) AS total,
+        	SUM(IF(remain=0, 1, 0)) AS supply_out,
+        	SUM(IF(remain>0, 1, 0)) AS supply_in,
+        	SUM(IF(remain<0, 1, 0)) AS supply_error,
+        	SUM(case when (remain<min_stock AND remain>0) then 1 else 0 end) AS supply_almost,
 
-		return response()->json($statistic);
+        	SUM(remain) as remain_total, 
+        	SUM(remain*price_avg_in) as price_avg_total, 
+        	SUM(remain*price_in) as price_total')
+        	->where('place_id', currentPlace()->id)
+            ->first();
 	}
 
 	public function show($supplyUuid) {
