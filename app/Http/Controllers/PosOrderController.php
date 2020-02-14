@@ -258,6 +258,9 @@ class PosOrderController extends Controller
             $itemTotalDiscountAmount = $itemDiscountAmount + $itemChildDiscountAmount;
             // tổng giá sau giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm
             $itemTotalPrice          = $itemSimplePrice + $itemChildrenPrice;
+
+            $timeIn = isset($item['time_in']) && $item['time_in'] ? $item['time_in'] : Carbon::now();
+            
             $result[ $item['uuid'] ] = [
                 // calculated
                 'product_id'               => $itemProduct->id,
@@ -282,8 +285,8 @@ class PosOrderController extends Controller
                 'pending'                  => $item['pending'],
                 'discount_id'              => $item['discount_id'] ?? 0,
 
-                'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($item['time_in'])),
-                'time_in'                  => $item['time_in'],
+                'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($timeIn)),
+                'time_in'                  => $timeIn,
                 'time_out'                 => Carbon::now(),
                 'price_by_time'            => $item['price_by_time'],
                 // need to remove when create or update item
