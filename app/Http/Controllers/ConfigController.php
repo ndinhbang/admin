@@ -75,8 +75,8 @@ class ConfigController extends Controller
         ];
         $place->update([
             'print_templates' => $templates,
-            'config_print'    => array_replace_recursive(config('default.print.config'), $request->config),
-            'print_info'      => array_replace_recursive(config('default.print.info'), $request->configInfo),
+            'config_print'    => array_replace_recursive(config('default.print.config'), $request->config ?? []),
+            'print_info'      => array_replace_recursive(config('default.print.info'), $request->configInfo ?? []),
         ]);
         return response()->json([
             'message' => 'Lưu cấu hình máy in thành công!',
