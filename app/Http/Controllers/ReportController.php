@@ -79,8 +79,8 @@ class ReportController extends Controller
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
-                SUM(order_items.total_buying_price) as total_buying_amount,
-                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+                SUM(order_items.total_buying_price*order_items.quantity) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price*order_items.quantity) as total_buying_avg_amount
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -262,8 +262,8 @@ class ReportController extends Controller
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
-                SUM(order_items.total_buying_price) as total_buying_amount,
-                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+                SUM(order_items.total_buying_price*order_items.quantity) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price*order_items.quantity) as total_buying_avg_amount
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
@@ -293,8 +293,8 @@ class ReportController extends Controller
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
-                SUM(order_items.total_buying_price) as total_buying_amount,
-                SUM(order_items.total_buying_avg_price) as total_buying_avg_amount
+                SUM(order_items.total_buying_price*order_items.quantity) as total_buying_amount,
+                SUM(order_items.total_buying_avg_price*order_items.quantity) as total_buying_avg_amount
             ")
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
