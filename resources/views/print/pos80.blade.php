@@ -3,7 +3,10 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link href="/css/print.css?v=4" rel="stylesheet">
+    
+    <style>
+        <?php include(public_path().'/css/print.css'); ?>
+    </style>
 </head>
 
 <body class="receipt w74mm">
