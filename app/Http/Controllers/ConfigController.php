@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ConfigRequest;
+use App\Http\Resources\PlaceResource;
 use Illuminate\Support\Facades\File;
 
 class ConfigController extends Controller
@@ -58,37 +59,28 @@ class ConfigController extends Controller
         $place->update([
             'config_sale' => array_replace_recursive($default, $request->config),
         ]);
-
         return response()->json([
-            'message'      => 'Lưu cấu hình bán hàng thành công!',
+            'message'     => 'Lưu cấu hình bán hàng thành công!',
             'config_sale' => $place->config_sale,
         ]);
     }
 
     public function configPrint(ConfigRequest $request)
     {
-        $place   = getBindVal('__currentPlace');
-        $default = config('default.print.config');
+        $place     = getBindVal('__currentPlace');
+        $templates = [
+            'pos80kitchen' => minifyHtml(view('print.templates.pos80kitchen')->render()),
+            'pos80'        => minifyHtml(view('print.templates.pos80')->render()),
+            'pos58'        => minifyHtml(view('print.templates.pos58')->render()),
+        ];
         $place->update([
-            'config_print' => array_replace_recursive($default, $request->config),
+            'print_templates' => $templates,
+            'config_print'    => array_replace_recursive(config('default.print.config'), $request->config),
+            'print_info'      => array_replace_recursive(config('default.print.info'), $request->configInfo),
         ]);
         return response()->json([
-            'message'      => 'Lưu cấu hình máy in thành công!',
-            'config_print' => $place->config_print,
-        ]);
-    }
-
-    public function configPrintInfo(ConfigRequest $request)
-    {
-        $place   = getBindVal('__currentPlace');
-        $default = config('default.print.info');
-        
-        $place->update([
-            'print_info' => array_replace_recursive($default, $request->configInfo),
-        ]);
-        return response()->json([
-            'message'      => 'Lưu thông tin in hóa đơn thành công!',
-            'print_info' => $place->print_info,
+            'message' => 'Lưu cấu hình máy in thành công!',
+            'place'   => new PlaceResource($place),
         ]);
     }
 }
