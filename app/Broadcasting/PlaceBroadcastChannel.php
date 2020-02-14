@@ -27,6 +27,12 @@ class PlaceBroadcastChannel
      */
     public function join(User $user, Place $place)
     {
+        if ( $user->hasAnyRole([
+            'superadmin',
+            'admin',
+        ]) ) {
+            return true;
+        }
         return DB::table('place_user')
             ->where('place_id', $place->id)
             ->where('user_id', $user->id)
