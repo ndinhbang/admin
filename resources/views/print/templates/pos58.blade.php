@@ -26,13 +26,25 @@
                                 <td class="text-left py-0" width="90%"><strong>@{{ item_name }}</strong></td>
                                 <td class="text-right py-0"><div class="no-wrap">@{{money item_price }}</div></td>
                             </tr>
+                            @{{#if children}}
                             <tr>
-                                <td class="text-left" colspan="2"><div class="no-wrap"><em>@{{ order_note }}</em> / <em>@{{ item_note }}</em></div></td>
+                                <td class="text-left py-0" colspan="2">
+                                    <small>
+                                        @{{#each children}}
+                                            - @{{ product_name }};
+                                        @{{/each}}
+                                    </small>
+                                </td>
                             </tr>
+                            @{{/if}}
+                            @{{#if item_note}}
+                            <tr>
+                                <td class="text-left" colspan="2"><div class="no-wrap"><em>@{{ item_note }}</em></div></td>
+                            </tr>
+                            @{{/if}}
                         </thead>
                     </table>
                 </div>
-                <span class="mark">@Goido.NET</span>
             </div>
         </section>
 

@@ -54,15 +54,15 @@
                     <tbody>
                         @{{#each items}}
                         <tr>
-                            <td class="text-left pb-1">@{{incremented @index}}</td>
-                            <td class="text-left pb-1" colspan="4"><strong>@{{ product_name }}</strong></td>
+                            <td class="text-left p-0 pb-1">@{{incremented @index}}</td>
+                            <td class="text-left p-0 pb-1" colspan="4">@{{ product_name }}</td>
                         </tr>
                         <tr>
-                            <td class="text-left"></td>
-                            <td class="text-left">@{{money product_price}}</td>
-                            <td class="text-right">@{{ quantity }}</td>
-                            <td class="text-right">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
-                            <td class="text-right">
+                            <td class="text-left p-0 pb-1"></td>
+                            <td class="text-left p-0 pb-1">@{{money product_price}}</td>
+                            <td class="text-right p-0 pb-1">@{{ quantity }}</td>
+                            <td class="text-right p-0 pb-1">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
+                            <td class="text-right p-0 pb-1">
                                 <strong>@{{money simple_price}}</strong>
                             </td>
                         </tr>
@@ -75,31 +75,25 @@
                             <td class="text-right py-1" colspan="2">
                                 <strong>@{{total amount discount_amount }}</strong></td>
                         </tr>
+                        @{{#if discount_amount}}
                         <tr>
                             <td class="text-left pb-1" colspan="3"><strong>Giảm giá theo đơn: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.amount+this.discount_amount)) * 100)"}}%)</td>
                         </tr>
+                        @{{/if}}
                         <tr>
                             <td class="text-left pb-1" colspan="3"><strong>Tổng thanh toán: </strong></td>
                             <td class="text-right py-0 pb-1" colspan="2">
                                 <strong>@{{money amount}}</strong></td>
                         </tr>
-                        <tr>
-                            <td class="text-left py-0 pb-1" colspan="3"><strong>Tiền khách đưa: </strong></td>
-                            <td class="text-right py-0 pb-1" colspan="2">
-                                <strong>@{{money received_amount}}</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-left py-0 pb-1" colspan="3"><strong>Tiền thừa: </strong></td>
-                            <td class="text-right py-0 pb-1" colspan="2">
-                                <strong>@{{payback received_amount amount}}</strong></td>
-                        </tr>
+                        @{{#if note}}
                         <tr>
                             <td class="text-left py-0 pb-1" colspan="5">Ghi chú:</td>
                         </tr>
                         <tr>
                             <td class="text-left py-0 pb-1" colspan="5">@{{ note }}</td>
                         </tr>
+                        @{{/if}}
                     </tbody>
                 </table>
             </div>

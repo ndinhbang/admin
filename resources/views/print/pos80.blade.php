@@ -19,7 +19,7 @@
                     <p class="print-logo my-0"><img src="{{ env('APP_MEDIA_URL').'/places/'.$order->place->logo }}" /></p>
                 @endif
                 @if (!is_null($print_info))
-                    <h1 class="text-center mb-0"><strong>{{ $print_info['title'] }}</strong></h1>
+                    <h1 class="text-center my-0"><strong>{{ $print_info['title'] }}</strong></h1>
                     @if($print_info['address'])
                         <p class="my-1 text-center">{{ $print_info['address'] }}</p>
                     @endif
@@ -27,7 +27,6 @@
                         <p class="my-1 text-center">{{ $print_info['phone'] }}</p>
                     @endif
                 @endif
-                <br />
                 <h2 class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></h2>
                 <p class="text-center my-1 mb-3">Số HĐ: <strong>{{ $order->code }}</strong></p>
                 <p class="my-1"><strong>Bàn:</strong>
@@ -69,21 +68,21 @@
                         @if ($items = $order->items ?? [])
                         @foreach ($items as $key => $item)
                         <tr>
-                            <td class="text-left top-border pb-1 pt-2 fs12" colspan="4">
-                                <strong class=" fs13">{{ $item->product->name }}</strong>
+                            <td class="text-left top-border p-0 pt-1" colspan="4">
+                                <span class="">{{ $item->product->name }}</span>
                                 @if($item->note)
                                 <div><small><em>{{ $item->note }}</em></small></div>
                                 @endif
                             </td>
                         </tr>
                         <tr>
-                            <td class="text-left pt-1">
+                            <td class="text-left p-0 pb-1">
                                 {{ number_format($item->product->price ?? 0, 0, ',', '.') }}
                             </td>
-                            <td class="text-right pt-1">{{ $item->quantity }}</td>
-                            <td class="text-right pt-1">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
+                            <td class="text-right p-0 pb-1">{{ $item->quantity }}</td>
+                            <td class="text-right p-0 pb-1">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
                             </td>
-                            <td class="text-right pt-1">
+                            <td class="text-right p-0 pb-1">
                                 <strong>{{ number_format($item->total_price, 0, ',', '.') }}</strong>
                             </td>
                         </tr>
