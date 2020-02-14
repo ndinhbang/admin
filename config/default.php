@@ -502,7 +502,7 @@ return [
                 'print_draft'         => false,
                 'print_when_paid'     => false,
                 'print_when_accepted' => false,
-                'show_logo'           => true,
+                'show_logo'           => false,
                 'menu'                => [],
                 'copies'              => 1,
             ],
