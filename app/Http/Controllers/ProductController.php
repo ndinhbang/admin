@@ -69,11 +69,11 @@ class ProductController extends Controller {
 
 			// tao supply neu san pham co quan ly ton kho
 			if ($product->can_stock) {
-				$product->remain = $request->input('remain');
-				$product->min_stock = $request->input('min_stock');
-				$product->unit_uuid = $request->input('unit_uuid');
+				$supplyInit['remain'] = $request->input('remain', 0);
+				$supplyInit['min_stock'] = $request->input('min_stock', 0);
+				$supplyInit['unit_uuid'] = $request->input('unit_uuid', 0);
 
-				$keyedArr = $this->addSupplies($product, $request->input('supplies', []));
+				$keyedArr = $this->addSupplies($product, $supplyInit, $request->input('supplies', []));
 				$product->supplies()->attach($keyedArr);
 			}
 
@@ -97,7 +97,7 @@ class ProductController extends Controller {
 	 * @param array   $arrSupplies
 	 * @return array
 	 */
-	protected function addSupplies(Product $product, array $arrSupplies) {
+	protected function addSupplies(Product $product, $supplyInit, array $arrSupplies) {
 		$result = [];
 		$collection = new Collection($arrSupplies);
 		// neu san pham khong co supply thi tu dong tao theo ten san pham
@@ -108,13 +108,13 @@ class ProductController extends Controller {
 			]);
 
 			if (!$supply->id) {
-				$unit = $product->unit_uuid ? Category::findUuid($product->unit_uuid) : null;
+				$unit = $supplyInit['unit_uuid'] ? Category::findUuid($supplyInit['unit_uuid']) : null;
 
 				// generate uuid
 				$supply->uuid = nanoId();
 				$supply->unit_id = !is_null($unit) ? $unit->id : 0;
-				$supply->remain = $product->remain ? $product->remain : 0;
-				$supply->min_stock = $product->min_stock ? $product->min_stock : 0;
+				$supply->remain = $supplyInit['remain'] ? $supplyInit['remain'] : 0;
+				$supply->min_stock = $supplyInit['min_stock'] ? $supplyInit['min_stock']: 0;
 				$supply->save();
 			}
 
@@ -179,7 +179,11 @@ class ProductController extends Controller {
 			]));
 			// tao supply neu san pham co quan ly ton kho
 			if ($product->can_stock) {
-				$keyedArr = $this->addSupplies($product, $request->input('supplies', []));
+				$supplyInit['remain'] = $request->input('remain', 0);
+				$supplyInit['min_stock'] = $request->input('min_stock', 0);
+				$supplyInit['unit_uuid'] = $request->input('unit_uuid', 0);
+
+				$keyedArr = $this->addSupplies($product, $supplyInit, $request->input('supplies', []));
 				$product->supplies()->sync($keyedArr);
 			}
 
