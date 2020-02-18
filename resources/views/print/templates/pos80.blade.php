@@ -17,9 +17,13 @@
 
             <div class="print-header">
                 @{{#place}}
-                <p class="my-1"><strong>@{{ title }}</strong></p>
-                <p class="my-1">Địa chỉ: @{{ address }}</p>
-                <p class="my-1">Liên hệ: @{{ contact_phone }}</p>
+                <p class="text-center my-1"><strong>@{{ title }}</strong></p>
+                @{{#if address}}
+                    <p class="text-center my-1">@{{ address }}</p>
+                @{{/if}}
+                @{{#if address}}
+                <p class="text-center my-1">@{{ contact_phone }}</p>
+                @{{/if}}
                 @{{/place}}
                 @{{#order}}
                     <p class="text-center my-1 mt-3"><strong>HÓA ĐƠN BÁN HÀNG</strong></p>
