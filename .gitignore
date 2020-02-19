@@ -35,3 +35,5 @@ public/precache-manifest.*.js
 public/medias/
 
 *.log
+
+laravel-echo-server.lock
