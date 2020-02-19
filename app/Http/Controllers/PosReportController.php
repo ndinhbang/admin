@@ -60,6 +60,7 @@ class PosReportController extends Controller
                 'items.children',
                 'items.product.category',
             ])
+            ->join('users', 'users.id', '=', 'orders.creator_id')
             ->where(function ($query) use ($request) {
                 if (count($this->employee_uuid)) {
                     $query->whereIn('users.uuid', $this->employee_uuid);
