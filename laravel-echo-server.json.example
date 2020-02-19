@@ -34,7 +34,7 @@
 		"redis": true
 	},
 	"apiOriginAllow": {
-		"allowCors": true,
+		"allowCors": false,
 		"allowOrigin": "http://console.goido.local",
 		"allowMethods": "GET, POST",
 		"allowHeaders": "Origin, Content-Type, X-Auth-Token, X-Requested-With, Accept, Authorization, X-CSRF-TOKEN, X-Socket-Id"
