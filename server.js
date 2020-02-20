@@ -2,6 +2,12 @@ require('dotenv').config();
 
 const env = process.env;
 
+process.on('uncaughtException', function (err) {
+    console.error(err.stack);
+    console.log("Node NOT Exiting...");
+});
+// another solution: https://nodejs.org/api/cli.html#cli_abort_on_uncaught_exception
+
 require('laravel-echo-server').run({
         authHost: env.SOCKET_AUTH_HOST,
         authEndpoint: env.SOCKET_AUTH_ENDPOINT,
