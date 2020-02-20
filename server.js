@@ -3,45 +3,45 @@ require('dotenv').config();
 const env = process.env;
 
 require('laravel-echo-server').run({
-        authHost: env.LARAVEL_ECHO_SERVER_AUTH_HOST,
-        authEndpoint: '/broadcasting/auth',
+        authHost: env.SOCKET_AUTH_HOST,
+        authEndpoint: env.SOCKET_AUTH_ENDPOINT,
         clients: [
             {
-                appId: env.LARAVEL_ECHO_SERVER_APP_ID,
-                key: env.LARAVEL_ECHO_SERVER_APP_KEY
+                appId: env.SOCKET_CLIENT_ID,
+                key: env.SOCKET_CLIENT_KEY
             }
         ],
         database: 'redis',
         databaseConfig: {
             redis: {
-                host: env.LARAVEL_ECHO_SERVER_REDIS_HOST,
-                port: env.LARAVEL_ECHO_SERVER_REDIS_PORT,
-                db: env.LARAVEL_ECHO_SERVER_REDIS_DB,
-                keyPrefix: env.LARAVEL_ECHO_SERVER_REDIS_KEY_PREFIX
+                host: env.REDIS_HOST,
+                port: env.REDIS_PORT,
+                db: env.REDIS_DB,
+                keyPrefix: env.REDIS_PREFIX
             },
             sqlite: {
                 databasePath: '/database/laravel-echo-server.sqlite'
             }
         },
-        devMode: env.LARAVEL_ECHO_SERVER_DEBUG,
-        host: env.LARAVEL_ECHO_SERVER_HOST,
-        port: env.LARAVEL_ECHO_SERVER_PORT,
-        protocol: env.LARAVEL_ECHO_SERVER_PROTO,
+        devMode: env.SOCKET_DEBUG,
+        host: env.SOCKET_HOST,
+        port: env.SOCKET_PORT,
+        protocol: env.SOCKET_PROTOCOL,
         socketio: {},
         secureOptions: 67108864,
-        sslCertPath: env.LARAVEL_ECHO_SERVER_SSL_CERT,
-        sslKeyPath: env.LARAVEL_ECHO_SERVER_SSL_KEY,
-        sslCertChainPath: env.LARAVEL_ECHO_SERVER_SSL_CHAIN,
-        sslPassphrase: env.LARAVEL_ECHO_SERVER_SSL_PASS,
+        sslCertPath: env.SOCKET_SSL_CERT_PATH,
+        sslKeyPath: env.SOCKET_SSL_KEY_PATH,
+        sslCertChainPath: env.SOCKET_SSL_CHAIN_PATH,
+        sslPassphrase: env.SOCKET_SSL_PASSPHRASE,
         subscribers: {
             http: true,
             redis: true
         },
         apiOriginAllow: {
-            allowCors: true,
-            allowOrigin: env.APP_URL,
-            allowMethods: 'GET, POST',
-            allowHeaders: 'Origin, Content-Type, X-Auth-Token, X-Requested-With, Accept, Authorization, X-CSRF-TOKEN, X-Socket-Id'
+            allowCors: env.SOCKET_ALLOW_CORS,
+            allowOrigin: env.SOCKET_ALLOW_ORIGIN,
+            allowMethods: env.SOCKET_ALLOW_METHODS,
+            allowHeaders: env.SOCKET_ALLOW_HEADERS
         }
     }
 );
