@@ -17,7 +17,7 @@ if ( !function_exists('currentPlace') ) {
             return app('__currentPlace');
         }
         if ( getBindVal('__requirePlace') ) {
-            throw new \Exception('Place is required');
+            throw new \Exception('Malformed request');
         }
         return null;
     }

@@ -22,7 +22,6 @@ class SegmentFilter extends QueryFilter
             return $this->builder;
         }
         return $this->builder
-            ->where('segments.title', 'like', "%{$search}%")
-            ->where('segments.description', 'like', "%{$search}%");
+            ->where('segments.name', 'like', "%{$search}%");
     }
 }
