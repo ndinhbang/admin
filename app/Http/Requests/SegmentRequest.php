@@ -18,13 +18,8 @@ class SegmentRequest extends FormRequest
      */
     public function authorize()
     {
-        if ( $this->user()
-                ->hasAnyRole([
-                    'admin',
-                    'superadmin',
-                ])
-            || $this->user()
-                ->can('crm.customers') ) {
+        if ( $this->user()->hasAnyRole([ 'admin', 'superadmin' ])
+            || $this->user()->can('crm.customers') ) {
             return true;
         }
     }
@@ -36,77 +31,45 @@ class SegmentRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'customers'                                    => [
-                'bail',
-                'array',
-                Rule::requiredIf(empty($this->conditions)),
-            ],
-            'customers.*.uuid'                             => [
-                'bail',
-                'alpha_dash',
-                'size:21',
-                'required',
-            ],
-            'conditions'                                   => [
-                'bail',
-                'array',
-                'max:6',
-                Rule::requiredIf(empty($this->customers)),
-            ],
-            'conditions.*.property'                        => [
-                'bail',
-                'required',
-                'array',
-                'max:7',
-            ],
-            'conditions.*.property.operator'               => [
-                'bail',
-                'required',
-                'array',
-                'max:2',
-            ],
-            'conditions.*.property.propertyValue'          => [
-                'bail',
-                'required',
-                'string',
-                Rule::in([
-                    'totalOrders',
-                    'totalOrderValue',
-                    'balance',
-                    'birthMonth',
-                    'daysSinceLastPurchase',
-                    'gender',
-                ]),
-            ],
-            'conditions.*.property.operator.operatorValue' => [
-                'bail',
-                'required',
-                'string',
-                Rule::in([
-                    'eq',
-                    'ne',
-                    'gt',
-                    'gte',
-                    'lt',
-                    'lte',
-                ]),
-            ],
-            'conditions.*.property.value'                  => [
-                'bail',
-                'required',
-                'alpha_num',
-            ],
-            'conditions.*.property.propertyLabel'          => [
-                'bail',
-                'string',
-                'max:191',
-            ],
-            'conditions.*.property.placeholer'             => [
-                'bail',
-                'string',
-                'max:191',
-            ],
-        ];
+        if ( $this->routeIs([ 'segment.create', 'segment.update' ]) ) {
+            return [
+                'fixedCustomers'                   => [
+                    'bail',
+                    'array',
+                    Rule::requiredIf(empty($this->conditions)),
+                ],
+                'conditions'                       => [
+                    'bail',
+                    'array',
+                    'max:6',
+                    Rule::requiredIf(empty($this->customers)),
+                ],
+                'fixedCustomers.*.uuid'            => [ 'bail', 'required', 'alpha_dash', 'size:21', ],
+                'conditions.*.property'            => [ 'bail', 'required', 'array', 'max:7' ],
+                'conditions.*.property.value'      => [ 'bail', 'required', 'alpha_num' ],
+                'conditions.*.property.name'       => [
+                    'bail',
+                    'required',
+                    'string',
+                    Rule::in(
+                        [
+                            'totalOrders',
+                            'totalOrderValue',
+                            'balance',
+                            'birthMonth',
+                            'daysSinceLastPurchase',
+                            'gender',
+                        ]
+                    ),
+                ],
+                'conditions.*.property.operator'   => [
+                    'bail',
+                    'required',
+                    'string',
+                    Rule::in([ 'eq', 'ne', 'gt', 'gte', 'lt', 'lte' ]),
+                ],
+            ];
+        }
+        return [];
     }
 }

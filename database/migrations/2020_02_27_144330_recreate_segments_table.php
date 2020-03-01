@@ -21,15 +21,15 @@ class RecreateSegmentsTable extends Migration
             $table->char('uuid',21)->unique();
             $table->unsignedInteger('place_id')->nullable()->index();
             $table->string('name');
-            $table->string('desc')->default('');
-            $table->json('customers');
-            $table->json('consitions');
+            $table->string('desc')->nullable();
+            $table->json('conditions');
             $table->timestamps();
         });
 
         Schema::create('account_segment', function (Blueprint $table) {
             $table->unsignedInteger('account_id');
             $table->unsignedInteger('segment_id');
+            $table->boolean('is_fixed'); // đánh dấu khách hàng cố định
             $table->primary(['account_id', 'segment_id']);
             $table->index(['segment_id', 'account_id']);
             $table->timestamps();

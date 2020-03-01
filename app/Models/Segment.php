@@ -21,7 +21,6 @@ class Segment extends Model
     protected $fillable = [
         'name',
         'desc',
-        'customers',
         'conditions',
     ];
 
@@ -35,22 +34,9 @@ class Segment extends Model
     protected $casts = [
         'uuid'       => 'string',
         'place_id'   => 'integer',
-        'customers'  => 'array',
         'conditions' => 'array',
-        'name'       => 'integer',
+        'name'       => 'string',
         'desc'       => 'string',
-    ];
-
-    /**
-     * Default values for attributes
-     * Note: Keep it in sync with default values that you set for filled in database
-     *
-     * @var  array
-     */
-    protected $attributes = [
-        'customers'  => [],
-        'conditions' => [],
-        'desc'       => '',
     ];
 
     protected static function boot()
@@ -62,5 +48,16 @@ class Segment extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    public function fixedCustomers()
+    {
+        return $this->customers()->wherePivot('is_fixed', 1);
+    }
+
+    public function customers()
+    {
+        return $this->belongsToMany('App\Models\Account', 'account_segment', 'segment_id', 'account_id')
+            ->withPivot([ 'is_fixed' ]);
     }
 }
