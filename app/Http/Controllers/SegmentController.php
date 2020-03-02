@@ -23,10 +23,9 @@ class SegmentController extends Controller
      */
     public function index(SegmentRequest $request)
     {
-        $segments = Segment::filter(new SegmentFilter($request))
-            ->orderBy('id', 'desc')
-            ->simplePaginate($request->input('per_page', 50));
-        return SegmentResource::collection($segments);
+        $builder = Segment::filter(new SegmentFilter($request))
+            ->orderBy('id', 'desc');
+        return SegmentResource::collection($builder->simplePaginate($request->per_page ?? 20));
     }
 
     /**
@@ -38,6 +37,7 @@ class SegmentController extends Controller
      */
     public function store(SegmentRequest $request)
     {
+        // todo: giới hạn 20 nhóm KH
         $segment = DB::transaction(
             function () use ($request) {
                 $placeId = currentPlace()->id;

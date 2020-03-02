@@ -21,7 +21,6 @@ class PromotionFilter extends QueryFilter
             return $this->builder;
         }
         return $this->builder
-            ->where('promotions.title', 'like', "%{$search}%")
-            ->where('promotions.description', 'like', "%{$search}%");
+            ->where('promotions.name', 'like', "%{$search}%");
     }
 }

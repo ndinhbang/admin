@@ -22,7 +22,7 @@ class RecreatePromotionsTable extends Migration
             $table->unsignedInteger('place_id')->nullable()->index();
             $table->string('name');
             $table->string('code');
-            $table->string('type'); // product or order
+            $table->string('type', 10); // product or order
             $table->unsignedTinyInteger('state')->default(0); //0: lưu tạm / 1: hoạt động /2: dừng
             $table->dateTime('from');
             $table->dateTime('to')->nullable();

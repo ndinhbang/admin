@@ -2,92 +2,69 @@
 
 namespace App\Models;
 
-
 use App\Model;
-use App\Model\PromotionCustomers;
+use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 
-/**
- * Class Promotion
- *
- * @package App\Models
- *
- * @property string $uuid             UUID;
- * @property string title             Tiêu đề chương trình khuyến mại
- * @property string description       Mô tả chương trình
- * @property string code              Mã chương trình khuyến mại
- * @property \DateTime start_date     Ngày bắt đầu áp dụng
- * @property \DateTime end_date       Ngày bắt đầu áp dụng;
- * @property boolean require_coupon   Yêu cầu nhập mã khuyến mại
- * @property string type              Loại áp dụng, theo hàng hoá hay hoá đơn
- * @method static $this create(array $array_merge)
- */
 class Promotion extends Model
 {
-
     use Filterable;
-
-    public function getRouteKeyName()
-    {
-        return 'uuid';
-    }
 
     protected $primaryKey = 'id';
 
-
-    protected $fillable = ['uuid', 'place_id', 'title', 'description', 'code', 'quantity', 'require_coupon', 'type', 'start_date', 'end_date', 'status'];
-
+    protected $fillable = [
+        'name',
+        'note',
+        'type',
+        'state',
+        'from',
+        'to',
+        'is_limited',
+        'limit_qty',
+        'remain_qty',
+        'applied_all_customers',
+        'applied_all_products',
+        'required_code',
+        'total',
+        'rules',
+        'customers',
+        'segments',
+    ];
     protected $hidden = [
         'id',
         'place_id',
     ];
 
-//    protected $with = ;
+    protected $casts = [
+        'uuid'                  => 'string',
+        'place_id'              => 'integer',
+        'name'                  => 'string',
+        'note'                  => 'string',
+        'type'                  => 'string',
+        'code'                  => 'string',
+        'state'                 => 'integer',
+        'from'                  => 'datetime',
+        'to'                    => 'datetime',
+        'is_limited'            => 'boolean',
+        'limit_qty'             => 'integer',
+        'remain_qty'            => 'integer',
+        'applied_all_customers' => 'boolean',
+        'applied_all_products'  => 'boolean',
+        'required_code'         => 'boolean',
+        'total'                 => 'array',
+        'rules'                 => 'array',
+        'customers'             => 'array',
+        'segments'              => 'array',
+    ];
 
-    public function customers()
+    protected static function boot()
     {
-        return $this->belongsToMany(Account::class, 'promotions_customers', 'promotion_id', 'customer_id')
-            ->wherePivot('customer_id', "!=", 0)
-            ->where('accounts.type', 'customer');
+        parent::boot();
+        static::addGlobalScope(new PlaceScope);
     }
 
-    public function segments()
+    public function getRouteKeyName()
     {
-        return $this->belongsToMany(Segment::class, 'promotions_customers', 'promotion_id', 'segment_id')
-            ->wherePivot('segment_id', "!=", 0);
+        return 'uuid';
     }
-
-
-    public function appliedAll()
-    {
-        return $this->hasMany(PromotionApplied::class)->whereNull(['product_id', 'category_id'])
-            ->where('promotion_applieds.type', '=', 'product');
-    }
-
-
-    public function appliedProducts()
-    {
-        return $this->belongsToMany(Product::class, 'promotion_applieds', 'promotion_id', 'product_id')
-            ->wherePivot('product_id', ">", 0)
-            ->withPivot(['quantity', 'discount', 'unit'])
-            ->where('promotion_applieds.type', '=', 'product');
-
-    }
-
-    public function appliedCategories()
-    {
-        return $this->belongsToMany(Category::class, 'promotion_applieds', 'promotion_id', 'category_id')
-            ->wherePivot('category_id', ">", 0)
-            ->withPivot(['quantity', 'discount', 'unit'])
-            ->where('promotion_applieds.type', '=', 'product');
-
-    }
-
-    public function appliedOrders()
-    {
-        return $this->hasMany(PromotionApplied::class, 'promotion_id')
-            ->where('promotion_applieds.type', '=', 'order');
-    }
-
-
 }
