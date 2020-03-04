@@ -28,7 +28,7 @@ class RecreatePromotionsTable extends Migration
             $table->dateTime('to')->nullable();
             $table->boolean('is_limited')->default(0); // có giới hạn số lượng km ?
             $table->unsignedInteger('limit_qty')->default(0); // số lượng km
-            $table->unsignedInteger('remain_qty')->default(0); // số lượng còn lại
+            $table->unsignedInteger('applied_qty')->default(0); // số lượng còn lại
             $table->boolean('required_code')->default(0); // yêu cầu nhập mã khi áp dụng ?
             $table->json('total'); // tổng km, tổng giá
             $table->json('rule');

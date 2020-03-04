@@ -31,7 +31,7 @@ class SegmentRequest extends FormRequest
      */
     public function rules()
     {
-        if ( $this->routeIs([ 'segment.create', 'segment.update' ]) ) {
+        if ( $this->routeIs([ 'segment.store', 'segment.update' ]) ) {
             return [
                 'fixedCustomers'                   => [
                     'bail',

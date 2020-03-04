@@ -14,6 +14,7 @@ class Promotion extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'note',
         'type',
         'state',
@@ -21,10 +22,8 @@ class Promotion extends Model
         'to',
         'is_limited',
         'limit_qty',
-        'remain_qty',
         'applied',
         'required_code',
-        'total',
         'rule',
         'customers',
         'segments',
@@ -46,7 +45,6 @@ class Promotion extends Model
         'to'            => 'datetime',
         'is_limited'    => 'boolean',
         'limit_qty'     => 'integer',
-        'remain_qty'    => 'integer',
         'applied'       => 'array',
         'required_code' => 'boolean',
         'total'         => 'array',
