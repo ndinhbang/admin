@@ -43,26 +43,8 @@ class PromotionRequest extends FormRequest
                 'applied.someCategory'          => [ 'bail', 'required', 'boolean' ],
                 'applied.someProduct'           => [ 'bail', 'required', 'boolean' ],
                 'required_code'                 => [ 'bail', 'boolean', Rule::requiredIf($this->type === 'order') ],
-                'rule'                          => [ 'bail', 'required', 'array', 'max:6', 'min:1' ],
-                'rule.all'                      => [ 'bail', 'array', Rule::requiredIf($applied[ 'allProduct' ]) ],
-                'rule.all.minimumQty'           => [
-                    'bail',
-                    'numeric',
-                    'min:1',
-                    Rule::requiredIf($applied[ 'allProduct' ]),
-                ],
-                'rule.all.discountValue'        => [
-                    'bail',
-                    'numeric',
-                    'min:1',
-                    Rule::requiredIf($applied[ 'allProduct' ]),
-                ],
-                'rule.all.discountType'         => [
-                    'bail',
-                    'string',
-                    'in:%,đ',
-                    Rule::requiredIf($applied[ 'allProduct' ]),
-                ],
+                'from'                          => [ 'bail', 'required', 'date' ],
+                'to'                            => [ 'bail', 'nullable', 'date', 'after_or_equal:from' ],
                 'rule.category'                 => [ 'bail', 'array', Rule::requiredIf($applied[ 'someCategory' ]) ],
                 'rule.category.*'               => [ 'bail', 'required', 'array' ],
                 'rule.category.*.uuid'          => [ 'bail', 'required', 'string', 'size:21' ],
@@ -106,6 +88,26 @@ class PromotionRequest extends FormRequest
                 'segments.*'                    => [ 'bail', 'required', 'array' ],
                 'segments.*.uuid'               => [ 'bail', 'required', 'string', 'size:21' ],
                 'segments.*.name'               => [ 'bail', 'required', 'string', 'max:191' ],
+                'rule'                          => [ 'bail', 'required', 'array', 'max:6', 'min:1' ],
+                'rule.all'                      => [ 'bail', 'array', Rule::requiredIf($applied[ 'allProduct' ]) ],
+                'rule.all.minimumQty'           => [
+                    'bail',
+                    'numeric',
+                    'min:1',
+                    Rule::requiredIf($applied[ 'allProduct' ]),
+                ],
+                'rule.all.discountValue'        => [
+                    'bail',
+                    'numeric',
+                    'min:1',
+                    Rule::requiredIf($applied[ 'allProduct' ]),
+                ],
+                'rule.all.discountType'         => [
+                    'bail',
+                    'string',
+                    'in:%,đ',
+                    Rule::requiredIf($applied[ 'allProduct' ]),
+                ],
                 'note'                          => [ 'bail', 'nullable', 'string', 'max:191' ],
                 'is_limited'                    => [ 'bail', 'required', 'boolean' ],
                 'limit_qty'                     => [
@@ -118,8 +120,6 @@ class PromotionRequest extends FormRequest
                         }
                     },
                 ],
-                'from'                          => [ 'bail', 'required', 'date' ],
-                'to'                            => [ 'bail', 'nullable', 'date', 'after_or_equal:from' ],
             ];
         }
         return [];
