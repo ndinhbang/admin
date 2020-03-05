@@ -82,7 +82,15 @@
                             <td class="text-left p-0 pb-1">
                                 {{ number_format($item->product->price ?? 0, 0, ',', '.') }}
                             </td>
-                            <td class="text-right p-0 pb-1">{{ $item->quantity }}</td>
+                            <td class="text-right p-0 pb-1">
+                                @if($item->price_by_time)
+                                    {{ Carbon\Carbon::parse($item->time_in)->format('d/m/Y H:i:s') }}<br />
+                                    {{ Carbon\Carbon::parse($item->time_out)->format('d/m/Y H:i:s') }}<br />
+                                    = <strong>{{ secondsToTime($item->quantity*60*60) }}</strong>
+                                @else
+                                    {{ $item->quantity }}
+                                @endif
+                            </td>
                             <td class="text-right p-0 pb-1">{{ number_format($item->discount_amount ?? 0, 0, ',', '.') }} <small>({{ round(($item->discount_amount/($item->total_price+$item->discount_amount))*100) }}%)</small>
                             </td>
                             <td class="text-right p-0 pb-1">

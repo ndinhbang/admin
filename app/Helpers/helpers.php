@@ -186,3 +186,35 @@ if ( !function_exists('getOrderKind') ) {
         return $kindArr[$kindNumber];
     }
 }
+
+if ( !function_exists('secondsToTime') ) {
+    function secondsToTime($seconds) {
+
+        $periods = array(
+            'ngày' => 86400,
+            'giờ' => 3600,
+            'phút' => 60,
+            'second' => 1
+        );
+     
+        $parts = array();
+     
+        foreach ($periods as $name => $dur) {
+            $div = floor($seconds / $dur);
+     
+            if ($div == 0)
+                continue;
+            else
+                $parts[] = $div . " " . $name;
+
+            $seconds %= $dur;
+        }
+     
+        $last = array_pop($parts);
+     
+        if (empty($parts))
+            return $last;
+        else
+            return join(', ', $parts) . " " . $last;
+    }
+}
