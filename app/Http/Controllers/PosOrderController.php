@@ -540,7 +540,7 @@ class PosOrderController extends Controller
             && $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
-        $order = DB::transaction(function () use ($products, $data, $order) {
+        $order = DB::transaction(function () use ($products, $data, $order, $customer) {
             $orderData = $this->prepareOrderData($data);
             $products->load([ 'supplies' ]);
             $calculatedItemsData = $this->calculateItemsData($data['items'], $products->keyBy('uuid'));
@@ -561,10 +561,13 @@ class PosOrderController extends Controller
             if ( $order->is_completed || $order->is_paid ) {
                 // trù kho
                 $this->subtractInventory($order, $products, $data['items']);
-                if ( $order->paid
-                    && $order->paid > $oldPaid ) {
+                if ( $order->paid ) {
                     // tao phieu thu
                     $order->createVoucher($data['payment_method'] ?? 'cash');
+                }
+                if ( $customer ) {
+                    // Cập nhật thông tin tổng quan cho account
+                    $customer->updateOrdersStats();
                 }
             }
             return $order;
