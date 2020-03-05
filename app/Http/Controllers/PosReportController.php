@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -12,6 +13,7 @@ class PosReportController extends Controller
     private $end_date = null;
     private $code = 'this_month';
     private $employee_uuid = [];
+    private $employee_id = [];
     private $category_uuid = [];
 
     public function __construct(Request $request) {
@@ -49,6 +51,9 @@ class PosReportController extends Controller
             ->first();
 
         // items Orders
+        if (count($this->employee_uuid)) {
+            $this->employee_id = User::whereIn('users.uuid', $this->employee_uuid)->pluck('id');
+        }
         $items = Order::with([
                 'creator',
                 'customer',
@@ -60,10 +65,9 @@ class PosReportController extends Controller
                 'items.children',
                 'items.product.category',
             ])
-            ->join('users', 'users.id', '=', 'orders.creator_id')
             ->where(function ($query) use ($request) {
-                if (count($this->employee_uuid)) {
-                    $query->whereIn('users.uuid', $this->employee_uuid);
+                if (count($this->employee_id)) {
+                    $query->whereIn('orders.creator_id', $this->employee_id);
                 }
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])

@@ -194,8 +194,7 @@ if ( !function_exists('secondsToTime') ) {
         $periods = [
             'ngày'   => 86400,
             'giờ'    => 3600,
-            'phút'   => 60,
-            'second' => 1,
+            'phút'   => 60
         ];
         $parts = [];
         foreach ( $periods as $name => $dur ) {
