@@ -42,6 +42,7 @@ class OrderItemResource extends JsonResource
             'discount_type'            => 'đ',
             'children_discount_amount' => $this->children_discount_amount,
             'discount_order_amount'    => $this->discount_order_amount,
+            'is_paused'                => $this->is_paused,
             'time_used'                => $this->time_used,
             'time_in'                  => $this->time_in,
             'time_out'                 => $this->time_out,

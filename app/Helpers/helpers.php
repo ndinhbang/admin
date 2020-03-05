@@ -106,13 +106,13 @@ if ( !function_exists('nextState') ) {
         if ( !empty($currentState) && !empty($nextState) ) {
             // neu co thiet lap bep
             $enableKitchen = config('default.pos.enable_kitchen');
-            if ( !$enableKitchen && isset($currentState['is_pending']) && $currentState['is_pending'] ) {
+            if ( !$enableKitchen && isset($currentState[ 'is_pending' ]) && $currentState[ 'is_pending' ] ) {
                 // chuyen tu trang thai 0 -> 2
                 return currentState(2);
             }
             // neu co ship do
             $enableShipment = config('default.pos.enable_shipment');
-            if ( !$enableShipment && isset($nextState['is_done']) && $nextState['is_done'] ) {
+            if ( !$enableShipment && isset($nextState[ 'is_done' ]) && $nextState[ 'is_done' ] ) {
                 // chuyen tu tran thai 3,4,5 -> 6
                 return currentState(6);
             }
@@ -137,10 +137,12 @@ if ( !function_exists('minifyHtml') ) {
      */
     function minifyHtml($html)
     {
-        $minifier = new \App\Helpers\HtmlMinifier([
-            'collapse_whitespace' => true,
-            'disable_comments'    => true,
-        ]);
+        $minifier = new \App\Helpers\HtmlMinifier(
+            [
+                'collapse_whitespace' => true,
+                'disable_comments'    => true,
+            ]
+        );
         return $minifier->minify($html);
     }
 }
@@ -165,8 +167,8 @@ if ( !function_exists('mediaUrl') ) {
 }
 if ( !function_exists('getOrderKind') ) {
     /**
-     * @param    integer    $kindNumber
-     * @param    bool       $reverse
+     * @param  integer  $kindNumber
+     * @param  bool     $reverse
      * @return string
      */
     function getOrderKind($kindNumber, $reverse = false)
@@ -177,44 +179,39 @@ if ( !function_exists('getOrderKind') ) {
             2 => 'online',
             3 => 'booking',
         ];
-        if ($reverse) {
+        if ( $reverse ) {
             $kindArr = array_flip($kindArr);
         }
-        if (!isset($kindArr[$kindNumber])) {
+        if ( !isset($kindArr[ $kindNumber ]) ) {
             throw new \OutOfRangeException('Order kind is out of range');
         }
-        return $kindArr[$kindNumber];
+        return $kindArr[ $kindNumber ];
     }
 }
-
 if ( !function_exists('secondsToTime') ) {
-    function secondsToTime($seconds) {
-
-        $periods = array(
-            'ngày' => 86400,
-            'giờ' => 3600,
-            'phút' => 60,
-            'second' => 1
-        );
-     
-        $parts = array();
-     
-        foreach ($periods as $name => $dur) {
+    function secondsToTime($seconds)
+    {
+        $periods = [
+            'ngày'   => 86400,
+            'giờ'    => 3600,
+            'phút'   => 60,
+            'second' => 1,
+        ];
+        $parts = [];
+        foreach ( $periods as $name => $dur ) {
             $div = floor($seconds / $dur);
-     
-            if ($div == 0)
+            if ( $div == 0 ) {
                 continue;
-            else
+            } else {
                 $parts[] = $div . " " . $name;
-
+            }
             $seconds %= $dur;
         }
-     
         $last = array_pop($parts);
-     
-        if (empty($parts))
+        if ( empty($parts) ) {
             return $last;
-        else
+        } else {
             return join(', ', $parts) . " " . $last;
+        }
     }
 }
