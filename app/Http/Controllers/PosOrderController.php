@@ -260,6 +260,7 @@ class PosOrderController extends Controller
             $itemTotalPrice          = $itemSimplePrice + $itemChildrenPrice;
 
             $timeIn = isset($item['time_in']) && $item['time_in'] ? $item['time_in'] : Carbon::now();
+            $timeOut = isset($item['time_out']) && $item['time_out'] ? $item['time_out'] : Carbon::now();
             
             $result[ $item['uuid'] ] = [
                 // calculated
@@ -287,7 +288,7 @@ class PosOrderController extends Controller
 
                 'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($timeIn)),
                 'time_in'                  => $timeIn,
-                'time_out'                 => Carbon::now(),
+                'time_out'                 => $timeOut,
                 'price_by_time'            => $item['price_by_time'],
                 // need to remove when create or update item
                 'base_price'               => $itemBasePrice,
