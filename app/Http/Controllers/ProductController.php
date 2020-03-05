@@ -29,12 +29,12 @@ class ProductController extends Controller {
 		'has_thumbnail',
 	];
 
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @param Request $request
-	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-	 */
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \App\Http\Requests\ProductRequest  $request
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
 	public function index(ProductRequest $request) {
 		$products = Product::with(['supplies', 'category', 'place'])
 			->filter(new ProductFilter($request))

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Filters\VoucherFilter;
 use App\Http\Requests\VoucherRequest;
 use App\Http\Resources\VoucherResource;
+use App\Models\Order;
 use App\Models\Voucher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -150,13 +151,36 @@ class VoucherController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Voucher  $voucher
+     * @param  \App\Http\Requests\VoucherRequest  $request
+     * @param  \App\Models\Voucher                $voucher
      * @return \Illuminate\Http\Response
-     * @throws \Exception
+     * @throws \Throwable
      */
-    public function destroy(Voucher $voucher)
+    public function destroy(VoucherRequest $request, Voucher $voucher)
     {
-        $voucher->delete();
+        DB::transaction(
+            function () use ($voucher, $request) {
+                $reason = "{$voucher->code} bị xóa bởi {$request->user()->name}";
+                // todo: hủy đơn hàng ứng với phiếu thu bán hàng
+                if ($voucher->category_id === 29) {
+                    $order = Order::find($voucher->order_id);
+                    $order->is_returned = 0;
+                    $order->is_canceled = 1;
+                    $order->is_served = 0;
+                    $order->is_paid = 0;
+                    $order->is_completed = 0;
+                    $order->reason = $reason;
+                    $order->save();
+                    $order->delete();
+                }
+                $voucher->note = $voucher->note . "(xóa bởi {$request->user()->name})";
+                $voucher->save();
+                // xóa
+                $voucher->delete();
+            },
+            5
+        );
+
         return response()->json([ 'message' => 'Xóa phiếu thành công' ]);
     }
 }
