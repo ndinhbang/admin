@@ -34,6 +34,7 @@ class PromotionController extends Controller
      */
     public function store(PromotionRequest $request)
     {
+        $this->transform($request);
         $promotion = DB::transaction(
             function () use ($request) {
                 $promotion = new Promotion;
@@ -41,10 +42,10 @@ class PromotionController extends Controller
                     array_merge(
                         $request->only($promotion->getFillable()),
                         [
-                            'uuid'       => nanoId(),
-                            'place_id'   => currentPlace()->id,
-                            'code'       => $request->code ?? strtoupper(Str::studly($request->name)),
-                            'total'      => [
+                            'uuid'     => nanoId(),
+                            'place_id' => currentPlace()->id,
+                            'code'     => $request->code ?? strtoupper(Str::studly($request->name)),
+                            'total'    => [
                                 'amount'          => 0,
                                 'discount_amount' => 0,
                             ],
@@ -57,6 +58,36 @@ class PromotionController extends Controller
         );
         return PromotionResource::make($promotion)
             ->additional([ 'message' => 'Tạo thành công' ]);
+    }
+
+    protected function transform(PromotionRequest $request)
+    {
+        $meregeArr = $request->all();
+        $applied   = $request->applied;
+        $type      = $request->type;
+        if ( !$applied[ 'someSegment' ] || $applied['allCustomer']) {
+            $meregeArr[ 'segments' ] = [];
+        }
+        if ( !$applied[ 'someCustomer' ] || $applied['allCustomer']) {
+            $meregeArr[ 'customers' ] = [];
+        }
+        if ( $type !== 'order' ) {
+            $meregeArr[ 'rule' ][ 'order' ] = [];
+        }
+        if ( !$applied[ 'allProduct' ] || $type === 'order' ) {
+            $meregeArr[ 'rule' ]['all'] = [
+                'minimumQty'    => null,
+                'discountType'  => '%',
+                'discountValue' => null,
+            ];
+        }
+        if ( !$applied[ 'someProduct' ] || $type === 'order' ) {
+            $meregeArr[ 'rule' ][ 'product' ] = [];
+        }
+        if ( !$applied[ 'someCategory' ] || $type === 'order' ) {
+            $meregeArr[ 'rule' ][ 'category' ] = [];
+        }
+        $request->merge($meregeArr);
     }
 
     /**
@@ -80,9 +111,10 @@ class PromotionController extends Controller
      */
     public function update(PromotionRequest $request, Promotion $promotion)
     {
-        if ($promotion->state) { // CTKM đã dc activate thì không cho phép cập nhật
-            return response()->json(['message' => 'Forbidden'], 403);
+        if ( $promotion->state ) { // CTKM đã dc activate thì không cho phép cập nhật
+            return response()->json([ 'message' => 'Forbidden' ], 403);
         }
+        $this->transform($request);
         $promotion = DB::transaction(
             function () use ($request, $promotion) {
                 $promotion->forceFill(
