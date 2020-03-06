@@ -178,23 +178,6 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany('App\Models\OrderItem', 'order_id');
-//        return $this->products()
-//            ->withPivot([
-//                'id',
-//                'quantity',
-//                'total_price',
-//                'discount_amount',
-//                'pending',
-//                'accepted',
-//                'doing',
-//                'done',
-//                'delivering',
-//                'completed',
-//                'canceled',
-//                'note',
-//                'created_at',
-//                'updated_at',
-//            ]);
     }
 
     public function products()

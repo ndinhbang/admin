@@ -12,6 +12,7 @@ class AccountController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \App\Http\Requests\AccountRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function index(AccountRequest $request)

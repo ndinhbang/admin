@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Scopes\PlaceScope;
+use App\Traits\Filterable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GenerateCode;
@@ -12,7 +13,7 @@ use App\Traits\GenerateCode;
  */
 class Voucher extends Model
 {
-    use SoftDeletes, GenerateCode;
+    use SoftDeletes, GenerateCode, Filterable;
 
     protected $primaryKey = 'id';
     protected $table = 'vouchers';
