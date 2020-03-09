@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Model;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
+use Illuminate\Database\Eloquent\Builder;
 
 class Promotion extends Model
 {
@@ -47,7 +48,7 @@ class Promotion extends Model
         'limit_qty'     => 'integer',
         'applied'       => 'array',
         'required_code' => 'boolean',
-        'total'         => 'array',
+        'stats'         => 'array',
         'rule'          => 'array',
         'customers'     => 'array',
         'segments'      => 'array',
@@ -62,5 +63,10 @@ class Promotion extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    public function scopeActive( $query ): Builder
+    {
+        return $query->where('state', 1);
     }
 }

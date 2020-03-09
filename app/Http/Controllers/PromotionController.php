@@ -25,6 +25,15 @@ class PromotionController extends Controller
         return PromotionResource::collection($promotions);
     }
 
+    public function current(PromotionRequest $request)
+    {
+        $promotions = Promotion::filter(new PromotionFilter($request))
+            ->active()
+            ->orderBy('id', 'desc')
+            ->get();
+        return PromotionResource::collection($promotions);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -45,7 +54,7 @@ class PromotionController extends Controller
                             'uuid'     => nanoId(),
                             'place_id' => currentPlace()->id,
                             'code'     => $request->code ?? strtoupper(Str::studly($request->name)),
-                            'total'    => [
+                            'stats'    => [
                                 'amount'          => 0,
                                 'discount_amount' => 0,
                             ],
@@ -65,17 +74,17 @@ class PromotionController extends Controller
         $meregeArr = $request->all();
         $applied   = $request->applied;
         $type      = $request->type;
-        if ( !$applied[ 'someSegment' ] || $applied['allCustomer']) {
+        if ( !$applied[ 'someSegment' ] || $applied[ 'allCustomer' ] ) {
             $meregeArr[ 'segments' ] = [];
         }
-        if ( !$applied[ 'someCustomer' ] || $applied['allCustomer']) {
+        if ( !$applied[ 'someCustomer' ] || $applied[ 'allCustomer' ] ) {
             $meregeArr[ 'customers' ] = [];
         }
         if ( $type !== 'order' ) {
             $meregeArr[ 'rule' ][ 'order' ] = [];
         }
         if ( !$applied[ 'allProduct' ] || $type === 'order' ) {
-            $meregeArr[ 'rule' ]['all'] = [
+            $meregeArr[ 'rule' ][ 'all' ] = [
                 'minimumQty'    => null,
                 'discountType'  => '%',
                 'discountValue' => null,
@@ -111,20 +120,20 @@ class PromotionController extends Controller
      */
     public function update(PromotionRequest $request, Promotion $promotion)
     {
-        if ( $promotion->state ) { // CTKM đã dc activate thì không cho phép cập nhật
-            return response()->json([ 'message' => 'Forbidden' ], 403);
-        }
         $this->transform($request);
         $promotion = DB::transaction(
             function () use ($request, $promotion) {
-                $promotion->forceFill(
-                    array_merge(
-                        $request->only($promotion->getFillable()),
-                        [
-                            'code' => $request->input('code', strtoupper(Str::studly($request->name))),
-                        ]
-                    )
-                );
+                if ( !$promotion->state ) {
+                    $promotion->forceFill(
+                        array_merge(
+                            $request->only($promotion->getFillable()),
+                            [
+                                'code' => $request->input('code', strtoupper(Str::studly($request->name))),
+                            ]
+                        )
+                    );
+                }
+                $promotion->state = $request->state;
                 $promotion->save();
                 return $promotion;
             }
