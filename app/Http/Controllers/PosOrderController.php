@@ -12,6 +12,7 @@ use App\Http\Resources\PosOrdersCollection;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Segment;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -129,6 +130,15 @@ class PosOrderController extends Controller
                     if ( $customer ) {
                         // Cập nhật thông tin tổng quan cho account
                         $customer->updateOrdersStats();
+                        //todo: attach segment
+                        $pivotData = [];
+                        $segments = Segment::cursor();
+                        foreach ($segments as $segment) {
+                            if ($customer->isSatisfiedAllConditions($segment->conditions ?? [])) {
+                                $pivotData[] = $segment->id;
+                            }
+                        }
+                        $customer->segments()->syncWithoutDetaching($pivotData);
                     }
                 }
                 return $order;
@@ -604,6 +614,15 @@ class PosOrderController extends Controller
                     if ( $customer ) {
                         // Cập nhật thông tin tổng quan cho account
                         $customer->updateOrdersStats();
+                        //todo: attach segment
+                        $pivotData = [];
+                        $segments = Segment::cursor();
+                        foreach ($segments as $segment) {
+                            if ($customer->isSatisfiedAllConditions($segment->conditions ?? [])) {
+                                $pivotData[] = $segment->id;
+                            }
+                        }
+                        $customer->segments()->syncWithoutDetaching($pivotData);
                     }
                 }
                 return $order;
