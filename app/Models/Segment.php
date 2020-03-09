@@ -58,6 +58,7 @@ class Segment extends Model
     public function customers()
     {
         return $this->belongsToMany('App\Models\Account', 'account_segment', 'segment_id', 'account_id')
+            ->withTimestamps()
             ->withPivot([ 'is_fixed' ]);
     }
 }

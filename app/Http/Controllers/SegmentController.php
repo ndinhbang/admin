@@ -65,6 +65,17 @@ class SegmentController extends Controller
                         );
                     $segment->customers()->sync($keyedData->toArray());
                 }
+                $conditions = $request->conditions ?? [];
+                if (!empty($conditions)) {
+                    $pivotData = [];
+                    $customers = Account::isCustomer()->cursor();
+                    foreach ($customers as $customer) {
+                        if ($customer->isSatisfiedAllConditions($conditions)) {
+                            $pivotData[] = $customer->id;
+                        }
+                    }
+                    $segment->customers()->syncWithoutDetaching($pivotData);
+                }
                 return $segment;
             }
         );
@@ -89,12 +100,12 @@ class SegmentController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  Segment  $segment
+     * @param  \App\Http\Requests\SegmentRequest  $request
+     * @param  Segment                            $segment
      * @return SegmentResource
-     * @throws Throwable
+     * @throws \Throwable
      */
-    public function update(Request $request, Segment $segment)
+    public function update(SegmentRequest $request, Segment $segment)
     {
         $segment = DB::transaction(
             function () use ($request, $segment) {
@@ -112,6 +123,17 @@ class SegmentController extends Controller
                             }
                         );
                     $segment->customers()->sync($keyedData->toArray());
+                }
+                $conditions = $request->conditions ?? [];
+                if (!empty($conditions)) {
+                    $pivotData = [];
+                    $customers = Account::isCustomer()->cursor();
+                    foreach ($customers as $customer) {
+                        if ($customer->isSatisfiedAllConditions($conditions)) {
+                            $pivotData[] = $customer->id;
+                        }
+                    }
+                    $segment->customers()->syncWithoutDetaching($pivotData);
                 }
                 return $segment;
             }

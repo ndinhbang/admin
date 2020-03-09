@@ -45,7 +45,7 @@ class SegmentRequest extends FormRequest
                     Rule::requiredIf(empty($this->customers)),
                 ],
                 'fixedCustomers.*.uuid'            => [ 'bail', 'required', 'alpha_dash', 'size:21', ],
-                'conditions.*.property'            => [ 'bail', 'required', 'array', 'max:7' ],
+                'conditions.*.property'            => [ 'bail', 'required', 'array', 'size:3' ],
                 'conditions.*.property.value'      => [ 'bail', 'required', 'alpha_num' ],
                 'conditions.*.property.name'       => [
                     'bail',

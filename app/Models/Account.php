@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Account extends Model
@@ -55,6 +56,66 @@ class Account extends Model
     public function getRouteKeyName()
     {
         return 'uuid';
+    }
+
+    public function isSatisfiedAllConditions(array $conditions = []): bool
+    {
+        if ( empty($conditions) ) {
+            return false;
+        }
+        foreach ( $conditions as $condition ) {
+            if ( !$this->isSatisfied($condition) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param  array  $condition
+     * @return bool
+     * @throws \Exception
+     */
+    public function isSatisfied(array $condition): bool
+    {
+        $prop = $condition[ 'property' ];
+        switch ( $prop[ 'name' ] ) {
+            case 'totalOrders':
+                return isConditionSatisfied($this->stats[ 'order_count' ] ?? 0, $prop[ 'operator' ], $prop[ 'value' ]);
+            case 'totalOrderValue':
+                return isConditionSatisfied($this->stats[ 'amount' ] ?? 0, $prop[ 'operator' ], $prop[ 'value' ]);
+            case 'balance':
+                return isConditionSatisfied($this->stats[ 'debt' ] ?? 0, $prop[ 'operator' ], $prop[ 'value' ]);
+            case 'birthMonth':
+                return isConditionSatisfied($this->birth_month ?? 0, $prop[ 'operator' ], $prop[ 'value' ]);
+            case 'daysSinceLastPurchase':
+                $lastOrder = !empty($this->stats[ 'last_order_at' ])
+                    ? Carbon::parse($this->stats[ 'last_order_at' ])
+                    : Carbon::now();
+                $now       = Carbon::now();
+                return isConditionSatisfied($lastOrder->diffInDays($now), $prop[ 'operator' ], $prop[ 'value' ]);
+            case 'gender':
+                return isConditionSatisfied($this->gender, $prop[ 'operator' ], $prop[ 'value' ]);
+            default:
+                throw new \Exception('Unexpected condition');
+        }
+    }
+
+    public function scopeIsCustomer($query): Builder
+    {
+        return $query->where('type', 'customer');
+    }
+
+    public function scopeIsSupplier($query): Builder
+    {
+        return $query->where('type', 'supplier');
+    }
+
+    public function segments()
+    {
+        return $this->belongsToMany('App\Models\Segment', 'account_segment', 'account_id', 'segment_id')
+            ->withTimestamps()
+            ->withPivot([ 'is_fixed' ]);
     }
 
     public function orders()
