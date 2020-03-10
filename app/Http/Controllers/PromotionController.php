@@ -29,7 +29,8 @@ class PromotionController extends Controller
     {
         $promotions = Promotion::filter(new PromotionFilter($request))
             ->active()
-            ->orderBy('id', 'desc')
+            ->orderBy('type', 'asc') // order -> product
+//            ->orderBy('id', 'desc')
             ->get();
         return PromotionResource::collection($promotions);
     }
@@ -53,7 +54,7 @@ class PromotionController extends Controller
                         [
                             'uuid'     => nanoId(),
                             'place_id' => currentPlace()->id,
-                            'code'     => $request->code ?? strtoupper(Str::studly($request->name)),
+                            'code'     => $request->code ?? strtoupper(Str::studly(Str::slug($request->name))),
                             'stats'    => [
                                 'amount'          => 0,
                                 'discount_amount' => 0,
@@ -128,7 +129,7 @@ class PromotionController extends Controller
                         array_merge(
                             $request->only($promotion->getFillable()),
                             [
-                                'code' => $request->input('code', strtoupper(Str::studly($request->name))),
+                                'code' => $request->input('code', strtoupper(Str::studly(Str::slug($request->name)))),
                             ]
                         )
                     );
