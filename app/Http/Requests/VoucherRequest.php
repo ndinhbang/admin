@@ -50,6 +50,17 @@ class VoucherRequest extends FormRequest
                 ],
             ];
         }
+
+        if ( $this->routeIs([ 'voucher.index' ] && $this->category_uuid) ) {
+            return [
+                'category_uuid'    => [
+                    'bail',
+                    'string',
+                    'size:21',
+                    new ExistsThenBindVal(Category::class, 'uuid'),
+                ],
+            ];
+        }
         return [];
     }
 }

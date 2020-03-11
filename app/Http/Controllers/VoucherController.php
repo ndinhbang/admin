@@ -65,8 +65,15 @@ class VoucherController extends Controller
      */
     public function index(VoucherRequest $request)
     {
+        $category = getBindVal('category');
+
         $vouchers = Voucher::with([ 'creator', 'approver', 'category', 'payer_payee' ])
             ->filter(new VoucherFilter($request))
+            ->where(function ($query) use ($request, $category) {
+                if (!is_null($category)) {
+                    $query->where('vouchers.category_id', $category->id);
+                }
+            })
             ->orderBy('id', 'desc')
             ->paginate($request->per_page ?? 10);
         return VoucherResource::collection($vouchers);
