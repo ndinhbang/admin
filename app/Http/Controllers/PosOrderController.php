@@ -91,10 +91,10 @@ class PosOrderController extends Controller
             throw new \InvalidArgumentException('Malformed data.');
         }
         // Promotion
-        $appliedPromotions = $request->input('applied_promotion.promotions');
-        $promotionUids     = collect($appliedPromotions)->pluck('uuid');
+        $appliedPromotions = collect($request->input('applied_promotion.promotions', []));
+        $promotionUids     = $appliedPromotions->pluck('uuid');
         $promotions        = Promotion::whereIn('uuid', $promotionUids->all())->get()->keyBy('uuid');
-        if ( $promotions->count() != $productUuids->count() ) {
+        if ( $promotions->count() != $promotionUids->count() ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
         app()->instance('__keyedPromotions', $promotions);
@@ -222,7 +222,7 @@ class PosOrderController extends Controller
     {
         $table      = getBindVal('__table');
         $customer   = getBindVal('__customer');
-        $promotions = getBindVal('__promotions');
+        $promotions = getBindVal('__keyedPromotions');
         return [
             'table_id'              => $table->id ?? null,
             'customer_id'           => $customer->id ?? 0,
@@ -310,8 +310,8 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
-                'promotion_id'             => getBindVal('__keyedPromotions')->get($item[ 'promotion_uuid' ]) ?? null,
-                'promotion_uuid'           => $item[ 'promotion_uuid' ],
+                'promotion_id'             => getBindVal('__keyedPromotions')->get($item[ 'promotion_uuid' ] ?? null),
+                'promotion_uuid'           => $item[ 'promotion_uuid' ] ?? null,
                 'product_price'            => $item[ 'product_price' ],
                 'printed_qty'              => $item[ 'added_qty' ] ?? 0,
                 'note'                     => $item[ 'note' ] ?? '',
@@ -322,7 +322,6 @@ class PosOrderController extends Controller
                 'doing'                    => $item[ 'doing' ],
                 'accepted'                 => $item[ 'accepted' ],
                 'pending'                  => $item[ 'pending' ],
-                'discount_id'              => $item[ 'discount_id' ] ?? 0,
                 'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($timeIn)),
                 'time_in'                  => $timeIn,
                 'time_out'                 => $timeOut,
@@ -506,7 +505,6 @@ class PosOrderController extends Controller
                 'doing',
                 'accepted',
                 'pending',
-                'discount_id',
                 'printed_qty',
                 'is_paused',
                 'time_used',
@@ -604,13 +602,18 @@ class PosOrderController extends Controller
             throw new \InvalidArgumentException('Malformed data.');
         }
         // Promotion
-        $appliedPromotions = $request->input('applied_promotion.promotions');
-        $promotionUids     = collect($appliedPromotions)->pluck('uuid');
-        $promotions        = Promotion::whereIn('uuid', $promotionUids->all())->get()->keyBy('uuid');
-        if ( $promotions->count() != $productUuids->count() ) {
-            throw new \InvalidArgumentException('Malformed data.');
+        if ( !empty($appliedPromotions = $request->input('applied_promotion.promotions', [])) ) {
+            $promotionUids = Arr::pluck($appliedPromotions, 'uuid');
+            dump($promotionUids);
+            $promotions    = Promotion::whereIn('uuid', $promotionUids)->get()->keyBy('uuid');
+            dump($promotions->count(), count($promotionUids), $promotionUids);
+            if ( $promotions->count() != count($promotionUids) ) {
+                throw new \InvalidArgumentException('Malformed data.');
+            }
+            app()->instance('__keyedPromotions', $promotions);
         }
-        app()->instance('__keyedPromotions', $promotions);
+
+
         $order = DB::transaction(
             function () use ($products, $data, $order, $customer) {
                 $orderData = $this->prepareOrderData($data);

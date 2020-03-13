@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
-use App\Rules\ExistsThenBindVal;
+use App\Rules\GdExists;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SupplyRequest extends FormRequest {
@@ -18,11 +18,12 @@ class SupplyRequest extends FormRequest {
 		}
 	}
 
-	/**
-	 * Get the validation rules that apply to the request.
-	 *
-	 * @return array
-	 */
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     * @throws \Exception
+     */
 	public function rules() {
 		if ($this->routeIs(['supply.store', 'supply.update'])) {
 			return [
@@ -31,7 +32,7 @@ class SupplyRequest extends FormRequest {
 					'bail',
 					'string',
 					'size:21',
-					new ExistsThenBindVal(Category::class, 'uuid'),
+					new GdExists(Category::class),
 				],
 				'min_stock' => ['bail', 'numeric', 'max:9999999'],
 			];

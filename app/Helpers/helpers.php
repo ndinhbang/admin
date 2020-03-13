@@ -33,17 +33,6 @@ if ( !function_exists('getBindVal') ) {
         return app()->offsetExists($key) ? app($key) : $default;
     }
 }
-if ( !function_exists('getClassShortName') ) {
-    /**
-     * @param $object
-     * @return string
-     * @throws ReflectionException
-     */
-    function getClassShortName($object)
-    {
-        return ( new \ReflectionClass($object) )->getShortName();
-    }
-}
 if ( !function_exists('uploadImage') ) {
     /**
      * @param  \Illuminate\Http\UploadedFile|null  $file

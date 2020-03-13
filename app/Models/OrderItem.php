@@ -17,7 +17,6 @@ class OrderItem extends Pivot
         'order_id',
         'product_id',
         'parent_id',
-        'discount_id',
         'promotion_id',
     ];
 
@@ -40,7 +39,6 @@ class OrderItem extends Pivot
         'children_price'         => 'integer',
         'total_buying_price'     => 'integer',
         'total_buying_avg_price' => 'integer',
-        'discount_id'            => 'integer',
         'discount_amount'        => 'integer',
         'discount_order_amount'  => 'integer',
         'canceled'               => 'integer',

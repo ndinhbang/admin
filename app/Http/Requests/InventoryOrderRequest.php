@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Account;
-use App\Rules\ExistsThenBindVal;
+use App\Rules\GdExists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,6 +25,7 @@ class InventoryOrderRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
+     * @throws \Exception
      */
     public function rules()
     {
@@ -39,7 +40,7 @@ class InventoryOrderRequest extends FormRequest
                     'required',
                     'string',
                     'size:21',
-                    new ExistsThenBindVal(Account::class, 'uuid'),
+                    new GdExists(Account::class),
                 ],
                 'supplies.*.qty_import' => [
                     'bail',

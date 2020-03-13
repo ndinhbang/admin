@@ -79,6 +79,7 @@ class Order extends Model
         'is_paid'               => 'boolean',
         'is_completed'          => 'boolean',
         'card_name'             => 'string',
+        'promotion_uuid'        => 'string',
         'applied_promotion'     => 'array',
     ];
 
@@ -131,7 +132,6 @@ class Order extends Model
     }
 
     // ======================= Mutators ================= //
-
     public function setCodeAttribute($value)
     {
         $this->attributes[ 'code' ] = is_null($value) ? $this->gencode($this->codePrefix) : $value;

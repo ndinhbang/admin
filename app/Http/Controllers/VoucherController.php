@@ -84,8 +84,8 @@ class VoucherController extends Controller
         $voucher = DB::transaction(
             function () use ($request) {
                 $placeId     = currentPlace()->id;
-                $category    = getBindVal('category');
-                $payer_payee = getBindVal('account');
+                $category    = getBindVal('__category');
+                $payer_payee = getBindVal('__account');
                 // create voucher
                 $voucher = Voucher::create(
                     array_merge(
@@ -129,8 +129,8 @@ class VoucherController extends Controller
     {
         $voucher = DB::transaction(
             function () use ($request, $voucher) {
-                $category    = getBindVal('category');
-                $payer_payee = getBindVal('account');
+                $category    = getBindVal('__category');
+                $payer_payee = getBindVal('__account');
                 // update voucher
                 $voucher->guard([ 'id', 'uuid', 'place_id', 'code' ]);
                 $voucher->update(
