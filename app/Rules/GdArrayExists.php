@@ -3,7 +3,6 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class GdArrayExists implements Rule
@@ -30,7 +29,7 @@ class GdArrayExists implements Rule
      * {@inheritDoc}
      * @throws \Exception
      */
-    public function __construct($modelClassName, $column = null, $attributeName = null, $globalName = null)
+    public function __construct($modelClassName, $globalName = null, $column = null, $attributeName = null)
     {
         $this->model         = app($modelClassName); // resolve model class
         $this->column        = $column ?? $this->model->getRouteKeyName();
@@ -49,26 +48,24 @@ class GdArrayExists implements Rule
     public function passes($attribute, $value)
     {
         if ( is_array($value) ) {
-            $uuids = $value;
-            if ( Arr::isAssoc($value) ) {
-                $uuids = data_get($value, '*.' . $this->column);
-                if ( $this->mergeFieldName ) {
-                    $uuids = array_merge(
-                        $uuids,
-                        data_get($value, '*.' . $this->mergeFieldName . '.*.' . $this->column)
-                    );
-                }
+            $uuids = data_get($value, '*.' . $this->column);
+            if ( $this->mergeFieldName ) {
+                $uuids = array_merge(
+                    $uuids,
+                    data_get($value, '*.' . $this->mergeFieldName . '.*.' . $this->column)
+                );
             }
             $uuids   = array_unique($uuids);
             $records = $this->model->whereIn($this->column, $uuids)->get();
-            if ( $records->count() == count($uuids) ) {
+            if ( $records->count() != count($uuids) ) {
                 return false;
             }
             if ( app()->offsetExists($this->globalName) ) {
                 throw new \Exception("{$this->globalName} is already registered in container");
             }
+            $keyed = $records->keyBy($this->model->getRouteKeyName());
             // bind value to app container
-            app()->instance($this->globalName, $records);
+            app()->instance($this->globalName, $keyed);
             return true;
         }
         return false;

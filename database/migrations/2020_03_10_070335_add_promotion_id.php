@@ -14,7 +14,7 @@ class AddPromotionId extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->json('applied_promotion')->nullable();
+            $table->json('promotion_applied')->nullable();
             $table->unsignedInteger('promotion_id')->nullable()->index()->after('amount');
             $table->char('promotion_uuid', 21)->nullable()->after('amount');
         });
@@ -33,7 +33,7 @@ class AddPromotionId extends Migration
     public function down()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['promotion_id', 'promotion_uuid', 'applied_promotion']);
+            $table->dropColumn(['promotion_id', 'promotion_uuid', 'promotion_applied']);
         });
         Schema::table('order_items', function (Blueprint $table) {
             $table->dropColumn(['promotion_id', 'promotion_uuid']);

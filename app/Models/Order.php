@@ -57,7 +57,6 @@ class Order extends Model
         'creator_id'            => 'integer',
         'customer_id'           => 'integer',
         'table_id'              => 'integer',
-        'promotion_id'          => 'integer',
         'state'                 => 'integer',
         'kind'                  => 'integer',
         'total_dish'            => 'integer',
@@ -79,8 +78,9 @@ class Order extends Model
         'is_paid'               => 'boolean',
         'is_completed'          => 'boolean',
         'card_name'             => 'string',
+        'promotion_id'          => 'integer',
         'promotion_uuid'        => 'string',
-        'applied_promotion'     => 'array',
+        'promotion_applied'     => 'array',
     ];
 
     /**
