@@ -11,11 +11,12 @@ class PosOrderResource extends JsonResource
 
     /**
      * Transform the resource into an array.
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      * @throws \Exception
      */
-    public function toArray( $request )
+    public function toArray($request)
     {
         $stateArr = config('default.orders.state');
         return [
@@ -24,10 +25,11 @@ class PosOrderResource extends JsonResource
             'card_name'       => $this->card_name,
             'kind'            => getOrderKind($this->kind),
             'state'           => $this->state,
-            'state_name'      => $stateArr[ $this->state ?? 0 ]['name'],
+            'state_name'      => $stateArr[ $this->state ?? 0 ][ 'name' ],
             'amount'          => $this->amount,
             'debt'            => $this->debt,
             'paid'            => $this->paid,
+            'promotion_uuid'  => $this->promotion_uuid,
             'discount_amount' => $this->discount_amount,
             'discount_value'  => $this->discount_amount,
             'discount_type'   => 'đ',
@@ -46,28 +48,36 @@ class PosOrderResource extends JsonResource
             'stage'           => 'remote',
             '$isDirty'        => false,
             '$isNew'          => false,
-            'items'           => ( new OrderItemsCollection($this->whenLoaded('items')) )->using([
-                'parent_uuid' => null,
-            ]),
+            'items'           => ( new OrderItemsCollection($this->whenLoaded('items')) )->using(
+                [
+                    'parent_uuid' => null,
+                ]
+            ),
 //            'place_uuid'      => $this->whenLoaded('place', function () {
 //                return $this->place->uuid;
 //            }),
-            $this->mergeWhen($this->resource->relationLoaded('table'), function () {
-                return [
-                    'table_uuid' => $this->table->uuid ?? null,
-                    'table_name' => $this->table->name ?? '',
-                    'area_name'  => $this->table->area->name ?? '',
+            $this->mergeWhen(
+                $this->resource->relationLoaded('table'),
+                function () {
+                    return [
+                        'table_uuid' => $this->table->uuid ?? null,
+                        'table_name' => $this->table->name ?? '',
+                        'area_name'  => $this->table->area->name ?? '',
 //                    'table'      => new TableResource($this->table),
-                ];
-            }),
-            $this->mergeWhen($this->resource->relationLoaded('customer'), function () {
-                return [
-                    'customer_uuid' => $this->customer->uuid ?? null,
-                    'customer_name' => $this->customer->name ?? '',
-                    'customer_code' => $this->customer->code ?? '',
+                    ];
+                }
+            ),
+            $this->mergeWhen(
+                $this->resource->relationLoaded('customer'),
+                function () {
+                    return [
+                        'customer_uuid' => $this->customer->uuid ?? null,
+                        'customer_name' => $this->customer->name ?? '',
+                        'customer_code' => $this->customer->code ?? '',
 //                    'customer'      => $this->customer,
-                ];
-            }),
+                    ];
+                }
+            ),
             $this->merge($this->using),
         ];
     }

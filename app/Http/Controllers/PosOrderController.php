@@ -12,6 +12,7 @@ use App\Http\Resources\PosOrdersCollection;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\Segment;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -89,6 +90,14 @@ class PosOrderController extends Controller
         if ( $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
+        // Promotion
+        $appliedPromotions = $request->input('applied_promotion.promotions');
+        $promotionUids     = collect($appliedPromotions)->pluck('uuid');
+        $promotions        = Promotion::whereIn('uuid', $promotionUids->all())->get()->keyBy('uuid');
+        if ( $promotions->count() != $productUuids->count() ) {
+            throw new \InvalidArgumentException('Malformed data.');
+        }
+        app()->instance('__keyedPromotions', $promotions);
         $user  = $request->user();
         $order = DB::transaction(
             function () use ($products, $data, $user) {
@@ -132,9 +141,9 @@ class PosOrderController extends Controller
                         $customer->updateOrdersStats();
                         //todo: attach segment
                         $pivotData = [];
-                        $segments = Segment::cursor();
-                        foreach ($segments as $segment) {
-                            if ($customer->isSatisfiedAllConditions($segment->conditions ?? [])) {
+                        $segments  = Segment::cursor();
+                        foreach ( $segments as $segment ) {
+                            if ( $customer->isSatisfiedAllConditions($segment->conditions ?? []) ) {
                                 $pivotData[] = $segment->id;
                             }
                         }
@@ -159,13 +168,14 @@ class PosOrderController extends Controller
             ]
         );
         $usingArr = [
-            'place_uuid'    => currentPlace()->uuid,
-            'table_uuid'    => $table->uuid ?? null,
-            'table_name'    => $table->name ?? '',
-            'area_name'     => $table->area->name ?? '',
-            'customer_uuid' => $customer->uuid ?? null,
-            'customer_name' => $customer->name ?? '',
-            'customer_code' => $customer->code ?? '',
+            'place_uuid'     => currentPlace()->uuid,
+            'table_uuid'     => $table->uuid ?? null,
+            'table_name'     => $table->name ?? '',
+            'area_name'      => $table->area->name ?? '',
+            'customer_uuid'  => $customer->uuid ?? null,
+            'customer_name'  => $customer->name ?? '',
+            'customer_code'  => $customer->code ?? '',
+            'promotion_uuid' => $promotions->get($request->input('promotion_uuid')),
         ];
         $resource = ( new PosOrderResource($order) )->using($usingArr);
         $response = $resource->toResponse($request);
@@ -210,8 +220,9 @@ class PosOrderController extends Controller
      */
     private function prepareOrderData(array $requestData)
     {
-        $table    = getBindVal('__table');
-        $customer = getBindVal('__customer');
+        $table      = getBindVal('__table');
+        $customer   = getBindVal('__customer');
+        $promotions = getBindVal('__promotions');
         return [
             'table_id'              => $table->id ?? null,
             'customer_id'           => $customer->id ?? 0,
@@ -225,6 +236,9 @@ class PosOrderController extends Controller
             'is_returned'           => (bool) $requestData[ 'is_returned' ],
             'is_canceled'           => (bool) $requestData[ 'is_canceled' ],
             'is_served'             => (bool) $requestData[ 'is_served' ],
+            'promotion_id'          => $promotions->get($requestData[ 'promotion_uuid' ]),
+            'promotion_uuid'        => $requestData[ 'promotion_uuid' ],
+            'applied_promotion'     => $requestData[ 'applied_promotion' ],
             // update later
             'amount'                => 0,
             'discount_items_amount' => 0,
@@ -279,9 +293,11 @@ class PosOrderController extends Controller
             // tổng giảm giá (bao gồm giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm)
             $itemTotalDiscountAmount = $itemDiscountAmount + $itemChildDiscountAmount;
             // tổng giá sau giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm
-            $itemTotalPrice = $itemSimplePrice + $itemChildrenPrice;
-            $timeIn  = isset($item[ 'time_in' ]) && $item[ 'time_in' ] ? $item[ 'time_in' ] : Carbon::now();
-            $timeOut = isset($item[ 'is_paused' ]) && $item[ 'is_paused' ] ? $item[ 'time_out' ] : Carbon::now();
+            $itemTotalPrice            = $itemSimplePrice + $itemChildrenPrice;
+            $timeIn                    = isset($item[ 'time_in' ]) && $item[ 'time_in' ] ? $item[ 'time_in' ] : Carbon::now(
+            );
+            $timeOut                   = isset($item[ 'is_paused' ]) && $item[ 'is_paused' ] ? $item[ 'time_out' ] : Carbon::now(
+            );
             $result[ $item[ 'uuid' ] ] = [
                 // calculated
                 'product_id'               => $itemProduct->id,
@@ -294,6 +310,8 @@ class PosOrderController extends Controller
                 'total_buying_price'       => $itemTotalBuyingPrice,
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
+                'promotion_id'             => getBindVal('__keyedPromotions')->get($item[ 'promotion_uuid' ]) ?? null,
+                'promotion_uuid'           => $item[ 'promotion_uuid' ],
                 'product_price'            => $item[ 'product_price' ],
                 'printed_qty'              => $item[ 'added_qty' ] ?? 0,
                 'note'                     => $item[ 'note' ] ?? '',
@@ -305,15 +323,15 @@ class PosOrderController extends Controller
                 'accepted'                 => $item[ 'accepted' ],
                 'pending'                  => $item[ 'pending' ],
                 'discount_id'              => $item[ 'discount_id' ] ?? 0,
-                'time_used'             => Carbon::now()->diffInMinutes(Carbon::parse($timeIn)),
-                'time_in'               => $timeIn,
-                'time_out'              => $timeOut,
-                'is_paused'             => $item[ 'is_paused' ],
-                'price_by_time'         => $item[ 'price_by_time' ],
+                'time_used'                => Carbon::now()->diffInMinutes(Carbon::parse($timeIn)),
+                'time_in'                  => $timeIn,
+                'time_out'                 => $timeOut,
+                'is_paused'                => $item[ 'is_paused' ],
+                'price_by_time'            => $item[ 'price_by_time' ],
                 // need to remove when create or update item
-                'base_price'            => $itemBasePrice,
-                'total_discount_amount' => $itemTotalDiscountAmount,
-                'child_data'            => $datas,
+                'base_price'               => $itemBasePrice,
+                'total_discount_amount'    => $itemTotalDiscountAmount,
+                'child_data'               => $datas,
             ];
         }
         return $result;
@@ -477,6 +495,8 @@ class PosOrderController extends Controller
                 'total_buying_price',
                 'total_buying_avg_price',
                 'product_id',
+                'promotion_id',
+                'promotion_uuid',
                 // data from request
                 'note',
                 'canceled',
@@ -583,6 +603,14 @@ class PosOrderController extends Controller
             && $products->count() != count($productUuids) ) {
             throw new \InvalidArgumentException('Malformed data.');
         }
+        // Promotion
+        $appliedPromotions = $request->input('applied_promotion.promotions');
+        $promotionUids     = collect($appliedPromotions)->pluck('uuid');
+        $promotions        = Promotion::whereIn('uuid', $promotionUids->all())->get()->keyBy('uuid');
+        if ( $promotions->count() != $productUuids->count() ) {
+            throw new \InvalidArgumentException('Malformed data.');
+        }
+        app()->instance('__keyedPromotions', $promotions);
         $order = DB::transaction(
             function () use ($products, $data, $order, $customer) {
                 $orderData = $this->prepareOrderData($data);
@@ -616,9 +644,9 @@ class PosOrderController extends Controller
                         $customer->updateOrdersStats();
                         //todo: attach segment
                         $pivotData = [];
-                        $segments = Segment::cursor();
-                        foreach ($segments as $segment) {
-                            if ($customer->isSatisfiedAllConditions($segment->conditions ?? [])) {
+                        $segments  = Segment::cursor();
+                        foreach ( $segments as $segment ) {
+                            if ( $customer->isSatisfiedAllConditions($segment->conditions ?? []) ) {
                                 $pivotData[] = $segment->id;
                             }
                         }

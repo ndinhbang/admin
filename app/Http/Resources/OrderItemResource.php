@@ -37,6 +37,7 @@ class OrderItemResource extends JsonResource
             'accepted'                 => $this->accepted,
             'pending'                  => $this->pending,
             'note'                     => $this->note,
+            'promotion_uuid'           => $this->promotion_uuid,
             'discount_amount'          => $this->discount_amount,
             'discount_value'           => $this->discount_amount,
             'discount_type'            => 'đ',

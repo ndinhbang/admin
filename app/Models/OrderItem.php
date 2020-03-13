@@ -18,6 +18,7 @@ class OrderItem extends Pivot
         'product_id',
         'parent_id',
         'discount_id',
+        'promotion_id',
     ];
 
     // ======================= Attribute Casting ================= //
@@ -27,6 +28,7 @@ class OrderItem extends Pivot
         'parent_id'              => 'integer',
         'order_id'               => 'integer',
         'product_id'             => 'integer',
+        'promotion_id'           => 'integer',
         'quantity'               => 'double',
         'added_qty'              => 'integer',
         'printed_qty'            => 'integer',
