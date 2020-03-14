@@ -55,7 +55,7 @@ class ProductController extends Controller {
 	public function store(ProductRequest $request) {
 		$product = DB::transaction(function () use ($request) {
 			$placeId = currentPlace()->id;
-			$category = getBindVal('category');
+			$category = getBindVal('__category');
 			// Upload image
 			$baseName = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
 			// create product
@@ -168,7 +168,7 @@ class ProductController extends Controller {
 	public function update(ProductRequest $request, Product $product) {
 		$product = DB::transaction(function () use ($request, $product) {
 			$placeId = currentPlace()->id;
-			$category = getBindVal('category');
+			$category = getBindVal('__category');
 
 			$baseName = uploadImage($request->file('thumbnailFile'), $this->thumbnail_path);
 			// create product

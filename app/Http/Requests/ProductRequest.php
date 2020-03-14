@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
-use App\Rules\ExistsThenBindVal;
+use App\Rules\GdExists;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -55,7 +55,7 @@ class ProductRequest extends FormRequest
                     'required',
                     'string',
                     'size:21',
-                    new ExistsThenBindVal(Category::class, 'uuid'),
+                    new GdExists(Category::class),
                 ],
                 'supplies.*.quantity' => [
                     'bail',

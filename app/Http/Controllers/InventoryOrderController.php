@@ -65,7 +65,7 @@ class InventoryOrderController extends Controller {
 		$inventoryOrder = DB::transaction(function () use ($request) {
 			$placeId = currentPlace()->id;
 
-			$supplier = getBindVal('account');
+			$supplier = getBindVal('__account');
 			// create inventory order
 			$inventoryOrder = InventoryOrder::create(array_merge($request->except($this->exceptAttributes), [
 				'uuid' => nanoId(),
@@ -162,17 +162,18 @@ class InventoryOrderController extends Controller {
 		return new InventoryOrderResource($inventoryOrder->load(['creator', 'supplier', 'supplies']));
 	}
 
-	/**
-	 * Update the specified resource in storage.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\InventoryOrderRequest  $request
+     * @param  \App\Models\InventoryOrder                $inventoryOrder
+     * @return void
+     * @throws \Throwable
+     */
 	public function update(InventoryOrderRequest $request, InventoryOrder $inventoryOrder) {
 		$inventoryOrder = DB::transaction(function () use ($request, $inventoryOrder) {
 
-			$supplier = getBindVal('account');
+			$supplier = getBindVal('__account');
 
 			// update inventory order
 			$inventoryOrder->guard(['id', 'uuid', 'place_id', 'code']);

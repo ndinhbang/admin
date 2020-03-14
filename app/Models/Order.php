@@ -46,6 +46,7 @@ class Order extends Model
         'creator_id',
         'customer_id',
         'table_id',
+        'promotion_id',
     ];
 
     // ======================= Attribute Casting ================= //
@@ -77,11 +78,15 @@ class Order extends Model
         'is_paid'               => 'boolean',
         'is_completed'          => 'boolean',
         'card_name'             => 'string',
+        'promotion_id'          => 'integer',
+        'promotion_uuid'        => 'string',
+        'promotion_applied'     => 'array',
     ];
 
     /**
      * Default values for attributes
      * Note: Keep it in sync with default values that you set for filed in database
+     *
      * @var  array
      */
     protected $attributes = [
@@ -108,15 +113,8 @@ class Order extends Model
     // ======================= Overrided ================= //
 
     /**
-     * {@inheritDoc}
-     */
-    public function getRouteKeyName()
-    {
-        return 'uuid';
-    }
-
-    /**
      * The "booting" method of the model.
+     *
      * @return void
      */
     protected static function boot()
@@ -125,14 +123,22 @@ class Order extends Model
         static::addGlobalScope(new PlaceScope);
     }
 
-    // ======================= Mutators ================= //
-    public function setCodeAttribute( $value )
+    /**
+     * {@inheritDoc}
+     */
+    public function getRouteKeyName()
     {
-        $this->attributes['code'] = is_null($value) ? $this->gencode($this->codePrefix) : $value;
+        return 'uuid';
+    }
+
+    // ======================= Mutators ================= //
+    public function setCodeAttribute($value)
+    {
+        $this->attributes[ 'code' ] = is_null($value) ? $this->gencode($this->codePrefix) : $value;
     }
 
     // ======================= Local Scopes ================= //
-    public function scopeProgressing( $query )
+    public function scopeProgressing($query)
     {
         return $query->where('is_returned', 0)
             ->where('is_canceled', 0)
@@ -168,6 +174,7 @@ class Order extends Model
 
     /**
      * Items of the order
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function orderItems()
@@ -187,17 +194,20 @@ class Order extends Model
             ->withTimestamps();
     }
 
-    public function supplies() {
+    public function supplies()
+    {
         return $this->belongsToMany('App\Models\Supply', 'inventory', 'order_id', 'supply_id')
             ->withPivot('qty_import', 'qty_export', 'qty_remain', 'total_price', 'price_pu')
             ->withTimestamps();
     }
 
-    public function inventory() {
+    public function inventory()
+    {
         return $this->belongsTo('App\Models\Inventory');
     }
 
-    public function vouchers() {
+    public function vouchers()
+    {
         return $this->hasMany('App\Models\Voucher');
     }
 }

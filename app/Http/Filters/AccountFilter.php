@@ -12,9 +12,11 @@ class AccountFilter extends QueryFilter
             return $this->builder;
         }
 
-        return $this->builder->where('accounts.code', 'like', "%{$search}%")
-            ->orWhere('accounts.unsigned_name', 'like', "%{$search}%")
-            ->orWhere('accounts.phone', 'like', "%{$search}%");
+        return $this->builder->where(function($query) use ($search) {
+            $query->where('accounts.code', 'like', "%{$search}%")
+                ->orWhere('accounts.unsigned_name', 'like', "%{$search}%")
+                ->orWhere('accounts.phone', 'like', "%{$search}%");
+        });
     }
 
     public function type($type)

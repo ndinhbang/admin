@@ -68,16 +68,17 @@ class SupplyController extends Controller {
 		//
 	}
 
-	/**
-	 * Update the specified resource in storage.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\SupplyRequest  $request
+     * @param  \App\Models\Supply                $supply
+     * @return void
+     * @throws \Throwable
+     */
 	public function update(SupplyRequest $request, Supply $supply) {
 		$supply = DB::transaction(function () use ($request, $supply) {
-			$category = getBindVal('category');
+			$category = getBindVal('__category');
 
 			// create supply
 			$supply->update(array_merge($request->except($this->exceptAttributes), [

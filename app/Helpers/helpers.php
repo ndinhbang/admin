@@ -17,7 +17,7 @@ if ( !function_exists('currentPlace') ) {
             return app('__currentPlace');
         }
         if ( getBindVal('__requirePlace') ) {
-            throw new \Exception('Place is required');
+            throw new \Exception('Malformed request');
         }
         return null;
     }
@@ -31,17 +31,6 @@ if ( !function_exists('getBindVal') ) {
     function getBindVal($key, $default = null)
     {
         return app()->offsetExists($key) ? app($key) : $default;
-    }
-}
-if ( !function_exists('getClassShortName') ) {
-    /**
-     * @param $object
-     * @return string
-     * @throws ReflectionException
-     */
-    function getClassShortName($object)
-    {
-        return ( new \ReflectionClass($object) )->getShortName();
     }
 }
 if ( !function_exists('uploadImage') ) {
@@ -189,14 +178,18 @@ if ( !function_exists('getOrderKind') ) {
     }
 }
 if ( !function_exists('secondsToTime') ) {
+    /**
+     * @param $seconds
+     * @return mixed|string
+     */
     function secondsToTime($seconds)
     {
         $periods = [
-            'ngày'   => 86400,
-            'giờ'    => 3600,
-            'phút'   => 60
+            'ngày' => 86400,
+            'giờ'  => 3600,
+            'phút' => 60,
         ];
-        $parts = [];
+        $parts   = [];
         foreach ( $periods as $name => $dur ) {
             $div = floor($seconds / $dur);
             if ( $div == 0 ) {
@@ -211,6 +204,34 @@ if ( !function_exists('secondsToTime') ) {
             return $last;
         } else {
             return join(', ', $parts) . " " . $last;
+        }
+    }
+}
+if ( !function_exists('isConditionSatisfied') ) {
+    /**
+     * @param  integer  $left
+     * @param  string   $strOperator
+     * @param  integer  $right
+     * @return bool
+     * @throws \Exception
+     */
+    function isConditionSatisfied($left, $strOperator, $right)
+    {
+        switch ( $strOperator ) {
+            case 'eq':
+                return $left == $right;
+            case 'ne':
+                return $left != $right;
+            case 'gt':
+                return $left > $right;
+            case 'gte':
+                return $left >= $right;
+            case 'lt':
+                return $left < $right;
+            case 'lte':
+                return $left <= $right;
+            default:
+                throw new \Exception('Unexpected value');
         }
     }
 }

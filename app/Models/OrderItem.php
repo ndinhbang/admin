@@ -17,7 +17,7 @@ class OrderItem extends Pivot
         'order_id',
         'product_id',
         'parent_id',
-        'discount_id',
+        'promotion_id',
     ];
 
     // ======================= Attribute Casting ================= //
@@ -27,6 +27,7 @@ class OrderItem extends Pivot
         'parent_id'              => 'integer',
         'order_id'               => 'integer',
         'product_id'             => 'integer',
+        'promotion_id'           => 'integer',
         'quantity'               => 'double',
         'added_qty'              => 'integer',
         'printed_qty'            => 'integer',
@@ -38,7 +39,6 @@ class OrderItem extends Pivot
         'children_price'         => 'integer',
         'total_buying_price'     => 'integer',
         'total_buying_avg_price' => 'integer',
-        'discount_id'            => 'integer',
         'discount_amount'        => 'integer',
         'discount_order_amount'  => 'integer',
         'canceled'               => 'integer',

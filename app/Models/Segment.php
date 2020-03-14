@@ -5,28 +5,23 @@ namespace App\Models;
 use App\Http\Filters\SegmentFilter;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
-use Eloquent;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property string uuid
  * @property string place_id
  * @property string title
  * @property string description
- * @method  static Segment filter(SegmentFilter $param)
+ * @method  static Segment filter( SegmentFilter $param )
  */
-class Segment extends Eloquent
+class Segment extends Model
 {
     use Filterable;
 
     protected $fillable = [
-        'title',
-        'description',
-        'uuid',
-        'place_id',
+        'name',
+        'desc',
+        'conditions',
     ];
 
     protected $primaryKey = 'id';
@@ -36,10 +31,17 @@ class Segment extends Eloquent
         'place_id',
     ];
 
+    protected $casts = [
+        'uuid'       => 'string',
+        'place_id'   => 'integer',
+        'conditions' => 'array',
+        'name'       => 'string',
+        'desc'       => 'string',
+    ];
+
     protected static function boot()
     {
         parent::boot();
-
         static::addGlobalScope(new PlaceScope);
     }
 
@@ -48,21 +50,15 @@ class Segment extends Eloquent
         return 'uuid';
     }
 
-
-    /**
-     * @return BelongsToMany
-     */
-    public function customers()
+    public function fixedCustomers()
     {
-        return $this->belongsToMany(Account::class, 'segments_accounts')
-            ->where('type', '=', 'customer')->withTimestamps();
+        return $this->customers()->wherePivot('is_fixed', 1);
     }
 
-    /**
-     * @return HasMany
-     */
-    public function criteria()
+    public function customers()
     {
-        return $this->hasMany(Criterion::class);
+        return $this->belongsToMany('App\Models\Account', 'account_segment', 'segment_id', 'account_id')
+            ->withTimestamps()
+            ->withPivot([ 'is_fixed' ]);
     }
 }

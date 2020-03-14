@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\OrderItem;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Rules\ExistsThenBindVal;
+use App\Rules\GdExists;
 
 class PrintRequest extends FormRequest
 {
@@ -22,6 +22,7 @@ class PrintRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array
+     * @throws \Exception
      */
     public function rules()
     {
@@ -39,7 +40,7 @@ class PrintRequest extends FormRequest
                 'nullable',
                 'sometimes',
                 'numeric',
-                new ExistsThenBindVal(OrderItem::class, 'id', 'orderItem'),
+                new GdExists(OrderItem::class, 'id', '__orderItem'),
             ],
             'stt'      => [
                 'bail',

@@ -155,14 +155,15 @@ class InventoryTakeController extends Controller {
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param  \App\Http\Requests\InventoryTakeRequest  $request
+     * @param  \App\Models\InventoryTake                $inventoryTake
+     * @return \App\Http\Resources\InventoryTakeResource
+     * @throws \Throwable
      */
     public function update(InventoryTakeRequest $request, InventoryTake $inventoryTake) {
         $inventoryTake = DB::transaction(function () use ($request, $inventoryTake) {
 
-            $supplier = getBindVal('account');
+            $supplier = getBindVal('__account');
 
             // update inventory order
             $inventoryTake->guard(['id', 'uuid', 'place_id', 'code']);

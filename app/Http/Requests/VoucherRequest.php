@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Account;
 use App\Models\Category;
-use App\Rules\ExistsThenBindVal;
+use App\Rules\GdExists;
 use Illuminate\Foundation\Http\FormRequest;
 
 class VoucherRequest extends FormRequest
@@ -39,14 +39,14 @@ class VoucherRequest extends FormRequest
                     'required',
                     'string',
                     'size:21',
-                    new ExistsThenBindVal(Account::class, 'uuid'),
+                    new GdExists(Account::class),
                 ],
                 'category_uuid'    => [
                     'bail',
                     'required',
                     'string',
                     'size:21',
-                    new ExistsThenBindVal(Category::class, 'uuid'),
+                    new GdExists(Category::class),
                 ],
             ];
         }
