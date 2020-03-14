@@ -69,7 +69,7 @@ class PosOrderRequest extends FormRequest
                     'nullable',
                     'alpha_dash',
                     'size:21',
-                    ( new GdExists(Account::class, '__customer') ),
+                    ( new GdExists(Account::class, 'uuid','__customer') ),
                 ],
                 'table_uuid'                          => [
                     'bail',
