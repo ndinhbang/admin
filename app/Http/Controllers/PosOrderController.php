@@ -301,7 +301,7 @@ class PosOrderController extends Controller
                 'total_buying_avg_price'   => $itemTotalAvgBuyingPrice,
                 // data from request
                 'promotion_id'             =>
-                    !empty($requestData[ 'promotion_uuid' ])
+                    !empty($item[ 'promotion_uuid' ])
                         ? getBindVal('__keyedPromotions')->get($item[ 'promotion_uuid' ])->id
                         : null,
                 'promotion_uuid'           => $item[ 'promotion_uuid' ] ?? null,
