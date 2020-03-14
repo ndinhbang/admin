@@ -39,14 +39,15 @@ class ManageController extends Controller {
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
                 SUM(orders.debt) as total_debt_amount,
 
+                SUM(if(orders.debt > 0,1,0)) as debt,
                 SUM(if(orders.state='0',1,0)) as pending,
-                SUM(if(orders.is_paid='1',1,0)) as paid,
-                SUM(if(orders.is_canceled='1',1,0)) as canceled,
-                SUM(if(orders.is_returned='1',1,0)) as returned
+                SUM(if(orders.is_paid=1,1,0)) as paid,
+                SUM(if(orders.is_canceled=1,1,0)) as canceled,
+                SUM(if(orders.is_returned=1,1,0)) as returned
             "))
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
-            ->where('orders.is_paid', true)
 			->orderBy('orders.id', 'desc')
+            ->withTrashed()
 			->first();
 
 		return response()->json(compact('vouchers', 'orderStats'));
