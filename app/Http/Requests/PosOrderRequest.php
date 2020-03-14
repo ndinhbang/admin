@@ -41,7 +41,7 @@ class PosOrderRequest extends FormRequest
             return [
                 'total_eater'                         => [ 'bail', 'required', 'numeric', ],
                 'total_dish'                          => [ 'bail', 'required', 'numeric' ],
-                'amount'                              => [ 'bail', 'required', 'numeric' ],
+                'amount'                              => [ 'bail', 'required', 'numeric', 'min:0' ],
                 'discount_amount'                     => [ 'bail', 'required', 'numeric' ],
                 'received_amount'                     => [ 'bail', 'required', 'numeric' ],
                 'is_canceled'                         => [ 'bail', 'required', 'boolean' ],
@@ -52,9 +52,9 @@ class PosOrderRequest extends FormRequest
                 'card_name'                           => [ 'bail', 'sometimes', 'nullable', 'string', 'max:10' ],
                 'note'                                => [ 'bail', 'sometimes', 'nullable', 'string', 'max:191' ],
                 'items'                               => [ 'bail', 'sometimes', 'array', 'max:100' ],
-                'items.*.uuid'                        => [ 'bail', 'alpha_dash', 'size:21', 'required' ],
-                'items.*.product_uuid'                => [ 'bail', 'alpha_dash', 'size:21', 'required' ],
-                'items.*.quantity'                    => [ 'bail', 'numeric', 'required' ],
+                'items.*.uuid'                        => [ 'bail', 'required', 'alpha_dash', 'size:21' ],
+                'items.*.product_uuid'                => [ 'bail', 'required', 'alpha_dash', 'size:21' ],
+                'items.*.quantity'                    => [ 'bail', 'numeric', 'required', 'max:999' ],
                 'items.*.added_qty'                   => [ 'bail', 'required', 'numeric', 'max:999' ],
                 'items.*.note'                        => [ 'bail', 'sometimes', 'string', 'max:191' ],
                 'items.*.children'                    => [ 'bail', 'sometimes', 'array', 'max:10' ],
@@ -69,7 +69,7 @@ class PosOrderRequest extends FormRequest
                     'nullable',
                     'alpha_dash',
                     'size:21',
-                    new GdExists(Account::class, '__customer'),
+                    ( new GdExists(Account::class, '__customer') ),
                 ],
                 'table_uuid'                          => [
                     'bail',
@@ -79,14 +79,19 @@ class PosOrderRequest extends FormRequest
                     'size:21',
                     new GdExists(Table::class),
                 ],
-                'promotion_uuid'                      => [ 'bail', 'sometimes', 'nullable', 'string', 'size:21' ],
+                'promotion_uuid'                      => [ 'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21' ],
                 'promotion_applied'                   => [ 'bail', 'sometimes', 'nullable', 'array' ],
                 'promotion_applied.type'              => [
                     'bail',
                     'in:order,product',
                     Rule::requiredIf($hasPromotionApplied),
                 ],
-                'promotion_applied.code'              => [ 'bail', 'string', Rule::requiredIf($hasPromotionApplied) ],
+                'promotion_applied.code'              => [
+                    'bail',
+                    'string',
+                    'max:191',
+                    Rule::requiredIf($hasPromotionApplied),
+                ],
                 'promotion_applied.discountAmount'    => [
                     'bail',
                     'numeric',
@@ -102,7 +107,7 @@ class PosOrderRequest extends FormRequest
                 ],
                 'promotion_applied.promotions.*.uuid' => [
                     'bail',
-                    'string',
+                    'alpha_dash',
                     'size:21',
                     Rule::requiredIf($hasPromotionApplied),
                 ],
@@ -123,6 +128,34 @@ class PosOrderRequest extends FormRequest
                 'sometimes',
                 'numeric',
             ],
+        ];
+    }
+
+    /**
+     * Get custom attributes for validator errors.
+     *
+     * @return array
+     */
+    public function attributes()
+    {
+        return [
+            'amount'                           => 'Tiền thanh toán',
+            'card_name'                        => 'Thẻ tên',
+            'note'                             => 'Ghi chú',
+            'promotion_applied.type'           => 'Kiểu khuyến mãi',
+            'promotion_applied.code'           => 'Mã khuyến mãi',
+            'promotion_applied.discountAmount' => 'Giá trị khuyến mãi',
+            'reason' => 'Lý do',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'items.max'                   => 'Tối đa :max sản phẩm / 1 đơn hàng',
+            'items.*.children.max'        => 'Tối đa :max sản phẩm bán kèm / 1 sản phẩm',
+            'items.*.children.*.quantity' => 'Số lượng sản phẩm tối đa :max',
+            'items.*.quantity.max'        => 'Số lượng sản phẩm tối đa :max',
         ];
     }
 }

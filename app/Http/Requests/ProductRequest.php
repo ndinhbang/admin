@@ -16,32 +16,33 @@ class ProductRequest extends FormRequest
      */
     public function authorize()
     {
-        if ($this->user()->hasAnyRole(['admin', 'superadmin'])
-            || $this->user()->can('manage.products')) {
+        if ( $this->user()->hasAnyRole([ 'admin', 'superadmin' ])
+            || $this->user()->can('manage.products') ) {
             return true;
         }
-
+        return false;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
      * @return array
+     * @throws \Exception
      */
     public function rules()
     {
-        if ($this->routeIs(['product.store', 'product.update'])) {
+        if ( $this->routeIs([ 'product.store', 'product.update' ]) ) {
             return [
-                'price'               => ['bail', 'numeric'],
-                'price_sale'          => ['bail', 'nullable', 'sometimes', 'numeric'],
-                'name'                => ['bail', 'required', 'string', 'max:191'],
-                'is_hot'              => ['bail', 'boolean'],
-                'opened'              => ['bail', 'boolean'],
-                'can_stock'           => ['bail', 'boolean'],
-                'state'               => ['bail', 'boolean'],
-                'supplies'            => ['bail', 'array', 'max:25'],
-                'code'                => ['bail', 'nullable', 'sometimes', 'alpha_dash', 'max:20'],
-                'thumbnail'           => ['bail', 'nullable', 'string'],
+                'price'               => [ 'bail', 'numeric' ],
+                'price_sale'          => [ 'bail', 'nullable', 'sometimes', 'numeric' ],
+                'name'                => [ 'bail', 'required', 'string', 'max:191' ],
+                'is_hot'              => [ 'bail', 'boolean' ],
+                'opened'              => [ 'bail', 'boolean' ],
+                'can_stock'           => [ 'bail', 'boolean' ],
+                'state'               => [ 'bail', 'boolean' ],
+                'supplies'            => [ 'bail', 'array', 'max:25' ],
+                'code'                => [ 'bail', 'nullable', 'sometimes', 'alpha_dash', 'max:20' ],
+                'thumbnail'           => [ 'bail', 'nullable', 'string' ],
                 'thumbnailFile'       => [
                     'bail',
                     'nullable',
@@ -64,11 +65,10 @@ class ProductRequest extends FormRequest
                 ],
             ];
         }
-
         return [
-            'is_hot' => ['bail', 'sometimes', 'boolean'],
-            'opened' => ['bail', 'sometimes', 'boolean'],
-            'state'  => ['bail', 'sometimes', 'boolean'],
+            'is_hot' => [ 'bail', 'sometimes', 'boolean' ],
+            'opened' => [ 'bail', 'sometimes', 'boolean' ],
+            'state'  => [ 'bail', 'sometimes', 'boolean' ],
         ];
     }
 

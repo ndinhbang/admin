@@ -33,21 +33,15 @@ class SegmentRequest extends FormRequest
     {
         if ( $this->routeIs([ 'segment.store', 'segment.update' ]) ) {
             return [
-                'fixedCustomers'                   => [
-                    'bail',
-                    'array',
-                    Rule::requiredIf(empty($this->conditions)),
-                ],
-                'conditions'                       => [
+                'conditions'                     => [
                     'bail',
                     'array',
                     'max:6',
-                    Rule::requiredIf(empty($this->customers)),
+                    Rule::requiredIf(empty($this->fixedCustomers)),
                 ],
-                'fixedCustomers.*.uuid'            => [ 'bail', 'required', 'alpha_dash', 'size:21', ],
-                'conditions.*.property'            => [ 'bail', 'required', 'array', 'size:3' ],
-                'conditions.*.property.value'      => [ 'bail', 'required', 'alpha_num' ],
-                'conditions.*.property.name'       => [
+                'conditions.*.property'          => [ 'bail', 'required', 'array', 'size:3' ],
+                'conditions.*.property.value'    => [ 'bail', 'required', 'alpha_num' ],
+                'conditions.*.property.name'     => [
                     'bail',
                     'required',
                     'string',
@@ -62,14 +56,37 @@ class SegmentRequest extends FormRequest
                         ]
                     ),
                 ],
-                'conditions.*.property.operator'   => [
+                'conditions.*.property.operator' => [
                     'bail',
                     'required',
                     'string',
                     Rule::in([ 'eq', 'ne', 'gt', 'gte', 'lt', 'lte' ]),
                 ],
+                'fixedCustomers'                 => [
+                    'bail',
+                    'array',
+                    Rule::requiredIf(empty($this->conditions)),
+                ],
+                'fixedCustomers.*.uuid'          => [ 'bail', 'required', 'alpha_dash', 'size:21', ],
             ];
         }
         return [];
+    }
+
+    public function attributes()
+    {
+        return [
+            'conditions.*.property.name' => 'Thuộc tính',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'fixedCustomers.required'     => 'Bạn chưa nhập khách hàng cho nhóm khách hàng',
+            'conditions.required'         => 'Bạn chưa nhập khách hàng cho nhóm khách hàng',
+            'conditions.*.property.value' => 'Bạn chưa nhập giá trị cho thuộc tính',
+            'conditions.*.property.size'  => 'Bạn chưa nhập giá trị cho thuộc tính',
+        ];
     }
 }
