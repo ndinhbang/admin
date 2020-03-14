@@ -39,7 +39,7 @@ trait HasVoucher
             $voucherData['category_id']        = $voucherData['type'] ? 30 : 21;
 
             $voucherData['note'] = is_null($message) ? '' : $message.' cho đơn nhập '.$this->code;
-            // Chi mua hàng : Thu xuất trả
+            // Thu xuất trả :  Chi mua hàng
         } elseif ( static::getTable() == 'orders' ) {
             $voucherData['order_id']       = $this->id;
             $voucherData['payer_payee_id'] = $this->customer_id ?? 0;

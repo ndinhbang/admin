@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -89,6 +90,11 @@ class ReportController extends Controller
             ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
+        $items['this_time']['vouchers'] = Voucher::selectRaw("SUM(if(vouchers.type='0',amount,0)) as chi_amount,
+                    SUM(if(vouchers.type='1',amount,0)) as thu_amount")
+            ->whereBetween('vouchers.created_at', [$this->start_date, $this->end_date])
+            ->whereNotIn('vouchers.category_id', [21, 29])
+            ->first();
 
         $startPrevDate = $this->start_date;
         $diffDay = Carbon::parse($this->start_date)->diffInDays($this->end_date);
@@ -116,6 +122,13 @@ class ReportController extends Controller
             ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
+
+        $items['prev_time']['vouchers'] = Voucher::selectRaw("SUM(if(vouchers.type='0',amount,0)) as chi_amount,
+                    SUM(if(vouchers.type='1',amount,0)) as thu_amount")
+            ->whereBetween('vouchers.created_at', [$startPrevDate, $endPrevDate])
+            ->whereNotIn('vouchers.category_id', [21, 29])
+            ->first();
+            
         $time_range['this']['start'] = $this->start_date;
         $time_range['this']['end'] = $this->end_date;
 
