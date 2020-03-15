@@ -25,7 +25,7 @@ class AuthRequest extends FormRequest
     {
         if ($this->routeIs('auth.login')) {
             return [
-                'phone' => 'bail|required|digits_between:10,11',
+                'phone' => 'bail|required',
                 'password' => 'bail|required|min:6|max:191',
             ];
         }

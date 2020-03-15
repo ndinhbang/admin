@@ -89,6 +89,7 @@ class AuthController extends Controller
     public function login(AuthRequest $request)
     {
         $request->validated();
+        
         // If the class is using the ThrottlesLogins trait, we can automatically throttle
         // the login attempts for this application. We'll key this by the username and
         // the IP address of the client making these requests into this application.
@@ -98,28 +99,22 @@ class AuthController extends Controller
             // @throws \Illuminate\Validation\ValidationException
             $this->sendLockoutResponse($request);
         }
-        if ($this->attemptLogin($request)) {
-//            $request->session()->regenerate();
-            $this->clearLoginAttempts($request);
-            // authenticated user
-//            $user = $this->guard()->user();
-            // TODO: get all user 's abilities for using as scope for access token
-            // TODO: restrict access token by ip to limit the consequences of access token being stolen
 
-            // create PSR-7 request from current request object
-            // See: symfony/psr-http-message-bridge v1.2
-            $psr7Request = (new DiactorosFactory())->createRequest($request);
+        $this->clearLoginAttempts($request);
 
-            // issue the access token
-            return $this->issueToken($psr7Request->withParsedBody([
-                'grant_type'    => 'password',
-                'username'      => $request->input($this->username()),
-                'password'      => $request->input('password'),
-                'client_id'     => config('passport.password_client_id'),
-                'client_secret' => config('passport.password_client_secret'),
-                'scope'         => ''
-            ]));
-        }
+        // create PSR-7 request from current request object
+        // See: symfony/psr-http-message-bridge v1.2
+        $psr7Request = (new DiactorosFactory())->createRequest($request);
+
+        // issue the access token
+        return $this->issueToken($psr7Request->withParsedBody([
+            'grant_type'    => 'password',
+            'username'      => strtolower($request->input($this->username())),
+            'password'      => $request->input('password'),
+            'client_id'     => config('passport.password_client_id'),
+            'client_secret' => config('passport.password_client_secret'),
+            'scope'         => ''
+        ]));
 
         // If the login attempt was unsuccessful we will increment the number of attempts
         // to login and redirect the user back to the login form. Of course, when this
@@ -332,33 +327,5 @@ class AuthController extends Controller
         $user->notify(new PasswordResetted($user));
 
         return response()->json(['message' => 'Mật khẩu của bạn đã được thiết lập lại. Xin vui lòng đăng nhập lại!']);
-    }
-
-    public function changePassword(Request $request)
-    {
-        if (env('IS_DEMO')) {
-            return response()->json(['message' => 'Bạn không được phép thực hiện hành động này trong chế độ này.'], 422);
-        }
-
-        $validation = Validator::make($request->all(), [
-            'current_password'          => 'required',
-            'new_password'              => 'required|confirmed|different:current_password|min:6',
-            'new_password_confirmation' => 'required|same:new_password',
-        ]);
-
-        if ($validation->fails()) {
-            return response()->json(['message' => $validation->messages()->first()], 422);
-        }
-
-        $user = JWTAuth::parseToken()->authenticate();
-
-        if (!\Hash::check(request('current_password'), $user->password)) {
-            return response()->json(['message' => 'Mặt khẩu cũ không khớp! Vui lòng thử lại!'], 422);
-        }
-
-        $user->password = bcrypt(request('new_password'));
-        $user->save();
-
-        return response()->json(['message' => 'Mật khẩu của bạn đã được thay đổi thành công!']);
     }
 }

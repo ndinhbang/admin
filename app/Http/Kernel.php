@@ -20,6 +20,9 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \Barryvdh\Cors\HandleCors::class,
+        \App\Http\Middleware\RequirePlace::class,
+        \App\Http\Middleware\BindCurrentPlaceIfExists::class,
+        \App\Http\Middleware\SantinizeInput::class,
     ];
 
     /**
@@ -40,7 +43,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            'throttle:60,1',
+            'throttle:600,1',
             'bindings',
         ],
     ];
@@ -65,6 +68,10 @@ class Kernel extends HttpKernel
         'verified'      => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'scopes'        => \Laravel\Passport\Http\Middleware\CheckScopes::class,
         'scope'         => \Laravel\Passport\Http\Middleware\CheckForAnyScope::class,
+        'require.place' => \App\Http\Middleware\RequirePlace::class,
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
     ];
 
     /**

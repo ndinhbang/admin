@@ -2,15 +2,15 @@
 
 namespace App;
 
-use Laravel\Passport\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Scopes\PlaceM2MScope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Silber\Bouncer\Database\HasRolesAndAbilities;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Passport\HasApiTokens;
+use App\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasRolesAndAbilities, Notifiable;
+    use HasApiTokens, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -18,7 +18,12 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'phone', 'email', 'password'
+        'uuid',
+        'name',
+        'phone',
+        'email',
+        'password',
+        'display_name',
     ];
 
     /**
@@ -27,7 +32,9 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'id',
+        'password',
+        'remember_token',
     ];
 
     /**
@@ -39,8 +46,59 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        if(!is_null(request()->user()) && !request()->user()->hasAnyRole(['admin', 'superadmin'])) {
+            static::addGlobalScope(new PlaceM2MScope);
+        }
+    }
+
+    
+    public static function findUuid($uuid)
+    {
+        if($uuid)
+            return User::where('uuid', $uuid)->first();
+
+        return null;
+    }
+
+    /**
+     * The roles that belong to the user.
+     */
+    // public function places()
+    // {
+    //     return $this->belongsToMany('App\Models\Place');
+    // }
+
+    /**
+     * The roles that belong to the user.
+     */
+    public function places()
+    {
+        return $this->belongsToMany('App\Models\Place');
+    }
+
     // change login way form `username` -> `phone`
-    public function findForPassport($identifier) {
-        return $this->where('phone', $identifier)->first();
+    public function findForPassport($identifier)
+    {
+        return $this->orWhere('name', $identifier)->orWhere('email', $identifier)->orWhere('phone', $identifier)
+            ->first();
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
     }
 }

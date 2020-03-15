@@ -2,10 +2,9 @@
 
 namespace App\Providers;
 
-use Bouncer;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
-//use Silber\Bouncer\Bouncer;
+use Illuminate\Http\Resources\Json\Resource;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        if ($this->app->isLocal()) {
+            $this->app->register(TelescopeServiceProvider::class);
+        }
     }
 
     /**
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Schema::defaultStringLength(191);
-        Bouncer::ownedVia('App\Tenant', 'owner_id');
+        Resource::withoutWrapping();
     }
 }
+
