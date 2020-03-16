@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Model;
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 class Promotion extends Model
@@ -63,6 +64,16 @@ class Promotion extends Model
     {
         parent::boot();
         static::addGlobalScope(new PlaceScope);
+    }
+
+    public function setFromAttribute($date)
+    {
+        $this->attributes[ 'from' ] = Carbon::parse($date);
+    }
+
+    public function setToAttribute($date)
+    {
+        $this->attributes[ 'to' ] = $date ? Carbon::parse($date) : null;
     }
 
     public function getRouteKeyName()

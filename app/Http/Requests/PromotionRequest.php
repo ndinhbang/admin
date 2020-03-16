@@ -50,8 +50,8 @@ class PromotionRequest extends FormRequest
                     'array',
                     Rule::requiredIf($this->type === 'product' && $applied[ 'someCategory' ]),
                 ],
-                'rule.category.*'               => [ 'bail', 'required', 'array' ],
-                'rule.category.*.uuid'          => [ 'bail', 'required', 'string', 'size:21' ],
+                'rule.category.*'               => [ 'bail', 'required', 'array', 'size:5' ],
+                'rule.category.*.uuid'          => [ 'bail', 'required', 'alpha_dash', 'size:21' ],
                 'rule.category.*.name'          => [ 'bail', 'required', 'string', 'max:191' ],
                 'rule.category.*.minimumQty'    => [ 'bail', 'required', 'numeric', 'min:1' ],
                 'rule.category.*.discountValue' => [ 'bail', 'required', 'numeric', 'min:1' ],
@@ -61,8 +61,8 @@ class PromotionRequest extends FormRequest
                     'array',
                     Rule::requiredIf($this->type === 'product' && $applied[ 'someProduct' ]),
                 ],
-                'rule.product.*'                => [ 'bail', 'required', 'array' ],
-                'rule.product.*.uuid'           => [ 'bail', 'required', 'string', 'size:21' ],
+                'rule.product.*'                => [ 'bail', 'required', 'array', 'size:6' ],
+                'rule.product.*.uuid'           => [ 'bail', 'required', 'alpha_dash', 'size:21' ],
                 'rule.product.*.name'           => [ 'bail', 'required', 'string', 'max:191' ],
                 'rule.product.*.price'          => [ 'bail', 'required', 'numeric', 'min:1' ],
                 'rule.product.*.minimumQty'     => [ 'bail', 'required', 'numeric', 'min:1' ],
@@ -75,7 +75,7 @@ class PromotionRequest extends FormRequest
                 ],
                 'rule.product.*.discountType'   => [ 'bail', 'required', 'string', 'in:%,đ' ],
                 'rule.order'                    => [ 'bail', 'array', Rule::requiredIf($this->type === 'order') ],
-                'rule.order.*'                  => [ 'bail', 'required', 'array' ],
+                'rule.order.*'                  => [ 'bail', 'required', 'array', 'size:3' ],
                 'rule.order.*.minimumPrice'     => [ 'bail', 'required', 'numeric', 'min:1' ],
                 'rule.order.*.discountValue'    => [ 'bail', 'required', 'numeric', 'min:1' ],
                 'rule.order.*.discountType'     => [ 'bail', 'required', 'string', 'in:%,đ' ],
@@ -84,7 +84,7 @@ class PromotionRequest extends FormRequest
                     'array',
                     Rule::requiredIf(!$applied[ 'allCustomer' ] && empty($this->segments)),
                 ],
-                'customers.*'                   => [ 'bail', 'required', 'array' ],
+                'customers.*'                   => [ 'bail', 'required', 'array', 'size:3' ],
                 'customers.*.uuid'              => [ 'bail', 'required', 'string', 'size:21' ],
                 'customers.*.name'              => [ 'bail', 'required', 'string', 'max:191' ],
                 'customers.*.code'              => [ 'bail', 'required', 'string', 'alpha_num', 'max:191' ],
@@ -134,5 +134,34 @@ class PromotionRequest extends FormRequest
             ];
         }
         return [];
+    }
+
+    public function attributes()
+    {
+        return [
+            'name'                   => 'Tên khuyến mãi',
+            'code'                   => 'Mã khuyến mãi',
+            'type'                   => 'Loại hình áp dụng KM',
+            'from'                   => 'Ngày bắt đầu KM',
+            'to'                     => 'Ngày kết thúc KM',
+            'rule.all.minimumQty'    => 'Số lượng tối thiểu',
+            'rule.all.discountValue' => 'Giảm giá',
+            'note'                   => 'Ghi chú',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'rule.category.required' => 'Bạn chưa tạo điều kiện khuyến mãi',
+            'rule.order.required'    => 'Bạn chưa tạo điều kiện khuyến mãi',
+            'rule.product.*.size'    => 'Bạn chưa nhập đầy đủ thông tin cho điều kiện khuyến mãi',
+            'rule.order.*.size'      => 'Bạn chưa nhập đầy đủ thông tin cho điều kiện khuyến mãi',
+            'rule.category.*.size'   => 'Bạn chưa nhập đầy đủ thông tin cho điều kiện khuyến mãi',
+            'rule.product.required'  => 'Bạn chưa tạo điều kiện khuyến mãi',
+            'customers.required'     => 'Bạn chưa nhập đối tượng KM',
+            'segments.required'      => 'Bạn chưa nhập đối tượng KM',
+            'rule.all.required'      => 'Bạn chưa nhập điều kiện khuyến mãi',
+        ];
     }
 }
