@@ -34,8 +34,6 @@ class VoucherController extends Controller
                 "
                 SUM(if(vouchers.type='0',amount,0)) as chi_amount,
                 SUM(if(vouchers.type='1',amount,0)) as thu_amount,
-                SUM(if(vouchers.payment_method='cash',amount,0)) as tienmat_amount,
-                SUM(if((vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as taikhoan_amount,
                 SUM(if(vouchers.type='0' AND vouchers.payment_method='cash',amount,0)) as chi_tienmat,
                 SUM(if(vouchers.type='0' AND (vouchers.payment_method='transfer' OR vouchers.payment_method='bank_card'),amount,0)) as chi_taikhoan,
                 SUM(if(vouchers.type='1' AND vouchers.payment_method='cash',amount,0)) as thu_tienmat,
@@ -48,19 +46,13 @@ class VoucherController extends Controller
             ->first();
 
 
-        $categories = Category::whereIn('type', ['revenue', 'expense'])->where('state', 1)->get()->toArray();
-
         // Tổng chi thu theo từng danh mục
-        $byCategories = Voucher::select(
-            DB::raw("SUM(IF(amount,amount,0)) as amount_total, vouchers.type, categories.uuid, categories.name")
-        )
+        $byCategories = Voucher::selectRaw("IF(vouchers.type=1, 'revenue', 'expense') as vtype, categories.uuid, categories.name, SUM(IF(amount,amount,0)) as amount_total")
             ->filter(new VoucherFilter($request))
             ->join('categories', 'categories.id', '=', 'vouchers.category_id')
             ->groupBy('vouchers.category_id')
             ->orderBy('categories.id', 'asc')
             ->get()->toArray();
-
-        $byCategories = array_merge($categories, $byCategories);
 
         return response()->json(compact([ 'overview', 'byCategories' ]));
     }
