@@ -7,6 +7,7 @@ use App\Http\Requests\VoucherRequest;
 use App\Http\Resources\VoucherResource;
 use App\Models\Order;
 use App\Models\Voucher;
+use App\Models\Category;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -45,15 +46,22 @@ class VoucherController extends Controller
             ->filter(new VoucherFilter($request))
             ->orderBy('vouchers.id', 'desc')
             ->first();
+
+
+        $categories = Category::whereIn('type', ['revenue', 'expense'])->where('state', 1)->get()->toArray();
+
         // Tổng chi thu theo từng danh mục
         $byCategories = Voucher::select(
-            DB::raw("SUM(amount) as amount_total, vouchers.*, categories.uuid, categories.name")
+            DB::raw("SUM(IF(amount,amount,0)) as amount_total, vouchers.type, categories.uuid, categories.name")
         )
             ->filter(new VoucherFilter($request))
             ->join('categories', 'categories.id', '=', 'vouchers.category_id')
             ->groupBy('vouchers.category_id')
             ->orderBy('categories.id', 'asc')
-            ->get();
+            ->get()->toArray();
+
+        $byCategories = array_merge($categories, $byCategories);
+
         return response()->json(compact([ 'overview', 'byCategories' ]));
     }
 

@@ -244,9 +244,14 @@ class ReportController extends Controller
         $stats = (object) [];
 
         $items = Order::selectRaw("users.*, 
+                COUNT(orders.id) as total_order,
+                SUM(if(orders.discount_amount > 0,1,0)) as total_discount,
+                SUM(if(orders.discount_items_amount > 0,1,0)) as total_discount_items,
+                SUM(if(orders.debt > 0,1,0)) as total_debt,
                 SUM(orders.amount) as total_amount,
                 SUM(orders.discount_amount) as total_discount_amount,
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
+                SUM(orders.debt) as total_debt_amount,
                 SUM(orders.total_dish) as total_quantity
             ")
             ->join('users', 'users.id', '=', 'orders.creator_id')
