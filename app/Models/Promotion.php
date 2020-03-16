@@ -65,8 +65,15 @@ class Promotion extends Model
         return 'uuid';
     }
 
-    public function scopeActive( $query ): Builder
+    public function scopeActive($query): Builder
     {
         return $query->where('state', 1);
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'promotion_detail', 'promotion_id', 'order_id')
+            ->withPivot(['discount_amount'])
+            ->withTimestamps();
     }
 }

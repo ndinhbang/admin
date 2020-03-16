@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class OrderItem extends Pivot
 {
     public $incrementing = true;
+
     protected $table = 'order_items';
+
     protected $guarded = [ 'id' ];
 
     protected $hidden = [
@@ -70,30 +72,16 @@ class OrderItem extends Pivot
         return $this->belongsTo('App\Models\Place', 'place_id');
     }
 
-    /**
-     * The order that item belongs to
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function order()
     {
         return $this->belongsTo('App\Models\Order', 'order_id');
     }
 
-    /**
-     * Produc of item, 1 item has only 1 product
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function product()
     {
         return $this->belongsTo('App\Models\Product', 'product_id');
     }
 
-//    public function parent()
-//    {
-//        return $this->belongsTo('App\Models\OrderItem', 'parent_id');
-//    }
     public function children()
     {
         return $this->hasMany('App\Models\OrderItem', 'parent_id');

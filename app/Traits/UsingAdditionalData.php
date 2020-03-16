@@ -8,10 +8,11 @@ trait UsingAdditionalData
 
     /**
      * Add additional data to the API resource.
+     *
      * @param  array  $data
      * @return $this
      */
-    public function using( array $data )
+    public function using(array $data)
     {
         $this->using = $data;
         return $this;

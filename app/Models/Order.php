@@ -6,6 +6,7 @@ use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
 use App\Traits\GenerateCode;
 use App\Traits\HasVoucher;
+use App\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -149,65 +150,56 @@ class Order extends Model
     // ======================= Relationships ================= //
     public function place()
     {
-        return $this->belongsTo('App\Models\Place', 'place_id');
+        return $this->belongsTo(Place::class, 'place_id');
     }
 
     public function creator()
     {
-        return $this->belongsTo('App\User', 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function customer()
     {
-        return $this->belongsTo('App\Models\Account', 'customer_id');
+        return $this->belongsTo(Account::class, 'customer_id');
     }
 
     public function table()
     {
-        return $this->belongsTo('App\Models\Table', 'table_id');
+        return $this->belongsTo(Table::class, 'table_id');
     }
 
-    public function batchs()
+    public function promotions()
     {
-        return $this->hasMany('App\Models\OrderBatch', 'order_id');
-    }
-
-    /**
-     * Items of the order
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function orderItems()
-    {
-        return $this->hasMany('App\Models\OrderItem', 'order_id');
+        return $this->belongsToMany(Promotion::class, 'promotion_detail', 'order_id', 'promotion_id')
+            ->withPivot(['discount_amount'])
+            ->withTimestamps();
     }
 
     public function items()
     {
-        return $this->hasMany('App\Models\OrderItem', 'order_id');
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 
     public function products()
     {
-        return $this->belongsToMany('App\Models\Product', 'order_items')
-//            ->using('App\Models\OrderItem')
+        return $this->belongsToMany(Product::class, 'order_items', 'order_id', 'product_id')
             ->withTimestamps();
     }
 
     public function supplies()
     {
-        return $this->belongsToMany('App\Models\Supply', 'inventory', 'order_id', 'supply_id')
+        return $this->belongsToMany(Supply::class, 'inventory', 'order_id', 'supply_id')
             ->withPivot('qty_import', 'qty_export', 'qty_remain', 'total_price', 'price_pu')
             ->withTimestamps();
     }
 
     public function inventory()
     {
-        return $this->belongsTo('App\Models\Inventory');
+        return $this->belongsTo(Inventory::class);
     }
 
     public function vouchers()
     {
-        return $this->hasMany('App\Models\Voucher');
+        return $this->hasMany(Voucher::class);
     }
 }

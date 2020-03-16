@@ -6,7 +6,9 @@ class MigrateDataOfOrderItemsTable extends Migration
 {
     /**
      * Run the migrations.
+     *
      * @return void
+     * @throws \Throwable
      */
     public function up()
     {
@@ -14,7 +16,7 @@ class MigrateDataOfOrderItemsTable extends Migration
             'orders'            => function ( $query ) {
                 $query->withoutGlobalScopes([ \App\Scopes\PlaceScope::class ]);
             },
-            'orders.orderItems' => function ( $query ) {
+            'orders.items' => function ( $query ) {
                 $query->withoutGlobalScopes([ \App\Scopes\PlaceScope::class ]);
             },
         ])
@@ -28,7 +30,7 @@ class MigrateDataOfOrderItemsTable extends Migration
                             continue;
                         }
                         foreach ( $orders as $order ) {
-                            $items = $order->orderItems ?? collect([]);
+                            $items = $order->items ?? collect([]);
                             if ( $items->isEmpty() ) {
                                 continue;
                             }
