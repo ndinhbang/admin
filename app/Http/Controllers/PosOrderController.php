@@ -39,7 +39,7 @@ class PosOrderController extends Controller
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
-                'items.children.product',
+                'items.children.product.category',
                 'items.product.category',
             ]
         )
@@ -176,7 +176,7 @@ class PosOrderController extends Controller
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
-                'items.children.product',
+                'items.children.product.category',
                 'items.product.category',
             ]
         );
@@ -703,7 +703,7 @@ class PosOrderController extends Controller
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
-                'items.children.product',
+                'items.children.product.category',
                 'items.product.category',
             ]
         );
@@ -751,7 +751,7 @@ class PosOrderController extends Controller
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
-                'items.children.product',
+                'items.children.product.category',
                 'items.product.category',
             ]
         );
@@ -796,7 +796,7 @@ class PosOrderController extends Controller
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
-                'items.children.product',
+                'items.children.product.category',
                 'items.product.category',
             ]
         );
