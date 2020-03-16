@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\OrderCanceled;
 use App\Events\OrderPaid;
 use App\Events\OrderUpdated;
+use App\Events\PromotionChanged;
 use App\Http\Filters\OrderFilter;
 use App\Http\Requests\PosOrderRequest;
 use App\Http\Resources\PosOrderResource;
@@ -83,6 +84,7 @@ class PosOrderController extends Controller
     {
         $customer     = getBindVal('__customer');
         $table        = getBindVal('__table');
+        $promotions   = getBindVal('__keyedPromotions') ?? collect([]);
         $data         = $request->all();
         $items        = $data[ 'items' ] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
@@ -92,7 +94,7 @@ class PosOrderController extends Controller
         }
         $user  = $request->user();
         $order = DB::transaction(
-            function () use ($products, $data, $user) {
+            function () use ($products, $data, $user, $promotions) {
                 // tao order
                 $now       = Carbon::now();
                 $customer  = getBindVal('__customer');
@@ -118,6 +120,21 @@ class PosOrderController extends Controller
                 $calculatedOrderData = $this->calculateOrderData($orderData, $calculatedItemsData);
                 // save new order
                 $order = Order::create($calculatedOrderData);
+                // sync promotions
+                if (!empty($data['promotions'])) {
+                    $promotionArr = collect($data['promotions'])->keyBy('uuid')->all();
+                    $order->promotions()->sync(
+                        $promotions->mapWithKeys(
+                            function ($row) use ($promotionArr) {
+                                return [
+                                    $row[ 'id' ] => [
+                                        'discount_amount' => $promotionArr[$row[ 'uuid' ]][ 'discount_amount' ],
+                                    ],
+                                ];
+                            }
+                        )->all()
+                    );
+                }
                 // save new items
                 $this->syncOrderItems($order, $calculatedItemsData);
                 //nếu bán thành công
@@ -139,7 +156,13 @@ class PosOrderController extends Controller
                                 $pivotData[] = $segment->id;
                             }
                         }
+                        // todo: cronjob to remove unsatified customers
                         $customer->segments()->syncWithoutDetaching($pivotData);
+                    }
+                    // chỉ trừ số lượng khi thu tiền
+                    if ( !$promotions->isEmpty() ) {
+                        Promotion::whereIn('id', $promotions->pluck('id')->all())
+                            ->update(['applied_qty' => DB::raw( 'applied_qty + 1' )]);
                     }
                 }
                 return $order;
@@ -149,6 +172,7 @@ class PosOrderController extends Controller
         unset($products);
         $order->load(
             [
+                'promotions',
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
@@ -170,6 +194,11 @@ class PosOrderController extends Controller
         // broadcast event
         if ( $order->is_paid ) {
             broadcast(new OrderPaid($order, currentPlace()))->toOthers();
+            foreach ( $promotions as $promotion ) {
+                if ( $promotion->is_limited ) {
+                    broadcast(new PromotionChanged($promotion, currentPlace()->uuid));
+                }
+            }
         } else {
             broadcast(new OrderUpdated($response->getData()))->toOthers();
         }
@@ -539,7 +568,8 @@ class PosOrderController extends Controller
                 $supplyQuantity = $supply->pivot->quantity;
                 //tổng số lương trừ kho
                 $outQuantity = $supplyQuantity * $productQuantity;
-                if ( ( !is_null($configSale) && !$configSale[ 'allowOverstock' ] ) && $outQuantity > $supply->remain ) {
+                if ( ( !is_null($configSale) && !$configSale[ 'allowOverstock' ] )
+                    && $outQuantity > $supply->remain ) {
                     // throw error if empty
                     throw new \Exception(
                         "\"{$supply->name}\" trong kho chỉ còn: {$supply->remain} - không đủ để bán cho sản phẩm \"{$product->name}\"."
@@ -585,6 +615,7 @@ class PosOrderController extends Controller
 //        }
         $customer     = getBindVal('__customer');
         $table        = getBindVal('__table');
+        $promotions   = getBindVal('__keyedPromotions') ?? collect([]);
         $data         = $request->all();
         $items        = $data[ 'items' ] ?? [];
         $productUuids = $this->getProductUuidOfAllOrderItems($items);
@@ -596,7 +627,7 @@ class PosOrderController extends Controller
         }
         // Promotion
         $order = DB::transaction(
-            function () use ($products, $data, $order, $customer) {
+            function () use ($products, $data, $order, $customer, $promotions) {
                 $orderData = $this->prepareOrderData($data);
                 $products->load([ 'supplies' ]);
                 $calculatedItemsData = $this->calculateItemsData($data[ 'items' ], $products->keyBy('uuid'));
@@ -615,6 +646,22 @@ class PosOrderController extends Controller
                 );
                 $keyedItems = $order->items->keyBy('uuid') ?? new Collection();
                 $this->syncOrderItems($order, $calculatedItemsData, $keyedItems);
+                // sync promotions
+                // sync promotions
+                if (!empty($data['promotions'])) {
+                    $promotionArr = collect($data['promotions'])->keyBy('uuid')->all();
+                    $order->promotions()->sync(
+                        $promotions->mapWithKeys(
+                            function ($row) use ($promotionArr) {
+                                return [
+                                    $row[ 'id' ] => [
+                                        'discount_amount' => $promotionArr[$row[ 'uuid' ]][ 'discount_amount' ],
+                                    ],
+                                ];
+                            }
+                        )->all()
+                    );
+                }
                 //nếu bán thành công
                 if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
@@ -636,6 +683,11 @@ class PosOrderController extends Controller
                         }
                         $customer->segments()->syncWithoutDetaching($pivotData);
                     }
+                    // chỉ trừ số lượng khi thu tiền
+                    if ( !$promotions->isEmpty() ) {
+                        Promotion::whereIn('id', $promotions->pluck('id')->all())
+                            ->update(['applied_qty' => DB::raw( 'applied_qty + 1' )]);
+                    }
                 }
                 return $order;
             },
@@ -647,6 +699,7 @@ class PosOrderController extends Controller
 //            'place',
 //            'table',
 //            'customer',
+                'promotions',
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },
@@ -668,6 +721,11 @@ class PosOrderController extends Controller
         // broadcast event
         if ( $order->is_paid ) {
             broadcast(new OrderPaid($order, currentPlace()))->toOthers();
+            foreach ( $promotions as $promotion ) {
+                if ( $promotion->is_limited ) {
+                    broadcast(new PromotionChanged($promotion, currentPlace()->uuid));
+                }
+            }
         } else {
             broadcast(new OrderUpdated($response->getData()))->toOthers();
         }
@@ -687,6 +745,7 @@ class PosOrderController extends Controller
         $order->load(
             [
 //            'place',
+                'promotions',
                 'customer',
                 'table.area',
                 'items' => function ($query) {
@@ -731,8 +790,9 @@ class PosOrderController extends Controller
         $order->load(
             [
 //            'place',
-                'table',
+                'table.area',
                 'customer',
+                'promotions',
                 'items' => function ($query) {
                     $query->where('parent_id', 0);
                 },

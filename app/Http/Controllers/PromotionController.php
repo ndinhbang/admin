@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PromotionChanged;
 use App\Http\Filters\PromotionFilter;
 use App\Http\Requests\PromotionRequest;
 use App\Http\Resources\PromotionResource;
@@ -66,6 +67,8 @@ class PromotionController extends Controller
                 return $promotion;
             }
         );
+        // broadcast
+        broadcast(new PromotionChanged($promotion, currentPlace()->uuid));
         return PromotionResource::make($promotion)
             ->additional([ 'message' => 'Tạo thành công' ]);
     }
@@ -139,6 +142,8 @@ class PromotionController extends Controller
                 return $promotion;
             }
         );
+        // broadcast
+        broadcast(new PromotionChanged($promotion, currentPlace()->uuid));
         return PromotionResource::make($promotion)
             ->additional([ 'message' => 'Cập nhật thành công' ]);
     }
@@ -147,14 +152,10 @@ class PromotionController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Promotion  $promotion
-     * @return \Illuminate\Http\Response
-     * @throws \Throwable
+     * @return void
      */
     public function destroy(Promotion $promotion)
     {
-        if ( $promotion->delete() ) {
-            return response()->json([ 'message' => 'Đã xóa chương trình khuyến mãi' ]);
-        }
-        return response()->json([ 'message' => 'Có lỗi xảy ra' ], 500);
+//
     }
 }
