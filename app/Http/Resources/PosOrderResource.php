@@ -74,13 +74,9 @@ class PosOrderResource extends JsonResource
             'stage'             => 'remote',
             '$isDirty'          => false,
             '$isNew'            => false,
-            'items'             =>
-                ( new OrderItemsCollection($this->whenLoaded('items')) )
-                    ->using(
-                        [
-                            'parent_uuid' => null,
-                        ]
-                    ),
+            'items'             => ( new OrderItemsCollection($this->whenLoaded('items')) )
+                ->using([ 'parent_uuid' => null ]),
+            'promotions'        => ( new PromotionCollection($this->whenLoaded('promotions')) ),
             $this->mergeWhen(
                 $this->resource->relationLoaded('table'),
                 function () {
