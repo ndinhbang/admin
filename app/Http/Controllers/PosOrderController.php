@@ -121,14 +121,14 @@ class PosOrderController extends Controller
                 // save new order
                 $order = Order::create($calculatedOrderData);
                 // sync promotions
-                if (!empty($data['promotions'])) {
-                    $promotionArr = collect($data['promotions'])->keyBy('uuid')->all();
+                if ( !empty($data[ 'promotions' ]) ) {
+                    $promotionArr = collect($data[ 'promotions' ])->keyBy('uuid')->all();
                     $order->promotions()->sync(
                         $promotions->mapWithKeys(
                             function ($row) use ($promotionArr) {
                                 return [
                                     $row[ 'id' ] => [
-                                        'discount_amount' => $promotionArr[$row[ 'uuid' ]][ 'discount_amount' ],
+                                        'discount_amount' => $promotionArr[ $row[ 'uuid' ] ][ 'discount_amount' ],
                                     ],
                                 ];
                             }
@@ -162,7 +162,7 @@ class PosOrderController extends Controller
                     // chỉ trừ số lượng khi thu tiền
                     if ( !$promotions->isEmpty() ) {
                         Promotion::whereIn('id', $promotions->pluck('id')->all())
-                            ->update(['applied_qty' => DB::raw( 'applied_qty + 1' )]);
+                            ->update([ 'applied_qty' => DB::raw('applied_qty + 1') ]);
                     }
                 }
                 return $order;
@@ -232,38 +232,38 @@ class PosOrderController extends Controller
     }
 
     /**
-     * @param  array  $requestData
+     * @param  array  $data
      * @return array
      */
-    private function prepareOrderData(array $requestData)
+    private function prepareOrderData(array $data)
     {
         $table    = getBindVal('__table');
         $customer = getBindVal('__customer');
         return [
             'table_id'              => $table->id ?? null,
             'customer_id'           => $customer->id ?? 0,
-            'note'                  => $requestData[ 'note' ] ?? '',
-            'reason'                => $requestData[ 'reason' ] ?? '',
-            'card_name'             => $requestData[ 'card_name' ] ?? '',
-            'total_eater'           => (int) $requestData[ 'total_eater' ],
-            'total_dish'            => (int) $requestData[ 'total_dish' ],
-            'received_amount'       => (int) $requestData[ 'received_amount' ],
-            'discount_amount'       => (int) $requestData[ 'discount_amount' ],
-            'is_returned'           => (bool) $requestData[ 'is_returned' ],
-            'is_canceled'           => (bool) $requestData[ 'is_canceled' ],
-            'is_served'             => (bool) $requestData[ 'is_served' ],
+            'note'                  => $data[ 'note' ] ?? '',
+            'reason'                => $data[ 'reason' ] ?? '',
+            'card_name'             => $data[ 'card_name' ] ?? '',
+            'total_eater'           => (int) $data[ 'total_eater' ],
+            'total_dish'            => (int) $data[ 'total_dish' ],
+            'received_amount'       => (int) $data[ 'received_amount' ],
+            'discount_amount'       => (int) $data[ 'discount_amount' ],
+            'is_returned'           => (bool) $data[ 'is_returned' ],
+            'is_canceled'           => (bool) $data[ 'is_canceled' ],
+            'is_served'             => (bool) $data[ 'is_served' ],
+            'promotion_automated'   => (bool) $data[ 'promotion_automated' ],
+            'promotion_uuid'        => $data[ 'promotion_uuid' ] ?? null,
             'promotion_id'          =>
-                !empty($requestData[ 'promotion_uuid' ])
-                    ? getBindVal('__keyedPromotions')->get($requestData[ 'promotion_uuid' ])->id
+                !empty($data[ 'promotion_uuid' ])
+                    ? getBindVal('__keyedPromotions')->get($data[ 'promotion_uuid' ])->id
                     : null,
-            'promotion_uuid'        => $requestData[ 'promotion_uuid' ] ?? null,
-            'promotion_applied'     => $requestData[ 'promotion_applied' ] ?? null,
             // update later
             'amount'                => 0,
             'discount_items_amount' => 0,
             'paid'                  => 0,
             'debt'                  => 0,
-            'is_paid'               => $requestData[ 'is_paid' ] ?? false,
+            'is_paid'               => $data[ 'is_paid' ] ?? false,
             'is_completed'          => false,
         ];
     }
@@ -648,14 +648,14 @@ class PosOrderController extends Controller
                 $this->syncOrderItems($order, $calculatedItemsData, $keyedItems);
                 // sync promotions
                 // sync promotions
-                if (!empty($data['promotions'])) {
-                    $promotionArr = collect($data['promotions'])->keyBy('uuid')->all();
+                if ( !empty($data[ 'promotions' ]) ) {
+                    $promotionArr = collect($data[ 'promotions' ])->keyBy('uuid')->all();
                     $order->promotions()->sync(
                         $promotions->mapWithKeys(
                             function ($row) use ($promotionArr) {
                                 return [
                                     $row[ 'id' ] => [
-                                        'discount_amount' => $promotionArr[$row[ 'uuid' ]][ 'discount_amount' ],
+                                        'discount_amount' => $promotionArr[ $row[ 'uuid' ] ][ 'discount_amount' ],
                                     ],
                                 ];
                             }
@@ -686,7 +686,7 @@ class PosOrderController extends Controller
                     // chỉ trừ số lượng khi thu tiền
                     if ( !$promotions->isEmpty() ) {
                         Promotion::whereIn('id', $promotions->pluck('id')->all())
-                            ->update(['applied_qty' => DB::raw( 'applied_qty + 1' )]);
+                            ->update([ 'applied_qty' => DB::raw('applied_qty + 1') ]);
                     }
                 }
                 return $order;

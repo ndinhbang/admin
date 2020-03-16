@@ -78,24 +78,7 @@ class PosOrderRequest extends FormRequest
                     new GdExists(Table::class),
                 ],
                 'promotion_uuid'                  => [ 'bail', 'sometimes', 'nullable', 'alpha_dash', 'size:21' ],
-//                'promotion_applied'                   => [ 'bail', 'sometimes', 'nullable', 'array' ],
-//                'promotion_applied.type'              => [
-//                    'bail',
-//                    'in:order,product',
-//                    Rule::requiredIf($hasPromotionApplied),
-//                ],
-//                'promotion_applied.code'              => [
-//                    'bail',
-//                    'string',
-//                    'max:191',
-//                    Rule::requiredIf($hasPromotionApplied),
-//                ],
-//                'promotion_applied.discountAmount'    => [
-//                    'bail',
-//                    'numeric',
-//                    'min:1',
-//                    Rule::requiredIf($hasPromotionApplied),
-//                ],
+                'promotion_automated'             => [ 'bail', 'sometimes', 'boolean' ],
                 'promotions'                      => [
                     'bail',
                     'sometimes',

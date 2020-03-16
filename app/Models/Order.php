@@ -81,7 +81,7 @@ class Order extends Model
         'card_name'             => 'string',
         'promotion_id'          => 'integer',
         'promotion_uuid'        => 'string',
-        'promotion_applied'     => 'array',
+        'promotion_automated'   => 'boolean',
     ];
 
     /**
@@ -171,7 +171,7 @@ class Order extends Model
     public function promotions()
     {
         return $this->belongsToMany(Promotion::class, 'promotion_detail', 'order_id', 'promotion_id')
-            ->withPivot(['discount_amount'])
+            ->withPivot([ 'discount_amount' ])
             ->withTimestamps();
     }
 
