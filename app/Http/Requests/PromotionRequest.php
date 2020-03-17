@@ -35,7 +35,7 @@ class PromotionRequest extends FormRequest
                 'code'                          => [ 'bail', 'nullable', 'string', 'max:50', 'alpha_dash' ],
                 'type'                          => [ 'bail', 'required', 'string', 'in:product,order' ],
                 'state'                         => [ 'bail', 'required', 'numeric', Rule::in([ 0, 1, 2 ]) ],
-                'applied'                       => [ 'bail', 'required', 'array', 'size:6' ],
+                'applied'                       => [ 'bail', 'required', 'array' ],
                 'applied.allCustomer'           => [ 'bail', 'required', 'boolean' ],
                 'applied.someSegment'           => [ 'bail', 'required', 'boolean' ],
                 'applied.someCustomer'          => [ 'bail', 'required', 'boolean' ],
