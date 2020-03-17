@@ -7,6 +7,7 @@ use App\Http\Filters\PromotionFilter;
 use App\Http\Requests\PromotionRequest;
 use App\Http\Resources\PromotionResource;
 use App\Models\Promotion;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -22,7 +23,7 @@ class PromotionController extends Controller
     {
         $promotions = Promotion::filter(new PromotionFilter($request))
             ->orderBy('id', 'desc')
-            ->simplePaginate($request->input('per_page', 20));
+            ->paginate($request->input('per_page', 20));
         return PromotionResource::collection($promotions);
     }
 

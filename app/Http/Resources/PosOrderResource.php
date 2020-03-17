@@ -29,6 +29,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * @property mixed total_eater
  * @property mixed created_at
  * @property mixed updated_at
+ * @property mixed promotion_automated
  */
 class PosOrderResource extends JsonResource
 {

@@ -42,6 +42,7 @@ class PromotionRequest extends FormRequest
                 'applied.allProduct'            => [ 'bail', 'required', 'boolean' ],
                 'applied.someCategory'          => [ 'bail', 'required', 'boolean' ],
                 'applied.someProduct'           => [ 'bail', 'required', 'boolean' ],
+                'applied.orderKind'             => [ 'bail', 'sometimes', 'in:all,inplace,takeaway' ],
                 'required_code'                 => [ 'bail', 'boolean', Rule::requiredIf($this->type === 'order') ],
                 'from'                          => [ 'bail', 'required', 'date' ],
                 'to'                            => [ 'bail', 'nullable', 'date', 'after_or_equal:from' ],
