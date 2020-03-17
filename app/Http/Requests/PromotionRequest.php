@@ -51,7 +51,7 @@ class PromotionRequest extends FormRequest
                     'array',
                     Rule::requiredIf($this->type === 'product' && $applied[ 'someCategory' ]),
                 ],
-                'rule.category.*'               => [ 'bail', 'required', 'array', 'size:5' ],
+                'rule.category.*'               => [ 'bail', 'required', 'array' ],
                 'rule.category.*.uuid'          => [ 'bail', 'required', 'alpha_dash', 'size:21' ],
                 'rule.category.*.name'          => [ 'bail', 'required', 'string', 'max:191' ],
                 'rule.category.*.minimumQty'    => [ 'bail', 'required', 'numeric', 'min:1' ],
