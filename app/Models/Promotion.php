@@ -43,8 +43,6 @@ class Promotion extends Model
         'type'          => 'string',
         'code'          => 'string',
         'state'         => 'integer',
-//        'from'          => 'datetime',
-//        'to'            => 'datetime',
         'is_limited'    => 'boolean',
         'limit_qty'     => 'integer',
         'applied'       => 'array',
@@ -53,11 +51,6 @@ class Promotion extends Model
         'rule'          => 'array',
         'customers'     => 'array',
         'segments'      => 'array',
-    ];
-
-    protected $dates = [
-        'from',
-        'to',
     ];
 
     protected static function boot()
