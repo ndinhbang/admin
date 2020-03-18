@@ -13,6 +13,8 @@ use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Exports\ReportRevenueExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -35,10 +37,11 @@ class ReportController extends Controller
     public function revenues(OrderRequest $request) {
 
         $type = request()->get('type', 'order');
+        $isExport = request()->get('is_export', false);
         
         switch ($type) {
             case 'order':
-                return $this->revenueByOrder($request);
+                return $this->revenueByOrder($request, $isExport);
                 break;
 
             case 'product':
@@ -142,7 +145,7 @@ class ReportController extends Controller
     /**
      * Báo cáo doanh số theo đơn hàng.
      */
-    private function revenueByOrder($request) {
+    private function revenueByOrder($request, $isExport = false) {
         // stats
         $stats = Order::selectRaw("
                 COUNT(orders.id) as total_order,
@@ -182,10 +185,15 @@ class ReportController extends Controller
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
             ->where('orders.is_paid', true)
             ->orderBy('orders.id', 'desc')
-            ->withTrashed()
-            ->paginate($request->per_page);
+            ->withTrashed();
 
-        return response()->json(compact('items', 'stats'));
+        if(!$isExport) {
+            $items = $items->paginate($request->per_page);
+            return response()->json(compact('items', 'stats'));
+        } else {
+            $items = $items->get();
+            return compact('items', 'stats');
+        }
     }
 
     /**
@@ -330,5 +338,14 @@ class ReportController extends Controller
             ->get();
 
         return response()->json(compact('items'));
+    }
+
+    /**
+     * Xuất báo cáo
+     */
+    public function export(OrderRequest $request) {
+        $data = $this->revenues($request);
+
+        return Excel::store(new ReportRevenueExport($data), 'bao-cao-doanh-thu.xlsx', 'public');
     }
 }
