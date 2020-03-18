@@ -313,10 +313,10 @@ class PosOrderController extends Controller
             $itemTotalDiscountAmount = $itemDiscountAmount + $itemChildDiscountAmount;
             // tổng giá sau giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm
             $itemTotalPrice            = $itemSimplePrice + $itemChildrenPrice;
-            $timeIn                    = isset($item[ 'time_in' ]) && $item[ 'time_in' ] ? $item[ 'time_in' ] : Carbon::now(
-            );
-            $timeOut                   = isset($item[ 'is_paused' ]) && $item[ 'is_paused' ] ? $item[ 'time_out' ] : Carbon::now(
-            );
+            $timeIn                    = Carbon::parse($item[ 'time_in' ] ?? 'now');
+            $timeOut                   = isset($item[ 'is_paused' ]) && $item[ 'is_paused' ]
+                ? Carbon::parse($item[ 'time_out' ] ?? 'now')
+                : null;
             $result[ $item[ 'uuid' ] ] = [
                 // calculated
                 'product_id'               => $itemProduct->id,
