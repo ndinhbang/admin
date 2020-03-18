@@ -45,11 +45,11 @@ class ReportController extends Controller
                 break;
 
             case 'product':
-                return $this->revenueByProduct($request);
+                return $this->revenueByProduct($request, $isExport);
                 break;
 
             case 'cashier':
-                return $this->revenueByCashier($request);
+                return $this->revenueByCashier($request, $isExport);
                 break;
         }
     }
@@ -192,14 +192,14 @@ class ReportController extends Controller
             return response()->json(compact('items', 'stats'));
         } else {
             $items = $items->get();
-            return compact('items', 'stats');
+            return compact('items', 'stats', 'request');
         }
     }
 
     /**
      * Báo cáo doanh số theo sản phẩm.
      */
-    private function revenueByProduct($request) {
+    private function revenueByProduct($request, $isExport = false) {
 
         // stats
         $stats = OrderItem::selectRaw("
@@ -238,16 +238,21 @@ class ReportController extends Controller
             })
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
             ->orderBy('total_amount', 'desc')
-            ->groupBy('products.id')
-            ->paginate($request->per_page);
+            ->groupBy('products.id');
 
-        return response()->json(compact('items', 'stats'));
+        if(!$isExport) {
+            $items = $items->paginate($request->per_page);
+            return response()->json(compact('items', 'stats'));
+        } else {
+            $items = $items->get();
+            return compact('items', 'stats', 'request');
+        }
     }
 
     /**
      * Báo cáo doanh số theo người bán (thu ngân).
      */
-    private function revenueByCashier($request) {
+    private function revenueByCashier($request, $isExport = false) {
 
         $stats = (object) [];
 
@@ -266,8 +271,15 @@ class ReportController extends Controller
             ->whereBetween('orders.created_at', [$this->start_date, $this->end_date])
             ->where('orders.is_paid', true)
             ->orderBy('total_amount', 'desc')
-            ->groupBy('users.id')
-            ->paginate($request->per_page);
+            ->groupBy('users.id');
+
+        if(!$isExport) {
+            $items = $items->paginate($request->per_page);
+            return response()->json(compact('items', 'stats'));
+        } else {
+            $items = $items->get();
+            return compact('items', 'stats', 'request');
+        }
 
         return response()->json(compact('items', 'stats'));
     }
@@ -343,9 +355,29 @@ class ReportController extends Controller
     /**
      * Xuất báo cáo
      */
-    public function export(OrderRequest $request) {
+    public function exportRevenues(OrderRequest $request) {
         $data = $this->revenues($request);
 
-        return Excel::store(new ReportRevenueExport($data), 'bao-cao-doanh-thu.xlsx', 'public');
+        $type = request()->get('type', 'order');
+
+        $filename = 'Doanh số ';
+
+        switch ($type) {
+            case 'order':
+                $filename .= 'theo đơn hàng ';
+                break;
+            case 'product':
+                $filename .= 'theo sản phẩm ';
+                break;
+            case 'cashier':
+                $filename .= 'theo người bán ';
+                break;
+        }
+
+        $filename .= 'từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+        Excel::store(new ReportRevenueExport($data), 'reports/'.$filename, 'public');
+
+        return $filename;
     }
 }
