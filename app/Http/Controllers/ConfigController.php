@@ -48,6 +48,7 @@ class ConfigController extends Controller
             'config_screen2nd' => [
                 'useImage' => $place->config_screen2nd['useImage'],
                 'image'    => mediaUrl($this->thumbnail_path . $place->config_screen2nd['image']),
+                'imageFile' => null,
             ],
         ]);
     }
