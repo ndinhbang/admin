@@ -13,7 +13,11 @@ use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Exports\ReportRevenueExport;
+use App\Exports\ReportRevenueOrderExport;
+use App\Exports\ReportRevenueProductExport;
+use App\Exports\ReportRevenueCashierExport;
+use App\Exports\ReportProfitDailyExport;
+use App\Exports\ReportProfitProductExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
@@ -221,7 +225,7 @@ class ReportController extends Controller
             ->where('products.place_id', getBindVal('__currentPlace')->id)
             ->first();
 
-        $items = Order::selectRaw("products.*, 
+        $products = Order::selectRaw("products.*, 
                 SUM(order_items.simple_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
@@ -241,10 +245,10 @@ class ReportController extends Controller
             ->groupBy('products.id');
 
         if(!$isExport) {
-            $items = $items->paginate($request->per_page);
+            $items['data'] = $products->get();
             return response()->json(compact('items', 'stats'));
         } else {
-            $items = $items->get();
+            $items = $products->get();
             return compact('items', 'stats', 'request');
         }
     }
@@ -281,7 +285,7 @@ class ReportController extends Controller
             return compact('items', 'stats', 'request');
         }
 
-        return response()->json(compact('items', 'stats'));
+        return response()->json(compact('items', 'stats', 'request'));
     }
 
 
@@ -293,7 +297,7 @@ class ReportController extends Controller
     /**
      * Báo cáo lợi nhuận theo ngày.
      */
-    private function profitByDaily($request) {
+    private function profitByDaily($request, $isExport = false) {
         $items['data'] = OrderItem::selectRaw("
                 DATE(order_items.created_at) as days,
                 SUM(order_items.total_price) as total_amount,
@@ -318,13 +322,13 @@ class ReportController extends Controller
             ->orderBy('days', 'desc')
             ->get();
 
-        return response()->json(compact('items'));
+        return response()->json(compact('items', 'request'));
     }
 
     /**
      * Báo cáo lợi nhuận theo sản phẩm.
      */
-    private function profitByProduct($request) {
+    private function profitByProduct($request, $isExport = false) {
         $items['data'] = OrderItem::selectRaw("
                 products.*,
                 SUM(order_items.total_price) as total_amount,
@@ -349,7 +353,7 @@ class ReportController extends Controller
             ->orderBy('total_amount', 'desc')
             ->get();
 
-        return response()->json(compact('items'));
+        return response()->json(compact('items', 'request'));
     }
 
     /**
@@ -357,26 +361,49 @@ class ReportController extends Controller
      */
     public function exportRevenues(OrderRequest $request) {
         $data = $this->revenues($request);
-
         $type = request()->get('type', 'order');
 
         $filename = 'Doanh số ';
 
         switch ($type) {
             case 'order':
-                $filename .= 'theo đơn hàng ';
+                $filename .= 'theo Đơn hàng từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+                Excel::store(new ReportRevenueOrderExport($data), 'reports/'.$filename, 'public');
                 break;
             case 'product':
-                $filename .= 'theo sản phẩm ';
+                $filename .= 'theo Sản phẩm từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+                Excel::store(new ReportRevenueProductExport($data), 'reports/'.$filename, 'public');
                 break;
             case 'cashier':
-                $filename .= 'theo người bán ';
+                $filename .= 'theo Nhân viên từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+                Excel::store(new ReportRevenueCashierExport($data), 'reports/'.$filename, 'public');
                 break;
         }
 
-        $filename .= 'từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+        return $filename;
+    }
 
-        Excel::store(new ReportRevenueExport($data), 'reports/'.$filename, 'public');
+    public function exportProfits(OrderRequest $request) {
+        $data = $this->profits($request);
+        $type = request()->get('type', 'order');
+
+        $filename = 'Lợi nhuận ';
+
+        switch ($type) {
+            case 'daily':
+                $filename .= 'theo Ngày từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+                Excel::store(new ReportProfitDailyExport($data), 'reports/'.$filename, 'public');
+                break;
+            case 'product':
+                $filename .= 'theo Sản phẩm từ '.Carbon::parse($this->start_date)->format('d.m.Y').' đến '.Carbon::parse($this->end_date)->format('d.m.Y').'.xlsx';
+
+                Excel::store(new ReportProfitProductExport($data), 'reports/'.$filename, 'public');
+                break;
+        }
 
         return $filename;
     }
