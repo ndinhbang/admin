@@ -14,6 +14,20 @@
                 <thead>
                 <tr>
                     <td class="text-left py-0 " width="93%">
+                        @{{#if order_code}}
+                        <div class="no-wrap">
+                            <span>@{{ order_code }}</span>
+                        </div>
+                        @{{/if}}
+                    </td>
+                    <td class="text-right py-0">
+                        @{{#if created_at}}
+                        <small class="no-wrap">@{{ created_at }}</small>
+                        @{{/if}}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-left py-0 " width="93%">
                         <div class="no-wrap"><strong>@{{ card_name }}</strong> | @{{ area_name }}-@{{ table_name }}
                         </div>
                     </td>
@@ -39,20 +53,6 @@
                             - @{{ product_name }};
                             @{{/each}}
                         </small>
-                    </td>
-                </tr>
-                @{{/if}}
-                @{{#if order_code}}
-                <tr>
-                    <td class="text-left" colspan="2">
-                        <div class="no-wrap"><em>@{{ order_code }}</em></div>
-                    </td>
-                </tr>
-                @{{/if}}
-                @{{#if created_at}}
-                <tr>
-                    <td class="text-left" colspan="2">
-                        <div class="no-wrap"><em>@{{ created_at }}</em></div>
                     </td>
                 </tr>
                 @{{/if}}
