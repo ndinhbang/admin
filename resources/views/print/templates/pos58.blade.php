@@ -10,24 +10,22 @@
 <section class="sheet padding-5mm">
     <div class="print">
         <div class="print-header my-0 mb-0">
+            <div class="pb-1 clearfix">
+                <div class="w50 float-left">
+                    @{{#if created_at}}
+                    <small class="no-wrap">@{{ created_at }}</small>
+                    @{{/if}}
+                </div>
+                <div class="w50 float-right text-right">
+                    @{{#if order_code}}
+                    <small>@{{ order_code }}</small>
+                    @{{/if}}
+                </div>
+            </div>
             <table>
                 <thead>
                 <tr>
-                    <td class="text-left py-0 " width="93%">
-                        @{{#if order_code}}
-                        <div class="no-wrap">
-                            <span>@{{ order_code }}</span>
-                        </div>
-                        @{{/if}}
-                    </td>
-                    <td class="text-right py-0">
-                        @{{#if created_at}}
-                        <small class="no-wrap">@{{ created_at }}</small>
-                        @{{/if}}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="text-left py-0 " width="93%">
+                    <td class="text-left py-0" width="93%">
                         <div class="no-wrap"><strong>@{{ card_name }}</strong> | @{{ area_name }}-@{{ table_name }}
                         </div>
                     </td>
