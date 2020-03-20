@@ -9,7 +9,7 @@
 <body class="receipt w50mm">
 <section class="sheet padding-5mm">
     <div class="print">
-        <div class="print-header my-0 mb-0">
+        <div class="my-0 mb-0 pb-1">
             <div class="pb-1 clearfix">
                 <div class="w50 float-left">
                     @{{#if created_at}}
@@ -57,7 +57,7 @@
                 @{{#if item_note}}
                 <tr>
                     <td class="text-left" colspan="2">
-                        <div class="no-wrap"><em>@{{ item_note }}</em></div>
+                        <div class="no-wrap"><small>@{{ item_note }}</small></div>
                     </td>
                 </tr>
                 @{{/if}}
