@@ -21,6 +21,7 @@ class PosCategoryResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'type' => $this->type,
+            'is_topping' => $this->is_topping,
             'products' => PosProductResource::collection($this->whenLoaded('products'))
         ];
     }

@@ -47,6 +47,7 @@ class CategoryController extends Controller {
 		$category->parent_id = $request->parent_id ?? 0;
 		$category->type = $request->type;
 		$category->place_id = currentPlace()->id;
+		$category->is_topping = $request->is_topping;
 		$category->save();
 
 		return response()->json(['message' => 'Tạo danh mục thành công!', 'category' => $category]);
@@ -75,6 +76,7 @@ class CategoryController extends Controller {
 		$category->parent_id = $request->parent_id ?? 0;
 		$category->position = $request->position;
 		$category->state = $request->state;
+		$category->is_topping = $request->is_topping;
 		$category->save();
 
 		return response()->json(['message' => 'Cập nhật danh mục thành công!', 'category' => $category]);
