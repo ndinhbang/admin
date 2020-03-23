@@ -34,7 +34,7 @@ class ManageController extends Controller {
                 SUM(if(orders.discount_amount > 0,1,0)) as total_discount,
                 SUM(if(orders.discount_items_amount > 0,1,0)) as total_discount_items,
                 SUM(if(orders.debt > 0,1,0)) as total_debt,
-                SUM(orders.amount) as total_amount,
+                SUM(if(orders.is_paid=1,orders.amount,0)) as total_amount,
                 SUM(orders.discount_amount) as total_discount_amount,
                 SUM(orders.discount_items_amount) as total_discount_items_amount,
                 SUM(orders.debt) as total_debt_amount,
