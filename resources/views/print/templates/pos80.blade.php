@@ -48,7 +48,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="text-left">STT</th>
                             <th class="text-left">Đơn giá</th>
                             <th class="text-right">SL</th>
                             <th class="text-right">Giảm giá</th>
@@ -58,8 +57,7 @@
                     <tbody>
                         @{{#each items}}
                         <tr>
-                            <td class="text-left p-0 pb-1">@{{incremented @index}}</td>
-                            <td class="text-left p-0 pb-1" colspan="4">
+                            <td class="text-left top-border p-0 pt-1" colspan="4">
                                 <span>@{{ product_name }}</span>
                                 @{{#if children}}
                                 <div><small>+</small>
@@ -72,7 +70,6 @@
                             </td>
                         </tr>
                         <tr>
-                            <td class="text-left p-0 pb-1"></td>
                             <td class="text-left p-0 pb-1">@{{money product_price}}</td>
                             <td class="text-right p-0 pb-1">@{{ quantity }}</td>
                             <td class="text-right p-0 pb-1">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
