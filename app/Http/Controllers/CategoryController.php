@@ -74,7 +74,7 @@ class CategoryController extends Controller {
 		$category->name = $request->name;
 		$category->description = $request->description;
 		$category->parent_id = $request->parent_id ?? 0;
-		$category->position = $request->position;
+		// $category->position = $request->position;
 		$category->state = $request->state;
 		$category->is_topping = $request->is_topping;
 		$category->save();
