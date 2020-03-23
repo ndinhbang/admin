@@ -74,7 +74,7 @@
                         <tr>
                             <td class="text-left top-border p-0 pt-1" colspan="4">
                                 <span class="">{{ $item->product->name }}</span>
-                                @if($item->children)
+                                @if($item->children->isNotEmpty())
                                     <div><small>+</small>
                                         @foreach ($item->children as $child)
                                             <small><em>{{$child->product->name}}; </em></small>

@@ -59,7 +59,7 @@
                         <tr>
                             <td class="text-left top-border p-0 pt-1" colspan="4">
                                 <span>@{{ product_name }}</span>
-                                @{{#if children}}
+                                @{{#if children.length}}
                                 <div><small>+</small>
                                     @{{#each children}}
                                         <small><em>@{{product_name}}; </em></small>
