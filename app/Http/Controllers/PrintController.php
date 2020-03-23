@@ -35,7 +35,10 @@ class PrintController extends Controller
             'creator',
             'customer',
             'table',
-            'items',
+            'items' => function ($query) {
+                $query->where('parent_id', 0);
+            },
+            'items.children.product',
             'items.product',
         ]);
 

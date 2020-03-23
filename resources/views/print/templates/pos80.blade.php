@@ -59,7 +59,17 @@
                         @{{#each items}}
                         <tr>
                             <td class="text-left p-0 pb-1">@{{incremented @index}}</td>
-                            <td class="text-left p-0 pb-1" colspan="4">@{{ product_name }}</td>
+                            <td class="text-left p-0 pb-1" colspan="4">
+                                <span>@{{ product_name }}</span>
+                                @{{#if children}}
+                                <div><small>+</small>
+                                    @{{#each children}}
+                                        <small><em>@{{product_name}}; </em></small>
+                                    @{{/each}}
+                                    <small>[ @{{money ../children_price}} ]</small>
+                                </div>
+                                @{{/if}}
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-left p-0 pb-1"></td>
@@ -67,7 +77,7 @@
                             <td class="text-right p-0 pb-1">@{{ quantity }}</td>
                             <td class="text-right p-0 pb-1">@{{money discount_amount}} (@{{js "Math.round((this.discount_amount/(this.simple_price+this.discount_amount)) * 100)"}}%)</td>
                             <td class="text-right p-0 pb-1">
-                                <strong>@{{money simple_price}}</strong>
+                                <strong>@{{money total_price}}</strong>
                             </td>
                         </tr>
                         @{{/each}}

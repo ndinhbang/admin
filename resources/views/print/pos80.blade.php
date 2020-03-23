@@ -74,6 +74,15 @@
                         <tr>
                             <td class="text-left top-border p-0 pt-1" colspan="4">
                                 <span class="">{{ $item->product->name }}</span>
+                                @if($item->children)
+                                    <div><small>+</small>
+                                        @foreach ($item->children as $child)
+                                            <small><em>{{$child->product->name}}; </em></small>
+                                        @endforeach
+                                        <small>[ {{number_format(round($item->children_price, -2), 0, ',', '.')
+                                        }} ]</small>
+                                    </div>
+                                @endif
                                 @if($item->note)
                                     <div><small><em>{{ $item->note }}</em></small></div>
                                 @endif
