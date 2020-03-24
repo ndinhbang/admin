@@ -305,8 +305,8 @@ class PosOrderController extends Controller
             if ( !empty($children) ) {
                 $datas = $this->calculateItemsData($children, $keyedProducts);
                 foreach ( $datas as $data ) {
-                    $itemChildrenPrice       += $data[ 'total_price' ];
-                    $itemChildDiscountAmount += $data[ 'total_discount_amount' ];
+                    $itemChildrenPrice       += ($data[ 'total_price' ] * $itemQuantity);
+                    $itemChildDiscountAmount += ($data[ 'total_discount_amount' ] * $itemQuantity);
                 }
             }
             // tổng giảm giá (bao gồm giảm giá của sản phẩm hiện tại và các sản phẩm bán kèm)

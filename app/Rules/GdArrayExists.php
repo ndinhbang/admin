@@ -25,6 +25,8 @@ class GdArrayExists implements Rule
 
     protected $mergeFieldName = null;
 
+    protected $diff = [];
+
     /**
      * {@inheritDoc}
      * @throws \Exception
