@@ -104,7 +104,6 @@ class PosOrderController extends Controller
                         'uuid'       => nanoId(),
                         'place_id'   => currentPlace()->id,
                         'creator_id' => $user->id,
-                        'kind'       => getOrderKind($data[ 'kind' ], true),
                         'code'       => $data[ 'code' ] ?? null,
                         'year'       => $now->year,
                         'month'      => $now->month,
@@ -240,6 +239,7 @@ class PosOrderController extends Controller
         $table    = getBindVal('__table');
         $customer = getBindVal('__customer');
         return [
+            'kind'                  => getOrderKind($data[ 'kind' ], true),
             'table_id'              => $table->id ?? null,
             'customer_id'           => $customer->id ?? 0,
             'note'                  => $data[ 'note' ] ?? '',
