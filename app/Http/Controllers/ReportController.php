@@ -83,7 +83,7 @@ class ReportController extends Controller
         // $items['prev_time']
 
         $items['this_time'] = OrderItem::selectRaw("
-                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.simple_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
@@ -115,7 +115,7 @@ class ReportController extends Controller
         $startPrevDate = Carbon::parse($this->start_date)->setTimezone(config('app.timezone'))->subDays($diffDay)->format('Y-m-d 00:00:00');
 
         $items['prev_time'] = OrderItem::selectRaw("
-                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.simple_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
@@ -300,7 +300,7 @@ class ReportController extends Controller
     private function profitByDaily($request, $isExport = false) {
         $items['data'] = OrderItem::selectRaw("
                 DATE(order_items.created_at) as days,
-                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.simple_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
@@ -331,7 +331,7 @@ class ReportController extends Controller
     private function profitByProduct($request, $isExport = false) {
         $items['data'] = OrderItem::selectRaw("
                 products.*,
-                SUM(order_items.total_price) as total_amount,
+                SUM(order_items.simple_price) as total_amount,
                 SUM(order_items.discount_amount) as total_discount_amount,
                 SUM(order_items.discount_order_amount) as total_discount_order_amount,
                 SUM(order_items.quantity) as total_quantity,
