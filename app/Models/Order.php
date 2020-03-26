@@ -7,8 +7,10 @@ use App\Traits\Filterable;
 use App\Traits\GenerateCode;
 use App\Traits\HasVoucher;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 /**
  * @property float|int     amount
@@ -168,13 +170,6 @@ class Order extends Model
         return $this->belongsTo(Table::class, 'table_id');
     }
 
-    public function promotions()
-    {
-        return $this->belongsToMany(Promotion::class, 'promotion_detail', 'order_id', 'promotion_id')
-            ->withPivot([ 'discount_amount' ])
-            ->withTimestamps();
-    }
-
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
@@ -193,13 +188,45 @@ class Order extends Model
             ->withTimestamps();
     }
 
-    public function inventory()
-    {
-        return $this->belongsTo(Inventory::class);
-    }
-
     public function vouchers()
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    /**
+     * Sync thông tin khuyến mãi
+     *
+     * @param  \Illuminate\Support\Collection  $promotions
+     * @param  array                           $data
+     */
+    public function syncPromotions(Collection $promotions, array $data)
+    {
+        if ( empty($data[ 'promotions' ]) ) {
+            return;
+        }
+        $promotionArr = collect($data[ 'promotions' ])->keyBy('uuid')->all();
+        $this->promotions()->sync(
+            $promotions->mapWithKeys(
+                function ($row) use ($promotionArr) {
+                    return [
+                        $row[ 'id' ] => [
+                            'discount_amount' => $promotionArr[ $row[ 'uuid' ] ][ 'discount_amount' ],
+                        ],
+                    ];
+                }
+            )->all()
+        );
+    }
+
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_detail', 'order_id', 'promotion_id')
+            ->withPivot([ 'discount_amount' ])
+            ->withTimestamps();
+    }
+
+    public function inventory()
+    {
+        return $this->belongsTo(Inventory::class);
     }
 }
