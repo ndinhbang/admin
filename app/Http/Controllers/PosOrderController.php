@@ -120,20 +120,7 @@ class PosOrderController extends Controller
                 // save new order
                 $order = Order::create($calculatedOrderData);
                 // sync promotions
-                if ( !empty($data[ 'promotions' ]) ) {
-                    $promotionArr = collect($data[ 'promotions' ])->keyBy('uuid')->all();
-                    $order->promotions()->sync(
-                        $promotions->mapWithKeys(
-                            function ($row) use ($promotionArr) {
-                                return [
-                                    $row[ 'id' ] => [
-                                        'discount_amount' => $promotionArr[ $row[ 'uuid' ] ][ 'discount_amount' ],
-                                    ],
-                                ];
-                            }
-                        )->all()
-                    );
-                }
+                $order->syncPromotions($promotions, $data);
                 // save new items
                 $this->syncOrderItems($order, $calculatedItemsData);
                 //nếu bán thành công
@@ -316,7 +303,6 @@ class PosOrderController extends Controller
             $isPaused = $item[ 'is_paused' ] ?? false;
             $timeIn   = Carbon::parse($item[ 'time_in' ] ?? 'now');
             $timeOut  = $isPaused ? Carbon::parse($item[ 'time_out' ] ?? 'now') : Carbon::now();
-
             $result[ $item[ 'uuid' ] ] = [
                 // calculated
                 'product_id'               => $itemProduct->id,
@@ -540,17 +526,12 @@ class PosOrderController extends Controller
     /**
      * @param  \App\Models\Order               $order
      * @param  \Illuminate\Support\Collection  $products
-     * @param  array                           $items
+     * @param  array                           $item
      * @throws \Exception
      */
-    private function subtractInventory(Order $order, Collection $products, array $items)
-    {
-        $canStockProducts = $products
-            ->where('can_stock', true)
-            ->keyBy('uuid');
-        foreach ( $items as $item ) {
-            if ( is_null($product = $canStockProducts->get($item[ 'product_uuid' ])) ) {
-                continue;
+    private function subtractItemInventory(Order $order, Collection $products, array $item) {
+        if ( is_null($product = $products->get($item[ 'product_uuid' ])) ) {
+            return;
             }
             $supplies = $product->supplies ?? new Collection();
             if ( $supplies->isEmpty() ) {
@@ -561,7 +542,7 @@ class PosOrderController extends Controller
             $now             = Carbon::now()->format('Y-m-d H:i:s');
             foreach ( $supplies as $supply ) {
                 // kiếm tra thiết lập cho phép bán khi tồn kho không đủ?
-                $configSale = currentPlace()->config_sale;
+            $configSale = currentPlace()->config_sale ?? null;
                 // $printInfo = currentPlace()->print_info;
                 // dd($printInfo);
                 // số lượng nguyên liệu / 1 sản phẩm
@@ -593,7 +574,25 @@ class PosOrderController extends Controller
                 $supply->save();
             } // end of supplies
             // unload redundant relations
-            // $product->unsetRelation('supplies');
+    }
+
+    /**
+     * @param  \App\Models\Order               $order
+     * @param  \Illuminate\Support\Collection  $products
+     * @param  array                           $items
+     * @throws \Exception
+     */
+    private function subtractInventory(Order $order, Collection $products, array $items)
+    {
+        $canStockProducts = $products
+            ->where('can_stock', true)
+            ->keyBy('uuid');
+        foreach ( $items as $item ) {
+            $this->subtractItemInventory($order, $canStockProducts, $item);
+            if (empty($item['children'])) continue;
+            foreach ($item['children'] as $child) {
+                $this->subtractItemInventory($order, $canStockProducts, $child);
+            }
         }
     }
 
@@ -648,20 +647,7 @@ class PosOrderController extends Controller
                 $this->syncOrderItems($order, $calculatedItemsData, $keyedItems);
                 // sync promotions
                 // sync promotions
-                if ( !empty($data[ 'promotions' ]) ) {
-                    $promotionArr = collect($data[ 'promotions' ])->keyBy('uuid')->all();
-                    $order->promotions()->sync(
-                        $promotions->mapWithKeys(
-                            function ($row) use ($promotionArr) {
-                                return [
-                                    $row[ 'id' ] => [
-                                        'discount_amount' => $promotionArr[ $row[ 'uuid' ] ][ 'discount_amount' ],
-                                    ],
-                                ];
-                            }
-                        )->all()
-                    );
-                }
+                $order->syncPromotions($promotions, $data);
                 //nếu bán thành công
                 if ( $order->is_completed || $order->is_paid ) {
                     // trù kho
