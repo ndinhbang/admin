@@ -93,7 +93,7 @@ class Supply extends Model
 
     public function inventory()
     {
-        return $this->hasMany('App\Models\Inventory', 'supply_id')
+        return $this->hasMany(Inventory::class, 'supply_id')
             ->where('status', 1)
             ->orderBy('updated_at', 'desc');
     }

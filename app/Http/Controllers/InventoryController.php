@@ -9,11 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller {
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
 	public function index(Request $request) {
 
         $summary = $this->statistic();
@@ -38,6 +39,7 @@ class InventoryController extends Controller {
 		}
 
 		$supplyInventory = Supply::select('supplies.*')
+
 			->where(function ($query) use ($request, $stock_range) {
 				if ($request->keyword) {
 					$query->where('supplies.name', 'like', '%' . $request->keyword . '%');

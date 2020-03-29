@@ -21,15 +21,19 @@ class Inventory extends Pivot
 
     // ======================= Attribute Casting ================= //
     protected $casts = [
-        'place_id' => 'integer',
-        'ref_code' => 'string',
-        'supply_id' => 'integer',
+        'place_id'    => 'integer',
+        'ref_code'    => 'string',
+        'supply_id'   => 'integer',
         'total_price' => 'double',
-        'price_pu' => 'double',
-        'qty_import' => 'double',
-        'qty_export' => 'double',
-        'qty_remain' => 'double',
-        'note' => 'string',
+        'price_pu'    => 'double',
+        'qty_import'  => 'double',
+        'qty_export'  => 'double',
+        'qty_remain'  => 'double',
+        'note'        => 'string',
     ];
 
+    public function inventoryOrder()
+    {
+        return $this->belongsTo(InventoryOrder::class, 'inventory_order_id');
+    }
 }

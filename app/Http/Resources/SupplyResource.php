@@ -21,10 +21,12 @@ class SupplyResource extends JsonResource
             'price_avg_in'       => $this->price_avg_in,
             $this->mergeWhen(
                 $this->resource->relationLoaded('unit'),
-                [
-                    'unit_uuid' => isset($this->unit->uuid) ? $this->unit->uuid : '',
-                    'unit_name' => isset($this->unit->name) ? $this->unit->name : '',
-                ]
+                function () {
+                    return [
+                        'unit_uuid' => isset($this->unit->uuid) ? $this->unit->uuid : '',
+                        'unit_name' => isset($this->unit->name) ? $this->unit->name : '',
+                    ];
+                }
             ),
             $this->mergeWhen(
                 $this->resource->relationLoaded('stocks'),

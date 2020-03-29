@@ -70,7 +70,6 @@ class InventoryOrder extends Model
     }
 
     // ======================= Mutators ================= //
-
     public function setCodeAttribute($value)
     {
         $this->attributes[ 'code' ] = is_null($value) ? $this->gencode($this->codePrefix[ $this->type ]) : $value;
@@ -102,5 +101,10 @@ class InventoryOrder extends Model
     public function vouchers()
     {
         return $this->hasMany(Voucher::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1)->where('deleted_at', null);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SupplyRequest;
+use App\Http\Resources\SupplyResource;
 use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,16 +18,15 @@ class SupplyController extends Controller {
 		'created_at',
 	];
 
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
 	public function index() {
-		$supplies = Supply::all()->keyBy('uuid');
-		$supplies->load(['unit']);
+		$supplies = Supply::with('unit')->get()->keyBy('uuid');
 
-		return response()->json($supplies);
+		return SupplyResource::collection($supplies);
 	}
 
 	/**
