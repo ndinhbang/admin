@@ -180,6 +180,17 @@ class VoucherController extends Controller
                     $order->save();
                     $order->delete();
                 }
+                // cap nhat lai so luong ton kho cua nguyen lieu trong don nhap kho
+                if ($voucher->category_id == 21) {
+                    $voucher->load(['inventoryOrder.supplies']);
+                    foreach ($voucher->inventoryOrder->supplies as $supply) {
+                        $supply->remain = $supply->remain - $supply->pivot->qty_import;
+                        $supply->save();
+                    }
+                    // xoa phieu nhap
+                    $voucher->inventoryOrder->delete();
+                }
+
                 $voucher->note = $voucher->note . "(xóa bởi {$request->user()->name})";
                 $voucher->save();
                 // xóa

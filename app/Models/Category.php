@@ -16,6 +16,7 @@ use App\Scopes\PlaceScope;
  * @property mixed     place_id
  * @property mixed     position
  * @property mixed     state
+ * @property mixed     is_topping
  */
 class Category extends Model
 {

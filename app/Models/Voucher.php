@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Scopes\PlaceScope;
 use App\Traits\Filterable;
+use App\Traits\GenerateCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\GenerateCode;
 
 /**
  * @method static create( array $voucherData )
@@ -85,7 +85,7 @@ class Voucher extends Model
     // ======================= Mutators ================= //
     public function setCodeAttribute($value)
     {
-        $this->attributes['code'] = is_null($value)
+        $this->attributes[ 'code' ] = is_null($value)
             ? $this->gencode($this->codePrefix[ $this->type ])
             : $value;
     }
@@ -117,5 +117,10 @@ class Voucher extends Model
     public function payer_payee()
     {
         return $this->belongsTo('App\Models\Account', 'payer_payee_id');
+    }
+
+    public function inventoryOrder()
+    {
+        return $this->belongsTo(InventoryOrder::class, 'inventory_order_id');
     }
 }
