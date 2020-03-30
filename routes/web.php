@@ -12,4 +12,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/{vue?}', 'HomeController@index')->where('vue', '[\/\w\.-]*')->name('home');
+// Route::get('/print/item/{order}/{itemId}/{stt}', 'PrintController@printItem')->name('print.order.item');
+// Route::get('/print/order/{order}', 'PrintController@printOrder')->name('print.order');
+Route::get('/print/preview/{order}', 'PrintController@preview')->name('print.preview');
+Route::get('/print/report/{place}', 'PrintController@report')->name('print.shift');
+
+
+// Route::get('/home', 'HomeController@index')->name('home');

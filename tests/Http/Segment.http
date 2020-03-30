@@ -1,0 +1,108 @@
+POST {{hosts}}/api/auth/login
+Accept: application/json
+Content-Type: application/json
+Cookie: XDEBUG_SESSION=PHPSTORM
+
+{
+  "phone": "admin",
+  "password": "password"
+}
+
+> {% client.global.set('access_token',response.body.access_token); print(response.body.access_token); %}
+
+###
+
+GET {{hosts}}/api/place/current
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+> {% client.global.set('place_id',response.body.user.places[0].uuid); print(response.body.user.places[0].uuid) %}
+
+
+
+###
+GET {{hosts}}/api/account
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+
+###
+
+GET {{hosts}}/api/areas
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+
+###
+###
+
+GET {{hosts}}/api/segment?page=1&per_page=8
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+
+> {% client.global.set('segment_id',response.body.data[0].uuid); print(response.body.data[0].uuid); %}
+
+###
+
+
+POST {{hosts}}/api/segment
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+Content-Type: application/json
+
+{
+  "title" : "Gentlemen",
+  "description" : "Gentleman",
+  "customers": "e3K7XITYei9n8vXZIu0d_,gpL7btfyKQsoo7jntTFRU",
+  "criteria": [
+    {"uuid" :  "CEAgNVs_X4vs58xB6e26X", "property" : "total_amount", "operator" : ">=", "value" :  1},
+    {"uuid" :  "3MYenNsVo43k2QhuzJbMe", "property" : "gender", "operator" : "=", "value" :  1}
+  ]
+}
+
+
+
+###
+GET {{hosts}}/api/segment/{{segment_id}}
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+
+####
+
+GET {{hosts}}/api/segment/XFGBpkTcv_c1alR7Gokov
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+
+###
+PUT {{hosts}}/api/segment/XFGBpkTcv_c1alR7Gokov
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+Content-Type: application/json
+
+{
+  "title" : "Gentlemen",
+  "description" : "Gentleman",
+  "customers": "e3K7XITYei9n8vXZIu0d_,gpL7btfyKQsoo7jntTFRU",
+  "criteria": [
+    {"uuid" :  "CEAgNVs_X4vs58xB6e26X", "property" : "total_amount", "operator" : ">=", "value" :  2000},
+    {"uuid" :  "3MYenNsVo43k2QhuzJbMe", "property" : "gender", "operator" : "=", "value" :  0},
+    {"uuid" :  null, "property" : "total_debt", "operator" : "=", "value" :  1000}
+  ]
+}
+
+###
+
+DELETE {{hosts}}/api/segment/XFGBpkTcv_c1alR7Gokov
+Accept: application/json
+Authorization: Bearer {{access_token}}
+X-Place-Id: {{place_id}}
+Content-Type: application/json
+
+###
+
+
