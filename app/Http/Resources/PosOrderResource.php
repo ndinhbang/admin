@@ -98,6 +98,14 @@ class PosOrderResource extends JsonResource
                     ];
                 }
             ),
+            $this->mergeWhen(
+                $this->whenLoaded('creator'),
+                [
+                    'creator_uuid'         => $this->creator->uuid ?? '',
+                    'creator_name'         => $this->creator->name ?? '',
+                    'creator_display_name' => $this->creator->display_name ?? '',
+                ]
+            ),
             $this->merge($this->using),
         ];
     }

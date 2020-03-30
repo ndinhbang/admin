@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Filters\OrderFilter;
 use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\PosOrdersCollection;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,8 +14,10 @@ class OrderController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * @param    \App\Http\Requests\OrderRequest    $request
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     *
+     * @param  \App\Http\Requests\OrderRequest  $request
+     * @return \App\Http\Resources\PosOrdersCollection
+     * @throws \Exception
      */
     public function index( OrderRequest $request )
     {
@@ -31,23 +34,28 @@ class OrderController extends Controller
             ->filter(new OrderFilter($request))
             ->first();
 
-        $orders  = Order::with([
-            'creator',
-            'customer',
-            'table',
-            'table.area',
-            'items' => function ( $query ) {
-                // $query->where('parent_id', 0);
-            },
-            'items.children',
-            'items.product.category',
-        ])
+        $orders  = Order::with(
+            [
+                'creator',
+                'customer',
+                'table.area',
+                'items' => function ($query) {
+                    $query->where('parent_id', 0);
+                },
+                'items.children.product.category',
+                'items.product.category',
+            ]
+        )
             ->filter(new OrderFilter($request))
             ->orderBy('orders.id', 'desc')
             ->withTrashed()
             ->paginate($request->per_page);
-        return OrderResource::collection($orders)
-            ->additional([ 'summary' => $summary ]);
+
+        return ( new PosOrdersCollection($orders) )->using(
+            [
+                'place_uuid' => currentPlace()->uuid,
+            ]
+        )->additional([ 'summary' => $summary ]);
     }
 
     /**

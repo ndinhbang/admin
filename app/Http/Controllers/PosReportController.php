@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Filters\OrderFilter;
+use App\Http\Resources\PosOrdersCollection;
 use App\Models\Order;
 use App\User;
 use Illuminate\Http\Request;
@@ -26,6 +28,10 @@ class PosReportController extends Controller
 
     /**
      * Báo cáo doanh số theo đơn hàng.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \App\Http\Resources\PosOrdersCollection
+     * @throws \Exception
      */
     public function index(Request $request) {
         // stats
@@ -54,17 +60,18 @@ class PosReportController extends Controller
         if (count($this->employee_uuid)) {
             $this->employee_id = User::whereIn('users.uuid', $this->employee_uuid)->pluck('id');
         }
-        $items = Order::with([
+        $orders  = Order::with(
+            [
                 'creator',
                 'customer',
-                'table',
                 'table.area',
-                'items' => function ( $query ) {
-                    // $query->where('parent_id', 0);
+                'items' => function ($query) {
+                    $query->where('parent_id', 0);
                 },
-                'items.children',
+                'items.children.product.category',
                 'items.product.category',
-            ])
+            ]
+        )
             ->where(function ($query) use ($request) {
                 if (count($this->employee_id)) {
                     $query->whereIn('orders.creator_id', $this->employee_id);
@@ -75,6 +82,11 @@ class PosReportController extends Controller
             ->withTrashed()
             ->paginate($request->per_page);
 
-        return response()->json(compact('items', 'stats'));
+        return ( new PosOrdersCollection($orders) )->using(
+            [
+                'place_uuid' => currentPlace()->uuid,
+            ]
+        )->additional([ 'stats' => $stats ]);
+//        return response()->json(compact('orders', 'stats'));
     }
 }
