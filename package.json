@@ -26,6 +26,6 @@
         "bootstrap": "^4.4.1",
         "dotenv": "^8.2.0",
         "laravel-echo-server": "^1.6.0",
-        "node-sass": "^4.13.0"
+        "node-sass": "^4.13.1"
     }
 }
